@@ -19,20 +19,21 @@ import {
   XCircle,
   Upload,
   Camera,
-  Loader2
+  Loader2,
+  DollarSign,
+  TrendingUp
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMoniteurs, Moniteur, NewMoniteur } from "@/hooks/useMoniteurs";
 import { useSuppliers } from "@/hooks/useSuppliers";
 import { uploadImage, uploadImageFromBase64 } from "@/lib/imageUpload";
+import { GARANTIE_OPTIONS, ETAT_OPTIONS } from "@/lib/constants";
 
 // Données par défaut
 const marques = ["Dell", "ASUS", "LG", "Samsung", "AOC", "BenQ", "Acer", "HP", "Philips", "MSI", "ViewSonic"];
 const tailles = ["19\"", "21.5\"", "24\"", "27\"", "28\"", "32\"", "34\"", "35\"", "38\"", "43\"", "49\""];
 const resolutions = ["1920x1080", "2560x1440", "3840x2160", "2560x1080", "3440x1440", "5120x1440"];
 const frequences = ["60Hz", "75Hz", "100Hz", "120Hz", "144Hz", "165Hz", "180Hz", "240Hz", "280Hz", "360Hz"];
-const garanties = ["3 mois", "6 mois", "9 mois", "12 mois"];
-const etats = ["Neuf", "Comme neuf", "Occasion"];
 
 export default function MoniteursNew() {
   const { moniteurs, loading, addMoniteur, updateMoniteur, deleteMoniteur } = useMoniteurs();
@@ -301,7 +302,22 @@ export default function MoniteursNew() {
     };
   };
 
+  // Fonction pour calculer les statistiques de prix basées sur les produits filtrés
+  const getPriceStats = (products: Moniteur[]) => {
+    const totalAchat = products.reduce((sum, product) => sum + (product.prix_achat * product.stock_actuel), 0);
+    const totalVente = products.reduce((sum, product) => sum + (product.prix_vente * product.stock_actuel), 0);
+    const beneficePotentiel = totalVente - totalAchat;
+    
+    return {
+      totalAchat,
+      totalVente,
+      beneficePotentiel,
+      margeGlobale: totalAchat > 0 ? ((beneficePotentiel / totalAchat) * 100) : 0
+    };
+  };
+
   const stats = getStockStats();
+  const priceStats = getPriceStats(filteredMoniteurs);
   const activeFournisseurs = suppliers.filter(s => s.statut === 'Actif' || s.statut === 'Privilégié');
 
   if (loading) {
@@ -439,7 +455,7 @@ export default function MoniteursNew() {
                         <SelectValue placeholder="Sélectionner l'état" />
                       </SelectTrigger>
                       <SelectContent className="bg-gray-800 border-gray-600">
-                        {etats.map((etat) => (
+                        {ETAT_OPTIONS.map((etat) => (
                           <SelectItem key={etat} value={etat}>{etat}</SelectItem>
                         ))}
                       </SelectContent>
@@ -447,12 +463,12 @@ export default function MoniteursNew() {
                   </div>
                   <div>
                     <Label htmlFor="garantie">Garantie</Label>
-                    <Select value={newMoniteur.garantie} onValueChange={(value: "3 mois" | "6 mois" | "9 mois" | "12 mois") => setNewMoniteur({ ...newMoniteur, garantie: value })}>
+                    <Select value={newMoniteur.garantie} onValueChange={(value: string) => setNewMoniteur({ ...newMoniteur, garantie: value })}>
                       <SelectTrigger className="bg-gray-800 border-gray-600">
                         <SelectValue placeholder="Sélectionner la garantie" />
                       </SelectTrigger>
                       <SelectContent className="bg-gray-800 border-gray-600">
-                        {garanties.map((garantie) => (
+                        {GARANTIE_OPTIONS.map((garantie) => (
                           <SelectItem key={garantie} value={garantie}>{garantie}</SelectItem>
                         ))}
                       </SelectContent>
@@ -676,7 +692,7 @@ export default function MoniteursNew() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
         <Card className="bg-gradient-to-r from-blue-600 to-blue-700 border-blue-500">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -721,6 +737,30 @@ export default function MoniteursNew() {
                 <p className="text-white text-3xl font-bold">{stats.rupture}</p>
               </div>
               <XCircle className="w-8 h-8 text-red-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-cyan-600 to-cyan-700 border-cyan-500">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-cyan-100 text-sm font-medium">Prix Total Achat</p>
+                <p className="text-white text-3xl font-bold">{priceStats.totalAchat.toLocaleString()} MAD</p>
+              </div>
+              <DollarSign className="w-8 h-8 text-cyan-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-emerald-600 to-emerald-700 border-emerald-500">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-emerald-100 text-sm font-medium">Prix Total Vente</p>
+                <p className="text-white text-3xl font-bold">{priceStats.totalVente.toLocaleString()} MAD</p>
+              </div>
+              <TrendingUp className="w-8 h-8 text-emerald-200" />
             </div>
           </CardContent>
         </Card>

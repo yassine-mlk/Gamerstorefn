@@ -5,7 +5,7 @@ import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 interface User {
   id: string;
   email: string;
-  role: 'admin' | 'member';
+  role: 'admin' | 'member' | 'manager' | 'vendeur' | 'livreur';
   name: string;
 }
 
@@ -15,7 +15,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  signUp: (email: string, password: string, userData: { name: string; role?: 'admin' | 'member' }) => Promise<void>;
+  signUp: (email: string, password: string, userData: { name: string; role?: 'admin' | 'member' | 'manager' | 'vendeur' | 'livreur' }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,6 +31,143 @@ export const useAuth = () => {
 interface AuthProviderProps {
   children: ReactNode;
 }
+
+// Fonctions de tracking simplifiées (sans hook)
+const getPublicIP = async (): Promise<string | null> => {
+  try {
+    const services = [
+      'https://api.ipify.org?format=json',
+      'https://ipapi.co/json/',
+      'https://httpbin.org/ip'
+    ];
+
+    for (const service of services) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        
+        const response = await fetch(service, { 
+          signal: controller.signal 
+        });
+        
+        clearTimeout(timeoutId);
+        const data = await response.json();
+        
+        if (data.ip) return data.ip;
+        if (data.origin) return data.origin;
+        
+      } catch (serviceError) {
+        continue;
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Erreur IP:', error);
+    return null;
+  }
+};
+
+const createSessionRecord = async () => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Vérifier si la table existe
+    const { error: checkError } = await supabase
+      .from('member_sessions')
+      .select('id')
+      .limit(1);
+
+    if (checkError) {
+      console.warn('Table member_sessions non disponible');
+      return;
+    }
+
+    // D'abord, fermer toutes les sessions actives de cet utilisateur
+    await supabase
+      .from('member_sessions')
+      .update({ 
+        logout_time: new Date().toISOString(),
+        is_active: false 
+      })
+      .eq('user_id', user.id)
+      .eq('is_active', true);
+
+    const userAgent = navigator.userAgent;
+    const ip = await getPublicIP();
+    
+    // Détection basique
+    const detectOS = (ua: string) => {
+      if (ua.includes('Windows')) return 'Windows';
+      if (ua.includes('Mac')) return 'macOS';
+      if (ua.includes('Linux')) return 'Linux';
+      if (ua.includes('iPhone') || ua.includes('iPad')) return 'iOS';
+      if (ua.includes('Android')) return 'Android';
+      return 'Unknown';
+    };
+
+    const detectBrowser = (ua: string) => {
+      if (ua.includes('Chrome') && !ua.includes('Edg')) return 'Chrome';
+      if (ua.includes('Firefox')) return 'Firefox';
+      if (ua.includes('Safari') && !ua.includes('Chrome')) return 'Safari';
+      if (ua.includes('Edg')) return 'Edge';
+      return 'Unknown';
+    };
+
+    const detectDevice = (ua: string) => {
+      if (/Mobile|Android|iPhone|iPad|iPod/i.test(ua)) {
+        if (/iPad/i.test(ua)) return 'tablet';
+        return 'mobile';
+      }
+      return 'desktop';
+    };
+
+    const sessionData = {
+      user_id: user.id,
+      ip_address: ip,
+      user_agent: userAgent,
+      operating_system: detectOS(userAgent),
+      browser: detectBrowser(userAgent),
+      device_type: detectDevice(userAgent),
+      is_active: true
+    };
+
+    const { error } = await supabase.from('member_sessions').insert(sessionData);
+    
+    if (error) {
+      console.error('Erreur création session:', error);
+    } else {
+      console.log('Session créée avec succès');
+    }
+  } catch (error) {
+    console.error('Erreur session:', error);
+  }
+};
+
+const endSessionRecord = async () => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('member_sessions')
+      .update({ 
+        logout_time: new Date().toISOString(),
+        is_active: false 
+      })
+      .eq('user_id', user.id)
+      .eq('is_active', true);
+
+    if (error) {
+      console.error('Erreur fin session:', error);
+    } else {
+      console.log('Session fermée avec succès');
+    }
+  } catch (error) {
+    console.error('Erreur fin session:', error);
+  }
+};
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -57,7 +194,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
         
         if (session?.user) {
-          setUser(transformSupabaseUser(session.user));
+          const transformedUser = transformSupabaseUser(session.user);
+          setUser(transformedUser);
+          // Créer une session de tracking
+          createSessionRecord();
         }
       } catch (error) {
         console.error('Erreur lors de la vérification de la session:', error);
@@ -73,15 +213,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
-        setUser(transformSupabaseUser(session.user));
+        const transformedUser = transformSupabaseUser(session.user);
+        setUser(transformedUser);
+        // Créer une session de tracking
+        createSessionRecord();
       } else if (event === 'SIGNED_OUT') {
+        // Terminer la session de tracking
+        endSessionRecord();
         setUser(null);
       }
       setIsLoading(false);
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    // Gérer la fermeture de page/onglet
+    const handleBeforeUnload = () => {
+      endSessionRecord();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []); // Pas de dépendances pour éviter les boucles
 
   const login = async (email: string, password: string): Promise<void> => {
     try {
@@ -95,14 +250,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       if (data.user) {
-        setUser(transformSupabaseUser(data.user));
+        const transformedUser = transformSupabaseUser(data.user);
+        setUser(transformedUser);
+        
+        // Créer une session de tracking
+        createSessionRecord();
+        
+        // Nettoyer les données de navigation potentiellement corrompues
+        localStorage.removeItem('lastVisitedPath');
+        sessionStorage.removeItem('redirectTo');
+        sessionStorage.removeItem('lastRoute');
+        
+        // Forcer la redirection vers la page d'accueil
+        if (window.location.pathname !== '/' && 
+            window.location.pathname !== '/dashboard' && 
+            window.location.pathname !== '/member-dashboard') {
+          window.history.replaceState(null, '', '/');
+        }
       }
     } catch (error) {
       throw error;
     }
   };
 
-  const signUp = async (email: string, password: string, userData: { name: string; role?: 'admin' | 'member' }): Promise<void> => {
+  const signUp = async (email: string, password: string, userData: { name: string; role?: 'admin' | 'member' | 'manager' | 'vendeur' | 'livreur' }): Promise<void> => {
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -127,6 +298,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async (): Promise<void> => {
     try {
+      // Terminer la session de tracking avant la déconnexion
+      endSessionRecord();
+      
       const { error } = await supabase.auth.signOut();
       if (error) {
         throw new Error(error.message);
@@ -146,5 +320,5 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signUp,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }; 

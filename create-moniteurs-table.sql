@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS moniteurs (
     resolution VARCHAR(100) NOT NULL, -- Ex: 1920x1080, 2560x1440, 3840x2160
     frequence_affichage VARCHAR(50) NOT NULL, -- Ex: 60Hz, 144Hz, 165Hz
     etat VARCHAR(20) DEFAULT 'Neuf' CHECK (etat IN ('Neuf', 'Comme neuf', 'Occasion')),
-    garantie VARCHAR(20) CHECK (garantie IN ('3 mois', '6 mois', '9 mois', '12 mois')),
+    garantie VARCHAR(20) CHECK (garantie IN ('Sans garantie', '3 mois', '6 mois', '9 mois', '12 mois')),
     prix_achat DECIMAL(12,2) DEFAULT 0.00,
     prix_vente DECIMAL(12,2) DEFAULT 0.00,
     stock_actuel INTEGER DEFAULT 0,

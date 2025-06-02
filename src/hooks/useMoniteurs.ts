@@ -11,7 +11,7 @@ export interface Moniteur {
   resolution: string;
   frequence_affichage: string;
   etat: 'Neuf' | 'Comme neuf' | 'Occasion';
-  garantie?: '3 mois' | '6 mois' | '9 mois' | '12 mois';
+  garantie?: string;
   prix_achat: number;
   prix_vente: number;
   stock_actuel: number;
@@ -36,7 +36,7 @@ export interface NewMoniteur {
   resolution: string;
   frequence_affichage: string;
   etat?: 'Neuf' | 'Comme neuf' | 'Occasion';
-  garantie?: '3 mois' | '6 mois' | '9 mois' | '12 mois';
+  garantie?: string;
   prix_achat?: number;
   prix_vente?: number;
   stock_actuel?: number;

@@ -24,7 +24,9 @@ import {
   CheckCircle,
   XCircle,
   Upload,
-  Loader2
+  Loader2,
+  DollarSign,
+  TrendingUp
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePeripheriques, Peripherique, NewPeripherique } from "@/hooks/usePeripheriques";
@@ -43,7 +45,7 @@ const categories = [
   { value: "webcam", label: "Webcams", icon: Camera }
 ];
 
-const garanties = ["3 mois", "6 mois", "9 mois", "12 mois", "24 mois"];
+const garanties = ["Sans garantie", "3 mois", "6 mois", "9 mois", "12 mois"];
 const etats = ["Neuf", "Comme neuf", "Occasion"];
 
 export default function Peripheriques() {
@@ -323,7 +325,22 @@ export default function Peripheriques() {
     return { total, disponibles, rupture, commande };
   };
 
+  // Fonction pour calculer les statistiques de prix basées sur les produits filtrés
+  const getPriceStats = (products: Peripherique[]) => {
+    const totalAchat = products.reduce((sum, product) => sum + (product.prix_achat * product.stock_actuel), 0);
+    const totalVente = products.reduce((sum, product) => sum + (product.prix_vente * product.stock_actuel), 0);
+    const beneficePotentiel = totalVente - totalAchat;
+    
+    return {
+      totalAchat,
+      totalVente,
+      beneficePotentiel,
+      margeGlobale: totalAchat > 0 ? ((beneficePotentiel / totalAchat) * 100) : 0
+    };
+  };
+
   const stats = getStockStats();
+  const priceStats = getPriceStats(filteredPeripheriques);
 
   if (loading) {
     return (
@@ -702,7 +719,7 @@ export default function Peripheriques() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
         <Card className="bg-gradient-to-r from-blue-600 to-blue-700 border-blue-500">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -747,6 +764,30 @@ export default function Peripheriques() {
                 <p className="text-white text-3xl font-bold">{stats.rupture}</p>
               </div>
               <XCircle className="w-8 h-8 text-red-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-cyan-600 to-cyan-700 border-cyan-500">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-cyan-100 text-sm font-medium">Prix Total Achat</p>
+                <p className="text-white text-3xl font-bold">{priceStats.totalAchat.toLocaleString()} MAD</p>
+              </div>
+              <DollarSign className="w-8 h-8 text-cyan-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-r from-emerald-600 to-emerald-700 border-emerald-500">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-emerald-100 text-sm font-medium">Prix Total Vente</p>
+                <p className="text-white text-3xl font-bold">{priceStats.totalVente.toLocaleString()} MAD</p>
+              </div>
+              <TrendingUp className="w-8 h-8 text-emerald-200" />
             </div>
           </CardContent>
         </Card>

@@ -152,20 +152,41 @@ export function useBankAccounts() {
       if (savedComptes) {
         setComptes(JSON.parse(savedComptes));
       } else {
-        setComptes(defaultBankAccounts);
-        localStorage.setItem('gamerstore_bank_accounts', JSON.stringify(defaultBankAccounts));
+        // Vérifier si c'est la toute première utilisation
+        const isFirstTimeUser = !localStorage.getItem('gamerstore_initialized');
+        
+        if (isFirstTimeUser) {
+          // Première utilisation : charger les données de démonstration
+          setComptes(defaultBankAccounts);
+          localStorage.setItem('gamerstore_bank_accounts', JSON.stringify(defaultBankAccounts));
+        } else {
+          // Utilisateur existant : commencer avec un tableau vide
+          setComptes([]);
+          localStorage.setItem('gamerstore_bank_accounts', JSON.stringify([]));
+        }
       }
 
       if (savedMouvements) {
         setMouvements(JSON.parse(savedMouvements));
       } else {
-        setMouvements(defaultMovements);
-        localStorage.setItem('gamerstore_bank_movements', JSON.stringify(defaultMovements));
+        // Vérifier si c'est la toute première utilisation
+        const isFirstTimeUser = !localStorage.getItem('gamerstore_initialized');
+        
+        if (isFirstTimeUser) {
+          // Première utilisation : charger les données de démonstration
+          setMouvements(defaultMovements);
+          localStorage.setItem('gamerstore_bank_movements', JSON.stringify(defaultMovements));
+          localStorage.setItem('gamerstore_initialized', 'true');
+        } else {
+          // Utilisateur existant : commencer avec un tableau vide
+          setMouvements([]);
+          localStorage.setItem('gamerstore_bank_movements', JSON.stringify([]));
+        }
       }
     } catch (error) {
       console.error('Erreur lors du chargement des comptes bancaires:', error);
-      setComptes(defaultBankAccounts);
-      setMouvements(defaultMovements);
+      setComptes([]);
+      setMouvements([]);
     } finally {
       setLoading(false);
     }
@@ -315,6 +336,30 @@ export function useBankAccounts() {
     }
   };
 
+  // Ajouter un mouvement depuis une vente (sans toast)
+  const addMouvementFromVente = (mouvement: Omit<MouvementBancaire, 'id' | 'date_mouvement'>) => {
+    try {
+      const newMouvement: MouvementBancaire = {
+        ...mouvement,
+        id: Date.now().toString(),
+        date_mouvement: new Date().toISOString()
+      };
+
+      const newMouvements = [newMouvement, ...mouvements];
+      const success = saveMouvements(newMouvements);
+
+      if (success) {
+        // Mettre à jour le solde du compte
+        updateSoldeCompte(mouvement.compte_bancaire_id);
+      }
+
+      return success;
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout du mouvement depuis vente:', error);
+      return false;
+    }
+  };
+
   // Mettre à jour le solde d'un compte
   const updateSoldeCompte = (compteId: string) => {
     const compte = comptes.find(c => c.id === compteId);
@@ -367,6 +412,7 @@ export function useBankAccounts() {
     updateCompte,
     deleteCompte,
     addMouvement,
+    addMouvementFromVente,
     getMouvementsCompte,
     getTotaux,
     updateSoldeCompte

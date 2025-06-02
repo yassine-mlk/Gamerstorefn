@@ -14,6 +14,8 @@ export interface Client {
   derniere_commande?: string;
   statut: 'Actif' | 'Inactif' | 'VIP';
   notes?: string;
+  type_client: 'particulier' | 'societe';
+  ice?: string;
   created_at: string;
   updated_at: string;
 }
@@ -26,6 +28,8 @@ export interface NewClient {
   adresse?: string;
   statut?: 'Actif' | 'Inactif' | 'VIP';
   notes?: string;
+  type_client?: 'particulier' | 'societe';
+  ice?: string;
 }
 
 export function useClients() {

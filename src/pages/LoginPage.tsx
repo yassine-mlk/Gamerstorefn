@@ -76,8 +76,12 @@ export default function LoginPage() {
       <div className="flex-1 flex items-center justify-center p-8 tech-gradient">
         <div className="w-full max-w-md space-y-8 animate-fade-in">
           <div className="text-center">
-            <div className="mx-auto w-16 h-16 gaming-gradient rounded-2xl flex items-center justify-center mb-6 animate-gaming-glow">
-              <Monitor className="w-8 h-8 text-white" />
+            <div className="mx-auto w-16 h-16 bg-gray-800 rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+              <img 
+                src="/logo-gamer-store.jpg" 
+                alt="Logo Gamerstore" 
+                className="w-12 h-12 object-contain rounded"
+              />
             </div>
             <h1 className="text-3xl font-bold text-white mb-2">Gamerstore Manager</h1>
             <p className="text-gray-400">Gestion complète de votre magasin gaming</p>
@@ -139,14 +143,6 @@ export default function LoginPage() {
                   )}
                 </Button>
               </form>
-
-              <div className="mt-4 text-center">
-                <p className="text-xs text-gray-500">
-                  Comptes de test :<br />
-                  Admin: admin@gamerstore.com / admin123<br />
-                  Membre: membre@gamerstore.com / membre123
-                </p>
-              </div>
             </CardContent>
           </Card>
         </div>

@@ -5,7 +5,6 @@ import {
   Package,
   Laptop,
   ShoppingCart,
-  LogOut,
   Monitor,
   Mouse,
   MapPin,
@@ -13,12 +12,16 @@ import {
   UserCheck,
   ClipboardList,
   CreditCard,
-  CheckSquare
+  CheckSquare,
+  Armchair,
+  FileCheck,
+  Cpu,
+  Settings,
+  RotateCcw
 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -30,7 +33,6 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 const adminMenuItems = [
@@ -55,19 +57,29 @@ const adminMenuItems = [
     icon: Truck,
   },
   {
-    title: "Stock",
-    url: "/inventory",
-    icon: Package,
-  },
-  {
     title: "PC Portables",
     url: "/pc-portable",
     icon: Laptop,
   },
   {
+    title: "Composants PC",
+    url: "/composants-pc",
+    icon: Cpu,
+  },
+  {
+    title: "PC Gamer",
+    url: "/pc-gamer",
+    icon: Settings,
+  },
+  {
     title: "Moniteurs",
     url: "/moniteurs",
     icon: Monitor,
+  },
+  {
+    title: "Chaises Gaming",
+    url: "/chaises-gaming",
+    icon: Armchair,
   },
   {
     title: "Périphériques",
@@ -90,6 +102,16 @@ const adminMenuItems = [
     icon: Banknote,
   },
   {
+    title: "Chèques",
+    url: "/cheques",
+    icon: FileCheck,
+  },
+  {
+    title: "Retours",
+    url: "/retours",
+    icon: RotateCcw,
+  },
+  {
     title: "Équipe",
     url: "/team",
     icon: UserCheck,
@@ -101,6 +123,19 @@ const adminMenuItems = [
   },
 ];
 
+const vendeurMenuItems = [
+  {
+    title: "Point de Vente",
+    url: "/vendeur-pos",
+    icon: CreditCard,
+  },
+  {
+    title: "Mes Ventes",
+    url: "/my-sales",
+    icon: ShoppingCart,
+  },
+];
+
 const memberMenuItems = [
   {
     title: "Tableau de bord",
@@ -108,7 +143,7 @@ const memberMenuItems = [
     icon: BarChart3,
   },
   {
-    title: "Mes Produits",
+    title: "Produits",
     url: "/my-products",
     icon: Package,
   },
@@ -127,10 +162,28 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   
-  const menuItems = userRole === "admin" ? adminMenuItems : memberMenuItems;
+  const menuItems = userRole === "admin" ? adminMenuItems : 
+                   userRole === "vendeur" ? vendeurMenuItems : 
+                   memberMenuItems;
 
-  const handleLogout = () => {
-    window.location.reload();
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case "admin": return "Admin";
+      case "vendeur": return "Vendeur";
+      case "manager": return "Manager";
+      case "livreur": return "Livreur";
+      default: return "Membre";
+    }
+  };
+
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case "admin": return "border-gaming-purple text-gaming-purple";
+      case "vendeur": return "border-gaming-cyan text-gaming-cyan";
+      case "manager": return "border-gaming-green text-gaming-green";
+      case "livreur": return "border-yellow-500 text-yellow-500";
+      default: return "border-gray-500 text-gray-500";
+    }
   };
 
   return (
@@ -138,17 +191,23 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
       <SidebarHeader className="border-b border-gray-700/50 p-6">
         <div className="flex items-center gap-4">
           <div className="relative">
-            <div className="w-10 h-10 gaming-gradient rounded-xl flex items-center justify-center shadow-lg">
-              <Monitor className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center shadow-lg">
+              <img 
+                src="/logo-gamer-store.jpg" 
+                alt="Logo Gamerstore" 
+                className="w-8 h-8 object-contain rounded"
+              />
             </div>
             <div className="absolute -top-1 -right-1 w-4 h-4 bg-gaming-cyan rounded-full border-2 border-gray-800"></div>
           </div>
           <div className="flex-1">
             <h2 className="text-xl font-bold text-white tracking-tight">Gamerstore</h2>
             <div className="flex items-center gap-2">
-              <p className="text-xs text-gray-400">Gestion Magasin</p>
-              <Badge variant="outline" className="text-xs border-gaming-purple text-gaming-purple">
-                {userRole === "admin" ? "Admin" : "Membre"}
+              <p className="text-xs text-gray-400">
+                {userRole === "vendeur" ? "Caisse Tactile" : "Gestion Magasin"}
+              </p>
+              <Badge variant="outline" className={`text-xs ${getRoleColor(userRole)}`}>
+                {getRoleLabel(userRole)}
               </Badge>
             </div>
           </div>
@@ -192,21 +251,6 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-
-      <SidebarFooter className="border-t border-gray-700/50 p-4">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <Button
-              variant="ghost"
-              onClick={handleLogout}
-              className="w-full justify-start text-gray-300 hover:text-white hover:bg-red-500/20 transition-all duration-300 rounded-xl"
-            >
-              <LogOut className="w-5 h-5 mr-3" />
-              <span className="text-sm lg:text-base">Déconnexion</span>
-            </Button>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
     </Sidebar>
   );
 }

@@ -8,14 +8,21 @@ import Dashboard from "./pages/Dashboard";
 import MemberDashboard from "./pages/MemberDashboard";
 import Clients from "./pages/Clients";
 import Suppliers from "./pages/Suppliers";
-import Inventory from "./pages/Inventory";
 import PCPortable from "./pages/PCPortableNew";
+import PCPortableDetails from "./pages/PCPortableDetails";
+import ComposantsPC from "./pages/ComposantsPC";
+import ComposantsPCDetails from "./pages/ComposantsPCDetails";
+import PCGamer from "./pages/PCGamer";
 import MoniteursNew from "./pages/MoniteursNew";
+import ChaisesGaming from "./pages/ChaisesGamingSimple";
 import Peripheriques from "./pages/Peripheriques";
 import Sales from "./pages/Sales";
 import PointOfSale from "./pages/PointOfSale";
+import VendeurPOS from "./pages/VendeurPOS";
 import Delivery from "./pages/Delivery";
 import CashRegister from "./pages/CashRegister";
+import Cheques from "./pages/Cheques";
+import Retours from "./pages/Retours";
 import Team from "./pages/Team";
 import Tasks from "./pages/Tasks";
 import MyProducts from "./pages/MyProducts";
@@ -63,26 +70,45 @@ const AppContent = () => {
                 path="/" 
                 element={
                   <Navigate 
-                    to={user.role === "admin" ? "/dashboard" : "/member-dashboard"} 
+                    to={
+                      user.role === "admin" ? "/dashboard" : 
+                      user.role === "vendeur" ? "/vendeur-pos" :
+                      "/member-dashboard"
+                    } 
                     replace 
                   />
                 } 
+              />
+              <Route 
+                path="/myproduct" 
+                element={<Navigate to="/my-products" replace />} 
               />
               {user.role === "admin" ? (
                 <>
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/clients" element={<Clients />} />
                   <Route path="/suppliers" element={<Suppliers />} />
-                  <Route path="/inventory" element={<Inventory />} />
                   <Route path="/pc-portable" element={<PCPortable />} />
+                  <Route path="/pc-portable/:id" element={<PCPortableDetails />} />
+                  <Route path="/composants-pc" element={<ComposantsPC />} />
+                  <Route path="/composants-pc/:id" element={<ComposantsPCDetails />} />
+                  <Route path="/pc-gamer" element={<PCGamer />} />
                   <Route path="/moniteurs" element={<MoniteursNew />} />
+                  <Route path="/chaises-gaming" element={<ChaisesGaming />} />
                   <Route path="/peripheriques" element={<Peripheriques />} />
                   <Route path="/sales" element={<Sales />} />
                   <Route path="/point-of-sale" element={<PointOfSale />} />
                   <Route path="/delivery" element={<Delivery />} />
                   <Route path="/cash-register" element={<CashRegister />} />
+                  <Route path="/cheques" element={<Cheques />} />
+                  <Route path="/retours" element={<Retours />} />
                   <Route path="/team" element={<Team />} />
                   <Route path="/tasks" element={<Tasks />} />
+                </>
+              ) : user.role === "vendeur" ? (
+                <>
+                  <Route path="/vendeur-pos" element={<VendeurPOS />} />
+                  <Route path="/my-sales" element={<Sales />} />
                 </>
               ) : (
                 <>
@@ -93,7 +119,19 @@ const AppContent = () => {
               )}
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<Settings />} />
-              <Route path="*" element={<NotFound />} />
+              <Route 
+                path="*" 
+                element={
+                  <Navigate 
+                    to={
+                      user.role === "admin" ? "/dashboard" : 
+                      user.role === "vendeur" ? "/vendeur-pos" :
+                      "/member-dashboard"
+                    } 
+                    replace 
+                  />
+                } 
+              />
             </Routes>
           </main>
         </div>

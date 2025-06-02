@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Banknote, TrendingUp, TrendingDown, Plus, Minus, Calendar, Building2, CreditCard, Wallet } from "lucide-react";
+import { Banknote, TrendingUp, TrendingDown, Plus, Minus, Calendar, Building2, CreditCard, Wallet, Building, RefreshCw, RotateCcw } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -31,55 +31,35 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBankAccounts } from "@/hooks/useBankAccounts";
-
-interface CashTransaction {
-  id: string;
-  type: "entree" | "sortie";
-  amount: number;
-  description: string;
-  category: string;
-  date: string;
-  user: string;
-}
+import { useCash } from "@/hooks/useCash";
+import { useRetours } from "@/hooks/useRetours";
 
 const CashRegister = () => {
   const {
     comptes,
+    mouvements,
     loading: loadingBankAccounts,
-    getTotaux
+    getTotaux,
+    getMouvementsCompte
   } = useBankAccounts();
 
-  const [transactions, setTransactions] = useState<CashTransaction[]>([
-    {
-      id: "T001",
-      type: "entree",
-      amount: 450.00,
-      description: "Vente accessoires gaming (Espèces)",
-      category: "Vente",
-      date: "2024-01-15",
-      user: "Admin"
-    },
-    {
-      id: "T002",
-      type: "sortie",
-      amount: 50.00,
-      description: "Frais de déplacement (Espèces)",
-      category: "Frais",
-      date: "2024-01-14",
-      user: "Admin"
-    },
-    {
-      id: "T003",
-      type: "entree",
-      amount: 1200.00,
-      description: "Vente PC portable (Espèces)",
-      category: "Vente",
-      date: "2024-01-13",
-      user: "Admin"
-    }
-  ]);
+  const {
+    transactions,
+    loading: loadingCash,
+    addCashTransaction,
+    getTotaux: getCashTotaux
+  } = useCash();
+
+  const {
+    retours,
+    reprises,
+    loading: loadingRetours,
+    getStats
+  } = useRetours();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
+  const [showAccountDetails, setShowAccountDetails] = useState(false);
   const [newTransaction, setNewTransaction] = useState({
     type: "entree" as "entree" | "sortie",
     amount: "",
@@ -87,44 +67,45 @@ const CashRegister = () => {
     category: ""
   });
 
-  const totalEntrees = transactions
-    .filter(t => t.type === "entree")
-    .reduce((sum, t) => sum + t.amount, 0);
+  const { totalEntrees, totalSorties, soldeCaisse } = getCashTotaux();
 
-  const totalSorties = transactions
-    .filter(t => t.type === "sortie")
-    .reduce((sum, t) => sum + t.amount, 0);
+  // Fonction pour afficher les détails d'un compte
+  const viewAccountDetails = (accountId: string) => {
+    setSelectedAccount(accountId);
+    setShowAccountDetails(true);
+  };
 
-  const soldeCaisse = totalEntrees - totalSorties;
+  // Obtenir les mouvements du compte sélectionné
+  const selectedAccountMovements = selectedAccount ? getMouvementsCompte(selectedAccount) : [];
+  const selectedAccountInfo = selectedAccount ? comptes.find(c => c.id === selectedAccount) : null;
 
   const addTransaction = () => {
     if (!newTransaction.amount || !newTransaction.description || !newTransaction.category) {
       return;
     }
 
-    const transaction: CashTransaction = {
-      id: `T${String(transactions.length + 1).padStart(3, '0')}`,
+    const success = addCashTransaction({
       type: newTransaction.type,
       amount: parseFloat(newTransaction.amount),
       description: newTransaction.description,
       category: newTransaction.category,
-      date: new Date().toISOString().split('T')[0],
       user: "Admin"
-    };
-
-    setTransactions([transaction, ...transactions]);
-    setNewTransaction({
-      type: "entree",
-      amount: "",
-      description: "",
-      category: ""
     });
-    setIsAddDialogOpen(false);
+
+    if (success) {
+      setNewTransaction({
+        type: "entree",
+        amount: "",
+        description: "",
+        category: ""
+      });
+      setIsAddDialogOpen(false);
+    }
   };
 
   const totauxBanques = getTotaux();
 
-  if (loadingBankAccounts) {
+  if (loadingBankAccounts || loadingCash || loadingRetours) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gaming-purple"></div>
@@ -208,21 +189,25 @@ const CashRegister = () => {
         </Card>
       </div>
 
-      {/* Onglets pour séparer caisse et banques */}
-      <Tabs defaultValue="caisse" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-gray-800">
-          <TabsTrigger value="caisse" className="text-white data-[state=active]:bg-gaming-cyan data-[state=active]:text-black">
+      {/* Tabs pour organiser les différentes sections */}
+      <Tabs defaultValue="cash" className="space-y-6">
+        <TabsList className="bg-gray-800 border-gray-700">
+          <TabsTrigger value="cash" className="data-[state=active]:bg-gaming-cyan data-[state=active]:text-black">
             <Banknote className="w-4 h-4 mr-2" />
-            Caisse Physique (Espèces)
+            Caisse
           </TabsTrigger>
-          <TabsTrigger value="banques" className="text-white data-[state=active]:bg-gaming-cyan data-[state=active]:text-black">
-            <Building2 className="w-4 h-4 mr-2" />
-            Comptes Bancaires
+          <TabsTrigger value="bank" className="data-[state=active]:bg-gaming-cyan data-[state=active]:text-black">
+            <Building className="w-4 h-4 mr-2" />
+            Banques
+          </TabsTrigger>
+          <TabsTrigger value="returns" className="data-[state=active]:bg-gaming-cyan data-[state=active]:text-black">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Retours & Reprises
           </TabsTrigger>
         </TabsList>
 
-        {/* Onglet Caisse Physique */}
-        <TabsContent value="caisse" className="space-y-6">
+        {/* Section Caisse */}
+        <TabsContent value="cash" className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-white">Mouvements en Espèces</h2>
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -406,8 +391,8 @@ const CashRegister = () => {
           </Card>
         </TabsContent>
 
-        {/* Onglet Comptes Bancaires */}
-        <TabsContent value="banques" className="space-y-6">
+        {/* Section Banques */}
+        <TabsContent value="bank" className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-white">Comptes Bancaires</h2>
             <p className="text-gray-400">Gérez vos comptes dans les paramètres</p>
@@ -416,7 +401,11 @@ const CashRegister = () => {
           {/* Résumé des comptes bancaires */}
           <div className="grid gap-4">
             {comptes.filter(c => c.statut === 'Actif').map((compte) => (
-              <Card key={compte.id} className="tech-gradient border-gray-700">
+              <Card 
+                key={compte.id} 
+                className="tech-gradient border-gray-700 cursor-pointer hover:border-gaming-cyan/50 transition-all duration-200"
+                onClick={() => viewAccountDetails(compte.id)}
+              >
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -432,7 +421,10 @@ const CashRegister = () => {
                       <div className="text-lg font-bold text-green-400">
                         {compte.solde_actuel.toFixed(2)} MAD
                       </div>
-                      <div className="text-xs text-gray-400">{compte.type_compte}</div>
+                      <div className="text-xs text-gray-400 flex items-center gap-1">
+                        {compte.type_compte}
+                        <span className="text-gaming-cyan">• Cliquer pour détails</span>
+                      </div>
                     </div>
                   </div>
                   {compte.numero_compte && (
@@ -461,7 +453,250 @@ const CashRegister = () => {
             </Card>
           )}
         </TabsContent>
+
+        {/* Section Retours & Reprises */}
+        <TabsContent value="returns" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-white">Retours & Reprises</h2>
+            <p className="text-gray-400">Transactions de retours et reprises</p>
+          </div>
+
+          {/* Résumé des retours et reprises */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card className="tech-gradient border-gray-700">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-red-400 text-sm flex items-center gap-2">
+                  <RotateCcw className="w-4 h-4" />
+                  Retours ({retours.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-white">
+                  {retours.reduce((sum, r) => sum + r.prix_total, 0).toFixed(2)} MAD
+                </div>
+                <p className="text-xs text-gray-400 mt-1">
+                  {retours.filter(r => r.statut === 'rembourse').length} traités
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="tech-gradient border-gray-700">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-purple-400 text-sm flex items-center gap-2">
+                  <RefreshCw className="w-4 h-4" />
+                  Reprises ({reprises.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-white">
+                  {reprises.reduce((sum, r) => sum + Math.abs(r.difference_prix), 0).toFixed(2)} MAD
+                </div>
+                <p className="text-xs text-gray-400 mt-1">
+                  {reprises.filter(r => r.statut === 'finalise').length} finalisées
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Historique des retours et reprises */}
+          <Card className="tech-gradient border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-white">Transactions Récentes</CardTitle>
+              <CardDescription className="text-gray-400">
+                Derniers retours et reprises effectués
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {(retours.length === 0 && reprises.length === 0) ? (
+                <div className="text-center py-8">
+                  <RefreshCw className="w-12 h-12 mx-auto text-gray-600 mb-4" />
+                  <h3 className="text-white font-semibold mb-2">Aucune transaction</h3>
+                  <p className="text-gray-400">Les retours et reprises apparaîtront ici</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-gray-300">Date</TableHead>
+                      <TableHead className="text-gray-300">Type</TableHead>
+                      <TableHead className="text-gray-300">Client</TableHead>
+                      <TableHead className="text-gray-300">Produit</TableHead>
+                      <TableHead className="text-gray-300">Montant</TableHead>
+                      <TableHead className="text-gray-300">Statut</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {/* Afficher les retours */}
+                    {retours.slice(0, 10).map((retour) => (
+                      <TableRow key={retour.id}>
+                        <TableCell className="text-gray-300">{retour.date_retour}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="border-red-400 text-red-400">
+                            <RotateCcw className="w-3 h-3 mr-1" />
+                            Retour
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-gray-300">{retour.client_nom}</TableCell>
+                        <TableCell className="text-gray-300">{retour.nom_produit}</TableCell>
+                        <TableCell className="font-semibold text-red-400">
+                          -{retour.prix_total.toFixed(2)} MAD
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={retour.statut === 'rembourse' ? 'default' : 'secondary'} className="text-xs">
+                            {retour.statut === 'en_attente' && 'En attente'}
+                            {retour.statut === 'rembourse' && 'Remboursé'}
+                            {retour.statut === 'traite' && 'Traité'}
+                            {retour.statut === 'refuse' && 'Refusé'}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {/* Afficher les reprises */}
+                    {reprises.slice(0, 10).map((reprise) => (
+                      <TableRow key={reprise.id}>
+                        <TableCell className="text-gray-300">{reprise.date_echange}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="border-purple-400 text-purple-400">
+                            <RefreshCw className="w-3 h-3 mr-1" />
+                            Reprise
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-gray-300">{reprise.client_nom || 'N/A'}</TableCell>
+                        <TableCell className="text-gray-300">
+                          {reprise.ancien_produit.nom} → {reprise.nouveau_produit.nom}
+                        </TableCell>
+                        <TableCell className={`font-semibold ${
+                          reprise.difference_prix > 0 ? 'text-red-400' : 'text-green-400'
+                        }`}>
+                          {reprise.difference_prix > 0 ? '+' : ''}{reprise.difference_prix.toFixed(2)} MAD
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={reprise.statut === 'finalise' ? 'default' : 'secondary'} className="text-xs">
+                            {reprise.statut === 'en_attente' && 'En attente'}
+                            {reprise.statut === 'finalise' && 'Finalisé'}
+                            {reprise.statut === 'annule' && 'Annulé'}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
+
+      {/* Dialog pour les détails du compte bancaire */}
+      <Dialog open={showAccountDetails} onOpenChange={setShowAccountDetails}>
+        <DialogContent className="tech-gradient border-gray-700 max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-white flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-gaming-cyan" />
+              Historique des Mouvements - {selectedAccountInfo?.nom_compte}
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              {selectedAccountInfo?.nom_banque} • Solde actuel: {selectedAccountInfo?.solde_actuel.toFixed(2)} MAD
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Statistiques du compte */}
+            <div className="grid grid-cols-3 gap-4">
+              <Card className="bg-gray-800/50 border-gray-700">
+                <CardContent className="p-3">
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-green-400">
+                      {selectedAccountMovements.filter(m => m.type_mouvement === 'Crédit' && m.statut === 'Validé').reduce((sum, m) => sum + m.montant, 0).toFixed(2)} MAD
+                    </div>
+                    <div className="text-xs text-gray-400">Total Crédits</div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-gray-800/50 border-gray-700">
+                <CardContent className="p-3">
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-red-400">
+                      {selectedAccountMovements.filter(m => m.type_mouvement === 'Débit' && m.statut === 'Validé').reduce((sum, m) => sum + m.montant, 0).toFixed(2)} MAD
+                    </div>
+                    <div className="text-xs text-gray-400">Total Débits</div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-gray-800/50 border-gray-700">
+                <CardContent className="p-3">
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-white">
+                      {selectedAccountMovements.length}
+                    </div>
+                    <div className="text-xs text-gray-400">Nb Mouvements</div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Liste des mouvements */}
+            <Card className="bg-gray-800/50 border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-white text-lg">Mouvements</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {selectedAccountMovements.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Building2 className="w-12 h-12 mx-auto text-gray-600 mb-4" />
+                    <p className="text-gray-400">Aucun mouvement trouvé</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-gray-300">Date</TableHead>
+                        <TableHead className="text-gray-300">Type</TableHead>
+                        <TableHead className="text-gray-300">Montant</TableHead>
+                        <TableHead className="text-gray-300">Libellé</TableHead>
+                        <TableHead className="text-gray-300">Catégorie</TableHead>
+                        <TableHead className="text-gray-300">Statut</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {selectedAccountMovements
+                        .sort((a, b) => new Date(b.date_mouvement).getTime() - new Date(a.date_mouvement).getTime())
+                        .map((mouvement) => (
+                        <TableRow key={mouvement.id}>
+                          <TableCell className="text-gray-300">
+                            {new Date(mouvement.date_mouvement).toLocaleDateString('fr-FR')}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={mouvement.type_mouvement === "Crédit" ? "default" : "destructive"}>
+                              {mouvement.type_mouvement}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className={`font-semibold ${
+                            mouvement.type_mouvement === "Crédit" ? "text-green-400" : "text-red-400"
+                          }`}>
+                            {mouvement.type_mouvement === "Crédit" ? "+" : "-"}{mouvement.montant.toFixed(2)} MAD
+                          </TableCell>
+                          <TableCell className="text-gray-300 max-w-xs truncate">
+                            {mouvement.libelle}
+                          </TableCell>
+                          <TableCell className="text-gray-300">
+                            {mouvement.categorie || '-'}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={mouvement.statut === 'Validé' ? 'default' : 'secondary'}>
+                              {mouvement.statut}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -100,7 +100,7 @@ const mockPCPortables: PCPortable[] = [
 
 // Marques par défaut - seront gérées via les paramètres plus tard
 const marques = ["ASUS", "Apple", "HP", "Dell", "Lenovo", "Acer", "MSI", "Alienware"];
-const garanties = ["3 mois", "6 mois", "9 mois", "12 mois"];
+const garanties = ["Sans garantie", "3 mois", "6 mois", "9 mois", "12 mois"];
 
 // Mock fournisseurs - à remplacer par les vrais fournisseurs de la base
 const mockFournisseurs = [

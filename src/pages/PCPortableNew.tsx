@@ -20,15 +20,22 @@ import {
   Upload,
   Image as ImageIcon,
   Camera,
-  Loader2
+  Loader2,
+  Eye,
+  UserPlus,
+  DollarSign,
+  TrendingUp
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePcPortables, PcPortable, NewPcPortable } from "@/hooks/usePcPortables";
 import { useSuppliers } from "@/hooks/useSuppliers";
+import { useNavigate } from "react-router-dom";
+import { AssignProductDialog } from "@/components/AssignProductDialog";
+import { uploadImageByType, uploadImageFromBase64ByType } from "@/lib/imageUpload";
 
 // Marques par défaut - seront gérées via les paramètres plus tard
 const marques = ["ASUS", "Apple", "HP", "Dell", "Lenovo", "Acer", "MSI", "Alienware", "Razer", "Samsung"];
-const garanties = ["3 mois", "6 mois", "9 mois", "12 mois", "18 mois", "24 mois", "36 mois"];
+const garanties = ["Sans garantie", "3 mois", "6 mois", "9 mois", "12 mois"];
 const etats = ["Neuf", "Comme neuf", "Occasion"];
 
 export default function PCPortableNew() {
@@ -43,6 +50,8 @@ export default function PCPortableNew() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [showCamera, setShowCamera] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const navigate = useNavigate();
 
   const [newProduct, setNewProduct] = useState<NewPcPortable>({
     nom_produit: "",
@@ -204,16 +213,35 @@ export default function PCPortableNew() {
     }
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setImagePreview(result);
-        setNewProduct({ ...newProduct, image_url: result });
-      };
-      reader.readAsDataURL(file);
+      setUploading(true);
+      try {
+        const result = await uploadImageByType(file, 'pc-portable');
+        if (result.success && result.url) {
+          setImagePreview(result.url);
+          setNewProduct({ ...newProduct, image_url: result.url });
+          toast({
+            title: "Image téléchargée",
+            description: "L'image a été téléchargée avec succès",
+          });
+        } else {
+          toast({
+            title: "Erreur",
+            description: result.error || "Erreur lors du téléchargement",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Erreur",
+          description: "Erreur lors du téléchargement de l'image",
+          variant: "destructive",
+        });
+      } finally {
+        setUploading(false);
+      }
     }
   };
 
@@ -245,7 +273,7 @@ export default function PCPortableNew() {
     setShowCamera(false);
   };
 
-  const takePhoto = () => {
+  const takePhoto = async () => {
     if (videoRef.current && canvasRef.current) {
       const canvas = canvasRef.current;
       const video = videoRef.current;
@@ -257,14 +285,34 @@ export default function PCPortableNew() {
       if (ctx) {
         ctx.drawImage(video, 0, 0);
         const imageData = canvas.toDataURL('image/jpeg', 0.8);
-        setImagePreview(imageData);
-        setNewProduct({ ...newProduct, image_url: imageData });
-        stopCamera();
         
-        toast({
-          title: "Photo capturée",
-          description: "La photo a été ajoutée au produit",
-        });
+        setUploading(true);
+        try {
+          const result = await uploadImageFromBase64ByType(imageData, 'pc-portable');
+          if (result.success && result.url) {
+            setImagePreview(result.url);
+            setNewProduct({ ...newProduct, image_url: result.url });
+            stopCamera();
+            toast({
+              title: "Photo capturée",
+              description: "La photo a été ajoutée au produit",
+            });
+          } else {
+            toast({
+              title: "Erreur",
+              description: result.error || "Erreur lors de l'upload de la photo",
+              variant: "destructive",
+            });
+          }
+        } catch (error) {
+          toast({
+            title: "Erreur",
+            description: "Erreur lors de l'upload de la photo",
+            variant: "destructive",
+          });
+        } finally {
+          setUploading(false);
+        }
       }
     }
   };
@@ -278,7 +326,22 @@ export default function PCPortableNew() {
     };
   };
 
+  // Nouvelle fonction pour calculer les statistiques de prix basées sur les produits filtrés
+  const getPriceStats = (products: PcPortable[]) => {
+    const totalAchat = products.reduce((sum, product) => sum + (product.prix_achat * product.stock_actuel), 0);
+    const totalVente = products.reduce((sum, product) => sum + (product.prix_vente * product.stock_actuel), 0);
+    const beneficePotentiel = totalVente - totalAchat;
+    
+    return {
+      totalAchat,
+      totalVente,
+      beneficePotentiel,
+      margeGlobale: totalAchat > 0 ? ((beneficePotentiel / totalAchat) * 100) : 0
+    };
+  };
+
   const stats = getStockStats();
+  const priceStats = getPriceStats(filteredProducts);
 
   const activeFournisseurs = suppliers.filter(s => s.statut === 'Actif' || s.statut === 'Privilégié');
 
@@ -456,18 +519,6 @@ export default function PCPortableNew() {
                     />
                   </div>
                 </div>
-
-                <div className="mt-4">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={newProduct.description}
-                    onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-                    className="bg-gray-800 border-gray-600"
-                    placeholder="Description détaillée du produit..."
-                    rows={3}
-                  />
-                </div>
               </div>
 
               {/* Image */}
@@ -623,17 +674,6 @@ export default function PCPortableNew() {
                     </Select>
                   </div>
                 </div>
-
-                <div className="mt-4">
-                  <Label htmlFor="emplacement">Emplacement</Label>
-                  <Input
-                    id="emplacement"
-                    value={newProduct.emplacement}
-                    onChange={(e) => setNewProduct({ ...newProduct, emplacement: e.target.value })}
-                    className="bg-gray-800 border-gray-600"
-                    placeholder="Ex: Rayon A1, Étagère 2"
-                  />
-                </div>
               </div>
             </div>
             
@@ -661,7 +701,7 @@ export default function PCPortableNew() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
         <Card className="bg-gaming-purple/20 border-gaming-purple/50">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -705,6 +745,30 @@ export default function PCPortableNew() {
               <div>
                 <p className="text-sm text-gray-400">En rupture</p>
                 <p className="text-2xl font-bold text-white">{stats.rupture}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-blue-600/20 border-blue-600/50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <DollarSign className="w-8 h-8 text-blue-400" />
+              <div>
+                <p className="text-sm text-gray-400">Prix Total Achat</p>
+                <p className="text-2xl font-bold text-white">{priceStats.totalAchat.toLocaleString()} MAD</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-emerald-600/20 border-emerald-600/50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <TrendingUp className="w-8 h-8 text-emerald-400" />
+              <div>
+                <p className="text-sm text-gray-400">Prix Total Vente</p>
+                <p className="text-2xl font-bold text-white">{priceStats.totalVente.toLocaleString()} MAD</p>
               </div>
             </div>
           </CardContent>
@@ -816,25 +880,57 @@ export default function PCPortableNew() {
                       </div>
                     )}
                   </div>
-                  
-                  <div className="flex justify-end gap-2 mt-4">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openEditDialog(product)}
-                      className="text-gaming-purple hover:bg-gaming-purple/20 h-8 w-8 p-0"
-                    >
-                      <Edit className="w-3 h-3" />
-                    </Button>
+
+                  {/* Actions */}
+                  <div className="border-t border-gray-700 pt-3 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <Button
+                        onClick={() => navigate(`/pc-portable/${product.id}`)}
+                        variant="outline"
+                        size="sm"
+                        className="border-gaming-cyan text-gaming-cyan hover:bg-gaming-cyan hover:text-white"
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        Voir détails
+                      </Button>
+                      
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => openEditDialog(product)}
+                          variant="ghost"
+                          size="sm"
+                          className="text-gaming-purple hover:bg-gaming-purple/20"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          onClick={() => handleDeleteProduct(product.id!)}
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-400 hover:bg-red-400/20"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
                     
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteProduct(product.id)}
-                      className="text-red-400 hover:bg-red-400/20 h-8 w-8 p-0"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
+                    {/* Bouton d'assignation */}
+                    <AssignProductDialog
+                      productId={product.id!}
+                      productType="pc_portable"
+                      productName={product.nom_produit}
+                      productCode={product.code_barre}
+                      trigger={
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full border-gaming-purple text-gaming-purple hover:bg-gaming-purple hover:text-white"
+                        >
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          Assigner à l'équipe
+                        </Button>
+                      }
+                    />
                   </div>
                 </CardContent>
               </Card>
