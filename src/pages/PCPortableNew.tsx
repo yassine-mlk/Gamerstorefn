@@ -34,7 +34,7 @@ import { AssignProductDialog } from "@/components/AssignProductDialog";
 import { uploadImageByType, uploadImageFromBase64ByType } from "@/lib/imageUpload";
 
 // Marques par défaut - seront gérées via les paramètres plus tard
-const marques = ["ASUS", "Apple", "HP", "Dell", "Lenovo", "Acer", "MSI", "Alienware", "Razer", "Samsung"];
+const marques = ["Acemajic", "Acer", "Alienware", "Apple", "ASUS", "Clevo", "Dell", "Gigabyte", "HP", "Lenovo", "MSI", "Razer", "Samsung"];
 const garanties = ["Sans garantie", "3 mois", "6 mois", "9 mois", "12 mois"];
 const etats = ["Neuf", "Comme neuf", "Occasion"];
 
