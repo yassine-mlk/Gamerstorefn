@@ -26,7 +26,10 @@ import {
   UserPlus,
   DollarSign,
   TrendingUp,
-  Barcode
+  Barcode,
+  ChevronDown,
+  ChevronRight,
+  Package
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePcPortables, PcPortable, NewPcPortable } from "@/hooks/usePcPortables";
@@ -195,6 +198,9 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
   const [isMultipleBarcodeMode, setIsMultipleBarcodeMode] = useState(false);
   const [multipleBarcodes, setMultipleBarcodes] = useState<string[]>([""]);
   const [multipleDepots, setMultipleDepots] = useState<('magasin principal' | 'depot')[]>(["magasin principal"]);
+  
+  // État pour gérer l'expansion des groupes de produits
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   const [newProduct, setNewProduct] = useState<NewPcPortable>({
     nom_produit: "",
@@ -656,8 +662,47 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
     setMultipleDepots(newDepots);
   };
 
+  // Fonction pour gérer l'expansion des groupes
+  const toggleGroupExpansion = (productKey: string) => {
+    const newExpanded = new Set(expandedGroups);
+    if (newExpanded.has(productKey)) {
+      newExpanded.delete(productKey);
+    } else {
+      newExpanded.add(productKey);
+    }
+    setExpandedGroups(newExpanded);
+  };
+
   const stats = getStockStats();
   const priceStats = getPriceStats(filteredProducts);
+
+  // Fonction pour regrouper les produits par nom et modèle
+  const getGroupedProducts = () => {
+    const groups: { [key: string]: PcPortable[] } = {};
+    
+    filteredProducts.forEach(product => {
+      const key = `${product.nom_produit}-${product.marque}-${product.modele || ''}`;
+      if (!groups[key]) {
+        groups[key] = [];
+      }
+      groups[key].push(product);
+    });
+
+    return Object.values(groups).map(group => {
+      const representative = group[0]; // Premier produit comme représentant
+      const totalStock = group.reduce((sum, p) => sum + p.stock_actuel, 0);
+      const exemplaires = group.length;
+      
+      return {
+        ...representative,
+        groupedStock: totalStock,
+        exemplairesCount: exemplaires,
+        exemplaires: group
+      };
+    });
+  };
+
+  const groupedProducts = getGroupedProducts();
 
   const activeFournisseurs = suppliers.filter(s => s.statut === 'Actif' || s.statut === 'Privilégié');
 
@@ -1194,18 +1239,20 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
-                    <Label htmlFor="depot">Dépôt de stockage</Label>
-                    <Select value={newProduct.depot} onValueChange={(value: 'magasin principal' | 'depot') => setNewProduct({ ...newProduct, depot: value })}>
-                      <SelectTrigger className="bg-white border-gray-200">
-                        <SelectValue placeholder="Sélectionner le dépôt" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-200">
-                        <SelectItem value="magasin principal">🏪 Magasin principal</SelectItem>
-                        <SelectItem value="depot">📦 Dépôt</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  {!isMultipleBarcodeMode && (
+                    <div>
+                      <Label htmlFor="depot">Dépôt de stockage</Label>
+                      <Select value={newProduct.depot} onValueChange={(value: 'magasin principal' | 'depot') => setNewProduct({ ...newProduct, depot: value })}>
+                        <SelectTrigger className="bg-white border-gray-200">
+                          <SelectValue placeholder="Sélectionner le dépôt" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-200">
+                          <SelectItem value="magasin principal">🏪 Magasin principal</SelectItem>
+                          <SelectItem value="depot">📦 Dépôt</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1331,146 +1378,179 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
             PC Portables
           </CardTitle>
           <CardDescription className="text-gray-600">
-            {filteredProducts.length} PC portable(s) trouvé(s)
+            {groupedProducts.length} produit(s) trouvé(s) • {filteredProducts.length} exemplaire(s)
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProducts.map((product) => (
-              <Card key={product.id} className="bg-white border-gray-200 hover:border-gaming-purple/50 transition-all">
-                <CardContent className="p-4">
-                  {/* Image */}
-                  <div className="w-full h-48 bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
-                    {product.image_url ? (
-                      <img 
-                        src={product.image_url} 
-                        alt={product.nom_produit}
-                        className="w-full h-full object-contain rounded-lg"
-                      />
-                    ) : (
-                      <ImageIcon className="w-16 h-16 text-gray-500" />
-                    )}
-                  </div>
+          <div className="space-y-6">
+            {groupedProducts.map((group) => {
+              const productKey = `${group.nom_produit}-${group.marque}-${group.modele || ''}`;
+              const isExpanded = expandedGroups.has(productKey);
+              
+              return (
+                <div key={productKey}>
+                  {/* Produit principal (regroupé) */}
+                  <Card className="bg-white border-gray-200 hover:shadow-md transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-4">
+                        {/* Image */}
+                        <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200 flex-shrink-0">
+                          {group.image_url ? (
+                            <img 
+                              src={group.image_url} 
+                              alt={group.nom_produit}
+                              className="w-full h-full object-contain rounded-lg"
+                            />
+                          ) : (
+                            <ImageIcon className="w-8 h-8 text-gray-400" />
+                          )}
+                        </div>
 
-                  {/* Header */}
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1">
-                      <h3 className="text-gray-900 font-medium text-lg">{product.nom_produit}</h3>
-                      <p className="text-gaming-cyan text-sm">{product.marque} {product.modele}</p>
-                      <Badge className="mt-1 text-xs bg-gray-200">{product.etat}</Badge>
-                    </div>
-                    <Badge className={`${getStatutColor(product.statut)} text-xs ml-2`}>
-                      {product.statut}
-                    </Badge>
-                  </div>
-                  
-                  {/* Specs */}
-                  <div className="space-y-2 mb-4">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Processeur:</span>
-                      <span className="text-gray-900 truncate ml-2">{product.processeur}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">RAM:</span>
-                      <span className="text-gray-900">{product.ram}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Stockage:</span>
-                      <span className="text-gray-900">{product.stockage}</span>
-                    </div>
-                    {product.carte_graphique && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">GPU:</span>
-                        <span className="text-gray-900 truncate ml-2">{product.carte_graphique}</span>
-                      </div>
-                    )}
-                    {product.ecran && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Écran:</span>
-                        <span className="text-gray-900">{product.ecran}</span>
-                      </div>
-                    )}
-                  </div>
+                        {/* Informations principales */}
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <h3 className="text-gray-900 font-medium text-lg">{group.nom_produit}</h3>
+                              <p className="text-gaming-cyan text-sm">{group.marque} {group.modele}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge className="bg-gray-100 text-gray-700">
+                                <Package className="w-3 h-3 mr-1" />
+                                {group.exemplairesCount} exemplaire{group.exemplairesCount > 1 ? 's' : ''}
+                              </Badge>
+                              <Badge className={getStatutColor(group.statut)}>
+                                Stock: {group.groupedStock}
+                              </Badge>
+                            </div>
+                          </div>
+                          
+                          {/* Spécifications résumées */}
+                          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm mb-3">
+                            <div>
+                              <span className="text-gray-600">Processeur:</span>
+                              <p className="text-gray-900 truncate">{group.processeur}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">RAM:</span>
+                              <p className="text-gray-900">{group.ram}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Stockage:</span>
+                              <p className="text-gray-900">{group.stockage}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Prix:</span>
+                              <p className="text-gaming-green font-semibold">{group.prix_vente} MAD</p>
+                            </div>
+                          </div>
 
-                  {/* Commercial Info */}
-                  <div className="border-t border-gray-200 pt-3 space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 text-sm">Prix d'achat:</span>
-                      <span className="text-gaming-green font-semibold">{product.prix_achat} MAD</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 text-sm">Prix de vente:</span>
-                      <span className="text-gaming-green font-semibold">{product.prix_vente} MAD</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600 text-sm">Stock:</span>
-                      <span className="text-gray-900">{product.stock_actuel} / {product.stock_minimum}</span>
-                    </div>
-                    {product.garantie && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600 text-sm">Garantie:</span>
-                        <span className="text-gray-600 text-sm">{product.garantie}</span>
+                          {/* Actions */}
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => toggleGroupExpansion(productKey)}
+                              variant="outline"
+                              size="sm"
+                              className="border-gaming-cyan text-gaming-cyan hover:bg-gaming-cyan hover:text-gray-900"
+                            >
+                              {isExpanded ? <ChevronDown className="w-4 h-4 mr-2" /> : <ChevronRight className="w-4 h-4 mr-2" />}
+                              {isExpanded ? 'Masquer' : 'Voir'} exemplaires
+                            </Button>
+                            
+                            {group.exemplairesCount === 1 && (
+                              <>
+                                <Button
+                                  onClick={() => navigate(`/pc-portable/${group.id}`)}
+                                  variant="outline"
+                                  size="sm"
+                                  className="border-gaming-purple text-gaming-purple hover:bg-gaming-purple hover:text-gray-900"
+                                >
+                                  <Eye className="w-4 h-4 mr-2" />
+                                  Détails
+                                </Button>
+                                
+                                <Button
+                                  onClick={() => openEditDialog(group)}
+                                  variant="outline"
+                                  size="sm"
+                                  className="border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white"
+                                >
+                                  <Edit className="w-4 h-4 mr-2" />
+                                  Modifier
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    )}
-                  </div>
+                    </CardContent>
+                  </Card>
 
-                  {/* Actions */}
-                  <div className="border-t border-gray-200 pt-3 space-y-3">
-                    <div className="flex justify-between items-center">
-                      <Button
-                        onClick={() => navigate(`/pc-portable/${product.id}`)}
-                        variant="outline"
-                        size="sm"
-                        className="border-gaming-cyan text-gaming-cyan hover:bg-gaming-cyan hover:text-gray-900"
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        Voir détails
-                      </Button>
-                      
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={() => openEditDialog(product)}
-                          variant="ghost"
-                          size="sm"
-                          className="text-gaming-purple hover:bg-gaming-purple/20"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          onClick={() => handleDeleteProduct(product.id!)}
-                          variant="ghost"
-                          size="sm"
-                          className="text-red-400 hover:bg-red-400/20"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
+                  {/* Exemplaires individuels (quand expandu) */}
+                  {isExpanded && (
+                    <div className="ml-8 mt-4 space-y-3">
+                      <h4 className="text-sm font-medium text-gray-700">Exemplaires individuels :</h4>
+                      {group.exemplaires.map((exemplaire, index) => (
+                        <Card key={exemplaire.id} className="bg-gray-50 border-gray-200">
+                          <CardContent className="p-3">
+                            <div className="flex justify-between items-center">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <Barcode className="w-4 h-4 text-gray-500" />
+                                  <span className="font-mono text-sm text-gray-900">
+                                    {exemplaire.code_barre || 'Non défini'}
+                                  </span>
+                                  <Badge className="bg-blue-100 text-blue-700 text-xs">
+                                    {(exemplaire as any).depot || 'Non défini'}
+                                  </Badge>
+                                </div>
+                                <div className="text-xs text-gray-600">
+                                  Stock: {exemplaire.stock_actuel} • 
+                                  Statut: <span className={`font-medium ${exemplaire.statut === 'Disponible' ? 'text-green-600' : 'text-yellow-600'}`}>
+                                    {exemplaire.statut}
+                                  </span>
+                                </div>
+                              </div>
+                              
+                              <div className="flex gap-1">
+                                <Button
+                                  onClick={() => navigate(`/pc-portable/${exemplaire.id}`)}
+                                  variant="outline"
+                                  size="sm"
+                                  className="border-gaming-cyan text-gaming-cyan hover:bg-gaming-cyan hover:text-gray-900 h-8 px-2"
+                                >
+                                  <Eye className="w-3 h-3" />
+                                </Button>
+                                
+                                <Button
+                                  onClick={() => openEditDialog(exemplaire)}
+                                  variant="outline"
+                                  size="sm"
+                                  className="border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white h-8 px-2"
+                                >
+                                  <Edit className="w-3 h-3" />
+                                </Button>
+                                
+                                <Button
+                                  onClick={() => handleDeleteProduct(exemplaire.id!)}
+                                  variant="outline"
+                                  size="sm"
+                                  className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white h-8 px-2"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
-                    
-                    {/* Bouton d'assignation */}
-                    <AssignProductDialog
-                      productId={product.id!}
-                      productType="pc_portable"
-                      productName={product.nom_produit}
-                      productCode={product.code_barre}
-                      trigger={
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full border-gaming-purple text-gaming-purple hover:bg-gaming-purple hover:text-gray-900"
-                        >
-                          <UserPlus className="w-4 h-4 mr-2" />
-                          Assigner à l'équipe
-                        </Button>
-                      }
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  )}
+                </div>
+              );
+            })}
             
-            {filteredProducts.length === 0 && (
-              <div className="col-span-full text-center py-8">
+            {groupedProducts.length === 0 && (
+              <div className="text-center py-8">
                 <Laptop className="w-12 h-12 mx-auto text-gray-600 mb-4" />
                 <p className="text-gray-600">Aucun PC portable trouvé</p>
               </div>
