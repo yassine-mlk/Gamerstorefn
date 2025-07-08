@@ -32,7 +32,7 @@ import { uploadImageByType, uploadImageFromBase64ByType } from "@/lib/imageUploa
 const marques = ["DXRacer", "Secretlab", "Corsair", "Razer", "ASUS ROG", "MSI", "Noblechairs", "AKRacing", "Vertagear", "Cooler Master"];
 const garanties = ["Sans garantie", "3 mois", "6 mois", "9 mois", "12 mois"];
 
-export default function ChaisesGaming() {
+export default function ChaisesGaming({ embedded = false }: { embedded?: boolean }) {
   const { suppliers, loading: loadingSuppliers } = useSuppliers();
   const { chaisesGaming, loading, addChaiseGaming, updateChaiseGaming, deleteChaiseGaming } = useChaisesGamingSupabase();
   const [searchTerm, setSearchTerm] = useState("");
@@ -313,19 +313,36 @@ export default function ChaisesGaming() {
   }
 
   return (
-    <div className="p-6 space-y-6 bg-background min-h-screen">
-      {/* Header */}
+    <div className={embedded ? "space-y-6" : "p-6 space-y-6 bg-background min-h-screen"}>
+      {!embedded && (
+        <>
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <SidebarTrigger className="text-white hover:text-gaming-cyan" />
+              <div>
+                <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+                  <Armchair className="w-8 h-8 text-gaming-cyan" />
+                  Chaises Gaming
+                </h1>
+                <p className="text-gray-400">Gestion du stock des chaises gaming</p>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+      
+      {/* En-tête avec bouton d'ajout */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <SidebarTrigger className="text-white hover:text-gaming-cyan" />
+        {embedded && (
           <div>
-            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-              <Armchair className="w-8 h-8 text-gaming-cyan" />
+            <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+              <Armchair className="w-6 h-6 text-gaming-cyan" />
               Chaises Gaming
-            </h1>
+            </h2>
             <p className="text-gray-400">Gestion du stock des chaises gaming</p>
           </div>
-        </div>
+        )}
         
         <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
           setIsAddDialogOpen(open);

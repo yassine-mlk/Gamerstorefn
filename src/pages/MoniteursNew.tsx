@@ -35,7 +35,7 @@ const tailles = ["19\"", "21.5\"", "24\"", "27\"", "28\"", "32\"", "34\"", "35\"
 const resolutions = ["1920x1080", "2560x1440", "3840x2160", "2560x1080", "3440x1440", "5120x1440"];
 const frequences = ["60Hz", "75Hz", "100Hz", "120Hz", "144Hz", "165Hz", "180Hz", "240Hz", "280Hz", "360Hz"];
 
-export default function MoniteursNew() {
+export default function MoniteursNew({ embedded = false }: { embedded?: boolean }) {
   const { moniteurs, loading, addMoniteur, updateMoniteur, deleteMoniteur } = useMoniteurs();
   const { suppliers, loading: loadingSuppliers } = useSuppliers();
   const [searchTerm, setSearchTerm] = useState("");
@@ -331,16 +331,33 @@ export default function MoniteursNew() {
   }
 
   return (
-    <div className="p-6 space-y-6 bg-background min-h-screen">
-      {/* Header */}
+    <div className={embedded ? "space-y-6" : "p-6 space-y-6 bg-background min-h-screen"}>
+      {!embedded && (
+        <>
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <SidebarTrigger />
+              <div>
+                <h1 className="text-3xl font-bold text-white">Gestion des Moniteurs</h1>
+                <p className="text-gray-400">Gérer l'inventaire des moniteurs</p>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+      
+      {/* En-tête avec bouton d'ajout */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <SidebarTrigger />
+        {embedded && (
           <div>
-            <h1 className="text-3xl font-bold text-white">Gestion des Moniteurs</h1>
+            <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+              <Monitor className="w-6 h-6 text-gaming-cyan" />
+              Moniteurs
+            </h2>
             <p className="text-gray-400">Gérer l'inventaire des moniteurs</p>
           </div>
-        </div>
+        )}
         
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>

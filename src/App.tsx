@@ -16,6 +16,7 @@ import PCGamer from "./pages/PCGamer";
 import MoniteursNew from "./pages/MoniteursNew";
 import ChaisesGaming from "./pages/ChaisesGamingSimple";
 import Peripheriques from "./pages/Peripheriques";
+import Stock from "./pages/Stock";
 import Sales from "./pages/Sales";
 import PointOfSale from "./pages/PointOfSale";
 import VendeurPOS from "./pages/VendeurPOS";
@@ -88,14 +89,15 @@ const AppContent = () => {
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/clients" element={<Clients />} />
                   <Route path="/suppliers" element={<Suppliers />} />
-                  <Route path="/pc-portable" element={<PCPortable />} />
-                  <Route path="/pc-portable/:id" element={<PCPortableDetails />} />
-                  <Route path="/composants-pc" element={<ComposantsPC />} />
-                  <Route path="/composants-pc/:id" element={<ComposantsPCDetails />} />
-                  <Route path="/pc-gamer" element={<PCGamer />} />
-                  <Route path="/moniteurs" element={<MoniteursNew />} />
-                  <Route path="/chaises-gaming" element={<ChaisesGaming />} />
-                  <Route path="/peripheriques" element={<Peripheriques />} />
+                                <Route path="/stock" element={<Stock />} />
+              <Route path="/pc-portable" element={<PCPortable />} />
+              <Route path="/pc-portable/:id" element={<PCPortableDetails />} />
+              <Route path="/composants-pc" element={<ComposantsPC />} />
+              <Route path="/composants-pc/:id" element={<ComposantsPCDetails />} />
+              <Route path="/pc-gamer" element={<PCGamer />} />
+              <Route path="/moniteurs" element={<MoniteursNew />} />
+              <Route path="/chaises-gaming" element={<ChaisesGaming />} />
+              <Route path="/peripheriques" element={<Peripheriques />} />
                   <Route path="/sales" element={<Sales />} />
                   <Route path="/point-of-sale" element={<PointOfSale />} />
                   <Route path="/delivery" element={<Delivery />} />

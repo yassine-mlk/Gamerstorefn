@@ -57,34 +57,9 @@ const adminMenuItems = [
     icon: Truck,
   },
   {
-    title: "PC Portables",
-    url: "/pc-portable",
-    icon: Laptop,
-  },
-  {
-    title: "Composants PC",
-    url: "/composants-pc",
-    icon: Cpu,
-  },
-  {
-    title: "PC Gamer",
-    url: "/pc-gamer",
-    icon: Settings,
-  },
-  {
-    title: "Moniteurs",
-    url: "/moniteurs",
-    icon: Monitor,
-  },
-  {
-    title: "Chaises Gaming",
-    url: "/chaises-gaming",
-    icon: Armchair,
-  },
-  {
-    title: "Périphériques",
-    url: "/peripheriques",
-    icon: Mouse,
+    title: "Stock",
+    url: "/stock",
+    icon: Package,
   },
   {
     title: "Ventes",

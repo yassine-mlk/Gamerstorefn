@@ -48,7 +48,7 @@ const categories = [
 const garanties = ["Sans garantie", "3 mois", "6 mois", "9 mois", "12 mois"];
 const etats = ["Neuf", "Comme neuf", "Occasion"];
 
-export default function Peripheriques() {
+export default function Peripheriques({ embedded = false }: { embedded?: boolean }) {
   const { peripheriques, loading, addPeripherique, updatePeripherique, deletePeripherique } = usePeripheriques();
   const { suppliers, loading: loadingSuppliers } = useSuppliers();
   const { settings } = useSettings();
@@ -352,16 +352,33 @@ export default function Peripheriques() {
   }
 
   return (
-    <div className="p-6 space-y-6 bg-background min-h-screen">
-      {/* Header */}
+    <div className={embedded ? "space-y-6" : "p-6 space-y-6 bg-background min-h-screen"}>
+      {!embedded && (
+        <>
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <SidebarTrigger />
+              <div>
+                <h1 className="text-3xl font-bold text-white">Gestion des Périphériques</h1>
+                <p className="text-gray-400">Gérer l'inventaire des périphériques</p>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+      
+      {/* En-tête avec bouton d'ajout */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <SidebarTrigger />
+        {embedded && (
           <div>
-            <h1 className="text-3xl font-bold text-white">Gestion des Périphériques</h1>
+            <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+              <Mouse className="w-6 h-6 text-gaming-cyan" />
+              Périphériques
+            </h2>
             <p className="text-gray-400">Gérer l'inventaire des périphériques</p>
           </div>
-        </div>
+        )}
         
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>

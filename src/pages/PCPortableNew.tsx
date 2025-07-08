@@ -38,7 +38,134 @@ const marques = ["ASUS", "Apple", "HP", "Dell", "Lenovo", "Acer", "MSI", "Alienw
 const garanties = ["Sans garantie", "3 mois", "6 mois", "9 mois", "12 mois"];
 const etats = ["Neuf", "Comme neuf", "Occasion"];
 
-export default function PCPortableNew() {
+// Processeurs Intel
+const processeursIntel = [
+  // Intel Core i3
+  "Intel Core i3-1115G4", "Intel Core i3-1125G4", "Intel Core i3-1215U", "Intel Core i3-1220P",
+  "Intel Core i3-12100H", "Intel Core i3-13100H",
+  // Intel Core i5
+  "Intel Core i5-1135G7", "Intel Core i5-1155G7", "Intel Core i5-1235U", "Intel Core i5-1240P",
+  "Intel Core i5-1245U", "Intel Core i5-12450H", "Intel Core i5-12500H", "Intel Core i5-1335U",
+  "Intel Core i5-1340P", "Intel Core i5-13420H", "Intel Core i5-13500H", "Intel Core i5-1350P",
+  // Intel Core i7
+  "Intel Core i7-1165G7", "Intel Core i7-1185G7", "Intel Core i7-1255U", "Intel Core i7-1260P",
+  "Intel Core i7-1265U", "Intel Core i7-12650H", "Intel Core i7-12700H", "Intel Core i7-1355U",
+  "Intel Core i7-1360P", "Intel Core i7-1365U", "Intel Core i7-13620H", "Intel Core i7-13700H",
+  "Intel Core i7-1370P", "Intel Core i7-13750H",
+  // Intel Core i9
+  "Intel Core i9-12900H", "Intel Core i9-12900HK", "Intel Core i9-13900H", "Intel Core i9-13900HK",
+  "Intel Core i9-13950HX", "Intel Core i9-13980HX"
+];
+
+// Processeurs AMD
+const processeursAMD = [
+  // AMD Ryzen 3
+  "AMD Ryzen 3 5300U", "AMD Ryzen 3 7320U", "AMD Ryzen 3 7330U",
+  // AMD Ryzen 5
+  "AMD Ryzen 5 5500U", "AMD Ryzen 5 5600U", "AMD Ryzen 5 5625U", "AMD Ryzen 5 6600H",
+  "AMD Ryzen 5 6600HS", "AMD Ryzen 5 7520U", "AMD Ryzen 5 7530U", "AMD Ryzen 5 7535HS",
+  "AMD Ryzen 5 7535U", "AMD Ryzen 5 7540U", "AMD Ryzen 5 7600X", "AMD Ryzen 5 7640HS",
+  "AMD Ryzen 5 7640U",
+  // AMD Ryzen 7
+  "AMD Ryzen 7 5700U", "AMD Ryzen 7 5800H", "AMD Ryzen 7 5800HS", "AMD Ryzen 7 6800H",
+  "AMD Ryzen 7 6800HS", "AMD Ryzen 7 6800U", "AMD Ryzen 7 7730U", "AMD Ryzen 7 7735HS",
+  "AMD Ryzen 7 7735U", "AMD Ryzen 7 7736U", "AMD Ryzen 7 7740HS", "AMD Ryzen 7 7840HS",
+  "AMD Ryzen 7 7840U",
+  // AMD Ryzen 9
+  "AMD Ryzen 9 5900HX", "AMD Ryzen 9 5980HX", "AMD Ryzen 9 6900HX", "AMD Ryzen 9 6980HX",
+  "AMD Ryzen 9 7940HS", "AMD Ryzen 9 7945HX"
+];
+
+// Processeurs Apple (pour MacBook)
+const processeursApple = [
+  "Apple M1", "Apple M1 Pro", "Apple M1 Max", "Apple M1 Ultra",
+  "Apple M2", "Apple M2 Pro", "Apple M2 Max", "Apple M2 Ultra",
+  "Apple M3", "Apple M3 Pro", "Apple M3 Max"
+];
+
+// Combiner tous les processeurs
+const processeurs = [
+  ...processeursIntel,
+  ...processeursAMD,
+  ...processeursApple
+].sort();
+
+// Cartes graphiques NVIDIA
+const cartesGraphiquesNVIDIA = [
+  // RTX 40 Series
+  "NVIDIA GeForce RTX 4090", "NVIDIA GeForce RTX 4080", "NVIDIA GeForce RTX 4070 Ti",
+  "NVIDIA GeForce RTX 4070", "NVIDIA GeForce RTX 4060 Ti", "NVIDIA GeForce RTX 4060",
+  "NVIDIA GeForce RTX 4050",
+  // RTX 30 Series
+  "NVIDIA GeForce RTX 3080 Ti", "NVIDIA GeForce RTX 3080", "NVIDIA GeForce RTX 3070 Ti",
+  "NVIDIA GeForce RTX 3070", "NVIDIA GeForce RTX 3060", "NVIDIA GeForce RTX 3050 Ti",
+  "NVIDIA GeForce RTX 3050",
+  // GTX Series
+  "NVIDIA GeForce GTX 1660 Ti", "NVIDIA GeForce GTX 1650 Ti", "NVIDIA GeForce GTX 1650",
+  // MX Series
+  "NVIDIA GeForce MX570", "NVIDIA GeForce MX550", "NVIDIA GeForce MX450", "NVIDIA GeForce MX350"
+];
+
+// Cartes graphiques AMD
+const cartesGraphiquesAMD = [
+  // RX 7000 Series
+  "AMD Radeon RX 7900M", "AMD Radeon RX 7800M", "AMD Radeon RX 7700S", "AMD Radeon RX 7600M XT",
+  "AMD Radeon RX 7600M", "AMD Radeon RX 7500M",
+  // RX 6000 Series
+  "AMD Radeon RX 6850M XT", "AMD Radeon RX 6800M", "AMD Radeon RX 6700M", "AMD Radeon RX 6650M XT",
+  "AMD Radeon RX 6650M", "AMD Radeon RX 6600M", "AMD Radeon RX 6500M", "AMD Radeon RX 6300M",
+  // Vega et anciennes
+  "AMD Radeon RX Vega 8", "AMD Radeon RX Vega 11"
+];
+
+// Graphiques intégrés
+const graphiquesIntegres = [
+  "Intel Iris Xe Graphics", "Intel UHD Graphics", "Intel HD Graphics 620",
+  "AMD Radeon Graphics", "Apple GPU (intégré)"
+];
+
+// Combiner toutes les cartes graphiques
+const cartesGraphiques = [
+  "Aucune (Graphiques intégrés)",
+  ...cartesGraphiquesNVIDIA,
+  ...cartesGraphiquesAMD,
+  ...graphiquesIntegres
+].sort();
+
+// Tailles d'écran
+const taillesEcran = [
+  '11.6"', '12.3"', '13.3"', '13.4"', '13.5"', '14"', '14.2"',
+  '15.6"', '16"', '16.2"', '17.3"', '18.4"'
+];
+
+// Résolutions d'écran
+const resolutionsEcran = [
+  "HD (1366x768)", "Full HD (1920x1080)", "2K (2560x1440)", 
+  "4K (3840x2160)", "Retina", "Touch Screen"
+];
+
+// Types de RAM
+const typesRAM = [
+  // DDR3
+  "DDR3 4GB", "DDR3 8GB", "DDR3 16GB",
+  // DDR4
+  "DDR4 4GB", "DDR4 8GB", "DDR4 16GB", "DDR4 32GB", "DDR4 64GB",
+  // DDR5
+  "DDR5 8GB", "DDR5 16GB", "DDR5 32GB", "DDR5 64GB", "DDR5 128GB",
+  // Configurations mixtes
+  "8GB DDR4 (4GB x2)", "16GB DDR4 (8GB x2)", "32GB DDR4 (16GB x2)",
+  "16GB DDR5 (8GB x2)", "32GB DDR5 (16GB x2)", "64GB DDR5 (32GB x2)"
+];
+
+// Types de stockage
+const typesStockage = [
+  "SSD 128GB", "SSD 256GB", "SSD 512GB", "SSD 1TB", "SSD 2TB",
+  "NVMe 256GB", "NVMe 512GB", "NVMe 1TB", "NVMe 2TB",
+  "HDD 500GB", "HDD 1TB", "HDD 2TB",
+  "SSD 256GB + HDD 1TB", "SSD 512GB + HDD 1TB", "SSD 1TB + HDD 1TB"
+];
+
+export default function PCPortableNew({ embedded = false }: { embedded?: boolean }) {
   const { pcPortables, loading, addPcPortable, updatePcPortable, deletePcPortable } = usePcPortables();
   const { suppliers, loading: loadingSuppliers } = useSuppliers();
   const [searchTerm, setSearchTerm] = useState("");
@@ -356,19 +483,36 @@ export default function PCPortableNew() {
   }
 
   return (
-    <div className="p-6 space-y-6 bg-background min-h-screen">
-      {/* Header */}
+    <div className={embedded ? "space-y-6" : "p-6 space-y-6 bg-background min-h-screen"}>
+      {!embedded && (
+        <>
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <SidebarTrigger className="text-white hover:text-gaming-cyan" />
+              <div>
+                <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+                  <Laptop className="w-8 h-8 text-gaming-cyan" />
+                  PC Portables
+                </h1>
+                <p className="text-gray-400">Gestion du stock des ordinateurs portables</p>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+      
+      {/* En-tête avec bouton d'ajout */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <SidebarTrigger className="text-white hover:text-gaming-cyan" />
+        {embedded && (
           <div>
-            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-              <Laptop className="w-8 h-8 text-gaming-cyan" />
+            <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+              <Laptop className="w-6 h-6 text-gaming-cyan" />
               PC Portables
-            </h1>
+            </h2>
             <p className="text-gray-400">Gestion du stock des ordinateurs portables</p>
           </div>
-        </div>
+        )}
         
         <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
           setIsAddDialogOpen(open);
@@ -447,13 +591,20 @@ export default function PCPortableNew() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="ecran">Écran</Label>
-                  <Input
-                    id="ecran"
-                    value={newProduct.ecran}
-                    onChange={(e) => setNewProduct({ ...newProduct, ecran: e.target.value })}
-                    className="bg-gray-800 border-gray-600"
-                    placeholder="Ex: 15.6'' Full HD"
-                  />
+                  <Select value={newProduct.ecran} onValueChange={(value) => setNewProduct({ ...newProduct, ecran: value })}>
+                    <SelectTrigger className="bg-gray-800 border-gray-600">
+                      <SelectValue placeholder="Sélectionner la taille d'écran" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-800 border-gray-600 max-h-[200px]">
+                      {taillesEcran.map((taille) => (
+                        <SelectItem key={taille} value={taille}>{taille}</SelectItem>
+                      ))}
+                      <div className="border-t border-gray-600 my-1"></div>
+                      {resolutionsEcran.map((resolution) => (
+                        <SelectItem key={resolution} value={resolution}>{resolution}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label htmlFor="etat">État *</Label>
@@ -477,46 +628,58 @@ export default function PCPortableNew() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="processeur">Processeur *</Label>
-                    <Input
-                      id="processeur"
-                      value={newProduct.processeur}
-                      onChange={(e) => setNewProduct({ ...newProduct, processeur: e.target.value })}
-                      className="bg-gray-800 border-gray-600"
-                      placeholder="Ex: Intel Core i7-12700H"
-                    />
+                    <Select value={newProduct.processeur} onValueChange={(value) => setNewProduct({ ...newProduct, processeur: value })}>
+                      <SelectTrigger className="bg-gray-800 border-gray-600">
+                        <SelectValue placeholder="Sélectionner un processeur" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-800 border-gray-600 max-h-[200px]">
+                        {processeurs.map((processeur) => (
+                          <SelectItem key={processeur} value={processeur}>{processeur}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <Label htmlFor="ram">Mémoire RAM *</Label>
-                    <Input
-                      id="ram"
-                      value={newProduct.ram}
-                      onChange={(e) => setNewProduct({ ...newProduct, ram: e.target.value })}
-                      className="bg-gray-800 border-gray-600"
-                      placeholder="Ex: 16 GB DDR5"
-                    />
+                    <Select value={newProduct.ram} onValueChange={(value) => setNewProduct({ ...newProduct, ram: value })}>
+                      <SelectTrigger className="bg-gray-800 border-gray-600">
+                        <SelectValue placeholder="Sélectionner la RAM" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-800 border-gray-600 max-h-[200px]">
+                        {typesRAM.map((ram) => (
+                          <SelectItem key={ram} value={ram}>{ram}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <div>
                     <Label htmlFor="stockage">Stockage *</Label>
-                    <Input
-                      id="stockage"
-                      value={newProduct.stockage}
-                      onChange={(e) => setNewProduct({ ...newProduct, stockage: e.target.value })}
-                      className="bg-gray-800 border-gray-600"
-                      placeholder="Ex: 512 GB SSD NVMe"
-                    />
+                    <Select value={newProduct.stockage} onValueChange={(value) => setNewProduct({ ...newProduct, stockage: value })}>
+                      <SelectTrigger className="bg-gray-800 border-gray-600">
+                        <SelectValue placeholder="Sélectionner le stockage" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-800 border-gray-600 max-h-[200px]">
+                        {typesStockage.map((stockage) => (
+                          <SelectItem key={stockage} value={stockage}>{stockage}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <Label htmlFor="carte_graphique">Carte graphique</Label>
-                    <Input
-                      id="carte_graphique"
-                      value={newProduct.carte_graphique}
-                      onChange={(e) => setNewProduct({ ...newProduct, carte_graphique: e.target.value })}
-                      className="bg-gray-800 border-gray-600"
-                      placeholder="Ex: NVIDIA RTX 4060 8GB"
-                    />
+                    <Select value={newProduct.carte_graphique} onValueChange={(value) => setNewProduct({ ...newProduct, carte_graphique: value })}>
+                      <SelectTrigger className="bg-gray-800 border-gray-600">
+                        <SelectValue placeholder="Sélectionner la carte graphique" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-800 border-gray-600 max-h-[200px]">
+                        {cartesGraphiques.map((carte) => (
+                          <SelectItem key={carte} value={carte}>{carte}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>
@@ -530,7 +693,7 @@ export default function PCPortableNew() {
                       <img 
                         src={imagePreview} 
                         alt="Aperçu" 
-                        className="w-full h-48 object-cover rounded-lg border border-gray-600"
+                        className="w-full h-48 object-contain rounded-lg border border-gray-600"
                       />
                     </div>
                   )}
@@ -812,7 +975,7 @@ export default function PCPortableNew() {
                       <img 
                         src={product.image_url} 
                         alt={product.nom_produit}
-                        className="w-full h-full object-cover rounded-lg"
+                        className="w-full h-full object-contain rounded-lg"
                       />
                     ) : (
                       <ImageIcon className="w-16 h-16 text-gray-500" />

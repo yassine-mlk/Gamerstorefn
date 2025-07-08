@@ -71,13 +71,7 @@ export default function Clients() {
   }, [clients, searchTerm]);
 
   const handleAddClient = async () => {
-    if (!newClient.nom || !newClient.prenom || !newClient.email) {
-      return;
-    }
-
-    // Validation ICE pour les sociétés
-    if (newClient.type_client === 'societe' && !newClient.ice?.trim()) {
-      alert("Le numéro ICE est obligatoire pour les sociétés");
+    if (!newClient.nom) {
       return;
     }
 
@@ -99,13 +93,7 @@ export default function Clients() {
   };
 
   const handleEditClient = async () => {
-    if (!selectedClient || !newClient.nom || !newClient.prenom || !newClient.email) {
-      return;
-    }
-
-    // Validation ICE pour les sociétés
-    if (newClient.type_client === 'societe' && !newClient.ice?.trim()) {
-      alert("Le numéro ICE est obligatoire pour les sociétés");
+    if (!selectedClient || !newClient.nom) {
       return;
     }
 
@@ -200,136 +188,265 @@ export default function Clients() {
               Nouveau client
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Ajouter un nouveau client</DialogTitle>
-              <DialogDescription>
-                Remplissez les informations du nouveau client
+              <DialogTitle className="flex items-center gap-2 text-xl">
+                <Plus className="w-5 h-5 text-gaming-cyan" />
+                Ajouter un nouveau client
+              </DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Créez un nouveau profil client en remplissant les informations ci-dessous
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
-              {/* Type de client */}
-              <div>
-                <Label>Type de client *</Label>
+            
+            <div className="space-y-6">
+              {/* Section 1: Type de client */}
+              <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 bg-gaming-cyan rounded-full flex items-center justify-center text-xs font-bold text-black">1</div>
+                  <h3 className="text-lg font-semibold text-white">Type de client</h3>
+                </div>
+                <p className="text-sm text-gray-400 mb-4">Choisissez le type de client pour adapter les champs requis</p>
+                
                 <RadioGroup 
                   value={newClient.type_client} 
                   onValueChange={(value: any) => setNewClient({...newClient, type_client: value, ice: value === 'particulier' ? '' : newClient.ice})}
-                  className="flex gap-6 mt-2"
+                  className="grid grid-cols-2 gap-4"
                 >
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-3 p-3 border border-gray-600 rounded-lg hover:border-gaming-cyan transition-colors">
                     <RadioGroupItem value="particulier" id="particulier" />
-                    <Label htmlFor="particulier" className="flex items-center gap-2">
-                      <User className="w-4 h-4" />
-                      Particulier
+                    <Label htmlFor="particulier" className="flex items-center gap-2 cursor-pointer">
+                      <User className="w-5 h-5 text-gaming-green" />
+                      <div>
+                        <div className="font-medium text-white">Particulier</div>
+                        <div className="text-xs text-gray-400">Client individuel</div>
+                      </div>
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-3 p-3 border border-gray-600 rounded-lg hover:border-gaming-cyan transition-colors">
                     <RadioGroupItem value="societe" id="societe" />
-                    <Label htmlFor="societe" className="flex items-center gap-2">
-                      <Building2 className="w-4 h-4" />
-                      Société
+                    <Label htmlFor="societe" className="flex items-center gap-2 cursor-pointer">
+                      <Building2 className="w-5 h-5 text-gaming-purple" />
+                      <div>
+                        <div className="font-medium text-white">Société</div>
+                        <div className="text-xs text-gray-400">Entreprise ou organisation</div>
+                      </div>
                     </Label>
                   </div>
                 </RadioGroup>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="nom">Nom {newClient.type_client === 'societe' ? 'société' : ''} *</Label>
-                  <Input
-                    id="nom"
-                    value={newClient.nom}
-                    onChange={(e) => setNewClient({...newClient, nom: e.target.value})}
-                    placeholder={newClient.type_client === 'societe' ? "Nom de la société" : "Nom"}
-                  />
+              {/* Section 2: Informations principales */}
+              <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 bg-gaming-cyan rounded-full flex items-center justify-center text-xs font-bold text-black">2</div>
+                  <h3 className="text-lg font-semibold text-white">Informations principales</h3>
+                  <span className="text-xs text-red-400 font-medium">* Obligatoire</span>
                 </div>
-                <div>
-                  <Label htmlFor="prenom">
-                    {newClient.type_client === 'societe' ? 'Contact principal' : 'Prénom'} *
-                  </Label>
-                  <Input
-                    id="prenom"
-                    value={newClient.prenom}
-                    onChange={(e) => setNewClient({...newClient, prenom: e.target.value})}
-                    placeholder={newClient.type_client === 'societe' ? "Nom du contact" : "Prénom"}
-                  />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="nom" className="flex items-center gap-2 text-gray-300 mb-2">
+                      {newClient.type_client === 'societe' ? (
+                        <>
+                          <Building2 className="w-4 h-4" />
+                          Nom de la société *
+                        </>
+                      ) : (
+                        <>
+                          <User className="w-4 h-4" />
+                          Nom de famille *
+                        </>
+                      )}
+                    </Label>
+                    <Input
+                      id="nom"
+                      value={newClient.nom}
+                      onChange={(e) => setNewClient({...newClient, nom: e.target.value})}
+                      placeholder={newClient.type_client === 'societe' ? "Ex: TechCorp Solutions" : "Ex: Dupont"}
+                      className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="prenom" className="flex items-center gap-2 text-gray-300 mb-2">
+                      <User className="w-4 h-4" />
+                      {newClient.type_client === 'societe' ? 'Nom du contact principal' : 'Prénom'}
+                    </Label>
+                    <Input
+                      id="prenom"
+                      value={newClient.prenom}
+                      onChange={(e) => setNewClient({...newClient, prenom: e.target.value})}
+                      placeholder={newClient.type_client === 'societe' ? "Ex: Mohammed Alami" : "Ex: Jean"}
+                      className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Champ ICE pour les sociétés */}
+                {newClient.type_client === 'societe' && (
+                  <div className="mt-4">
+                    <Label htmlFor="ice" className="flex items-center gap-2 text-gray-300 mb-2">
+                      <Building2 className="w-4 h-4" />
+                      Numéro ICE
+                    </Label>
+                    <Input
+                      id="ice"
+                      value={newClient.ice}
+                      onChange={(e) => setNewClient({...newClient, ice: e.target.value})}
+                      placeholder="Ex: 001234567000025"
+                      className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Identifiant Commun de l'Entreprise (15 chiffres) - Optionnel
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Section 3: Contact et localisation */}
+              <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 bg-gaming-cyan rounded-full flex items-center justify-center text-xs font-bold text-black">3</div>
+                  <h3 className="text-lg font-semibold text-white">Contact et localisation</h3>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="email" className="flex items-center gap-2 text-gray-300 mb-2">
+                      <Mail className="w-4 h-4" />
+                      Adresse email
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={newClient.email}
+                      onChange={(e) => setNewClient({...newClient, email: e.target.value})}
+                      placeholder="Ex: client@exemple.com"
+                      className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="telephone" className="flex items-center gap-2 text-gray-300 mb-2">
+                      <Phone className="w-4 h-4" />
+                      Numéro de téléphone
+                    </Label>
+                    <Input
+                      id="telephone"
+                      value={newClient.telephone}
+                      onChange={(e) => setNewClient({...newClient, telephone: e.target.value})}
+                      placeholder="Ex: 06 12 34 56 78 ou +212 6 12 34 56 78"
+                      className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="adresse" className="flex items-center gap-2 text-gray-300 mb-2">
+                      <MapPin className="w-4 h-4" />
+                      Adresse complète
+                    </Label>
+                    <Textarea
+                      id="adresse"
+                      value={newClient.adresse}
+                      onChange={(e) => setNewClient({...newClient, adresse: e.target.value})}
+                      placeholder="Ex: 123 Avenue Mohammed V, Appartement 4, Casablanca 20000"
+                      rows={3}
+                      className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Champ ICE pour les sociétés */}
-              {newClient.type_client === 'societe' && (
-                <div>
-                  <Label htmlFor="ice">Numéro ICE *</Label>
-                  <Input
-                    id="ice"
-                    value={newClient.ice}
-                    onChange={(e) => setNewClient({...newClient, ice: e.target.value})}
-                    placeholder="Numéro ICE de la société"
-                  />
+              {/* Section 4: Paramètres du compte */}
+              <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 bg-gaming-cyan rounded-full flex items-center justify-center text-xs font-bold text-black">4</div>
+                  <h3 className="text-lg font-semibold text-white">Paramètres du compte</h3>
                 </div>
-              )}
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="statut" className="flex items-center gap-2 text-gray-300 mb-2">
+                      <Badge className="w-4 h-4" />
+                      Statut du client
+                    </Label>
+                    <Select value={newClient.statut} onValueChange={(value: any) => setNewClient({...newClient, statut: value})}>
+                      <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Actif">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            Actif - Client régulier
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="VIP">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                            VIP - Client privilégié
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Inactif">
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                            Inactif - Compte suspendu
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="notes" className="flex items-center gap-2 text-gray-300 mb-2">
+                      <Receipt className="w-4 h-4" />
+                      Notes additionnelles
+                    </Label>
+                    <Textarea
+                      id="notes"
+                      value={newClient.notes}
+                      onChange={(e) => setNewClient({...newClient, notes: e.target.value})}
+                      placeholder="Préférences, remarques, historique..."
+                      rows={3}
+                      className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                    />
+                  </div>
+                </div>
+              </div>
 
-              <div>
-                <Label htmlFor="email">Email *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={newClient.email}
-                  onChange={(e) => setNewClient({...newClient, email: e.target.value})}
-                  placeholder="email@exemple.com"
-                />
+              {/* Résumé et validation */}
+              <div className="p-4 bg-gaming-blue/10 border border-gaming-blue/30 rounded-lg">
+                <h4 className="text-white font-medium mb-2">Récapitulatif</h4>
+                <div className="text-sm text-gray-300 space-y-1">
+                  <p><strong>Type:</strong> {newClient.type_client === 'societe' ? 'Société' : 'Particulier'}</p>
+                  <p><strong>Nom:</strong> {newClient.nom || 'Non renseigné'}</p>
+                  <p><strong>{newClient.type_client === 'societe' ? 'Contact' : 'Prénom'}:</strong> {newClient.prenom || 'Non renseigné'}</p>
+                  <p><strong>Email:</strong> {newClient.email || 'Non renseigné'}</p>
+                  {newClient.type_client === 'societe' && (
+                    <p><strong>ICE:</strong> {newClient.ice || 'Non renseigné'}</p>
+                  )}
+                </div>
+                <div className="text-xs text-gray-500 mt-2">
+                  Seul le nom {newClient.type_client === 'societe' ? 'de la société' : 'de famille'} est obligatoire
+                </div>
               </div>
-              <div>
-                <Label htmlFor="telephone">Téléphone</Label>
-                <Input
-                  id="telephone"
-                  value={newClient.telephone}
-                  onChange={(e) => setNewClient({...newClient, telephone: e.target.value})}
-                  placeholder="06 12 34 56 78"
-                />
-              </div>
-              <div>
-                <Label htmlFor="adresse">Adresse</Label>
-                <Textarea
-                  id="adresse"
-                  value={newClient.adresse}
-                  onChange={(e) => setNewClient({...newClient, adresse: e.target.value})}
-                  placeholder="Adresse complète"
-                  rows={2}
-                />
-              </div>
-              <div>
-                <Label htmlFor="statut">Statut</Label>
-                <Select value={newClient.statut} onValueChange={(value: any) => setNewClient({...newClient, statut: value})}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Actif">Actif</SelectItem>
-                    <SelectItem value="Inactif">Inactif</SelectItem>
-                    <SelectItem value="VIP">VIP</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  value={newClient.notes}
-                  onChange={(e) => setNewClient({...newClient, notes: e.target.value})}
-                  placeholder="Notes additionnelles"
-                  rows={2}
-                />
-              </div>
-              <div className="flex gap-2">
+
+              {/* Boutons d'action */}
+              <div className="flex gap-3 pt-4">
                 <Button 
                   onClick={handleAddClient}
-                  className="gaming-gradient flex-1"
-                  disabled={!newClient.nom || !newClient.prenom || !newClient.email || (newClient.type_client === 'societe' && !newClient.ice?.trim())}
+                  className="gaming-gradient flex-1 h-12 text-base font-medium"
+                  disabled={!newClient.nom}
                 >
-                  Ajouter
+                  <Plus className="w-4 h-4 mr-2" />
+                  Créer le client
                 </Button>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsAddDialogOpen(false)}
+                  className="px-6 h-12 border-gray-600 hover:bg-gray-800"
+                >
                   Annuler
                 </Button>
               </div>
@@ -539,136 +656,247 @@ export default function Clients() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Modifier le client</DialogTitle>
-            <DialogDescription>
-              Modifiez les informations du client
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Edit className="w-5 h-5 text-gaming-yellow" />
+              Modifier le client
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Modifiez les informations du client sélectionné
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            {/* Type de client */}
-            <div>
-              <Label>Type de client *</Label>
+          
+          <div className="space-y-6">
+            {/* Section 1: Type de client */}
+            <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-6 bg-gaming-yellow rounded-full flex items-center justify-center text-xs font-bold text-black">1</div>
+                <h3 className="text-lg font-semibold text-white">Type de client</h3>
+              </div>
+              
               <RadioGroup 
                 value={newClient.type_client} 
                 onValueChange={(value: any) => setNewClient({...newClient, type_client: value, ice: value === 'particulier' ? '' : newClient.ice})}
-                className="flex gap-6 mt-2"
+                className="grid grid-cols-2 gap-4"
               >
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-3 p-3 border border-gray-600 rounded-lg hover:border-gaming-yellow transition-colors">
                   <RadioGroupItem value="particulier" id="edit-particulier" />
-                  <Label htmlFor="edit-particulier" className="flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    Particulier
+                  <Label htmlFor="edit-particulier" className="flex items-center gap-2 cursor-pointer">
+                    <User className="w-5 h-5 text-gaming-green" />
+                    <div>
+                      <div className="font-medium text-white">Particulier</div>
+                      <div className="text-xs text-gray-400">Client individuel</div>
+                    </div>
                   </Label>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-3 p-3 border border-gray-600 rounded-lg hover:border-gaming-yellow transition-colors">
                   <RadioGroupItem value="societe" id="edit-societe" />
-                  <Label htmlFor="edit-societe" className="flex items-center gap-2">
-                    <Building2 className="w-4 h-4" />
-                    Société
+                  <Label htmlFor="edit-societe" className="flex items-center gap-2 cursor-pointer">
+                    <Building2 className="w-5 h-5 text-gaming-purple" />
+                    <div>
+                      <div className="font-medium text-white">Société</div>
+                      <div className="text-xs text-gray-400">Entreprise ou organisation</div>
+                    </div>
                   </Label>
                 </div>
               </RadioGroup>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="edit-nom">Nom {newClient.type_client === 'societe' ? 'société' : ''} *</Label>
-                <Input
-                  id="edit-nom"
-                  value={newClient.nom}
-                  onChange={(e) => setNewClient({...newClient, nom: e.target.value})}
-                  placeholder={newClient.type_client === 'societe' ? "Nom de la société" : "Nom"}
-                />
+            {/* Section 2: Informations principales */}
+            <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-6 bg-gaming-yellow rounded-full flex items-center justify-center text-xs font-bold text-black">2</div>
+                <h3 className="text-lg font-semibold text-white">Informations principales</h3>
+                <span className="text-xs text-red-400 font-medium">* Obligatoire</span>
               </div>
-              <div>
-                <Label htmlFor="edit-prenom">
-                  {newClient.type_client === 'societe' ? 'Contact principal' : 'Prénom'} *
-                </Label>
-                <Input
-                  id="edit-prenom"
-                  value={newClient.prenom}
-                  onChange={(e) => setNewClient({...newClient, prenom: e.target.value})}
-                  placeholder={newClient.type_client === 'societe' ? "Nom du contact" : "Prénom"}
-                />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-nom" className="flex items-center gap-2 text-gray-300 mb-2">
+                    {newClient.type_client === 'societe' ? (
+                      <>
+                        <Building2 className="w-4 h-4" />
+                        Nom de la société *
+                      </>
+                    ) : (
+                      <>
+                        <User className="w-4 h-4" />
+                        Nom de famille *
+                      </>
+                    )}
+                  </Label>
+                  <Input
+                    id="edit-nom"
+                    value={newClient.nom}
+                    onChange={(e) => setNewClient({...newClient, nom: e.target.value})}
+                    placeholder={newClient.type_client === 'societe' ? "Ex: TechCorp Solutions" : "Ex: Dupont"}
+                    className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="edit-prenom" className="flex items-center gap-2 text-gray-300 mb-2">
+                    <User className="w-4 h-4" />
+                    {newClient.type_client === 'societe' ? 'Nom du contact principal' : 'Prénom'}
+                  </Label>
+                  <Input
+                    id="edit-prenom"
+                    value={newClient.prenom}
+                    onChange={(e) => setNewClient({...newClient, prenom: e.target.value})}
+                    placeholder={newClient.type_client === 'societe' ? "Ex: Mohammed Alami" : "Ex: Jean"}
+                    className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                  />
+                </div>
+              </div>
+
+              {/* Champ ICE pour les sociétés */}
+              {newClient.type_client === 'societe' && (
+                <div className="mt-4">
+                  <Label htmlFor="edit-ice" className="flex items-center gap-2 text-gray-300 mb-2">
+                    <Building2 className="w-4 h-4" />
+                    Numéro ICE
+                  </Label>
+                  <Input
+                    id="edit-ice"
+                    value={newClient.ice}
+                    onChange={(e) => setNewClient({...newClient, ice: e.target.value})}
+                    placeholder="Ex: 001234567000025"
+                    className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Identifiant Commun de l'Entreprise (15 chiffres) - Optionnel
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Section 3: Contact et localisation */}
+            <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-6 bg-gaming-yellow rounded-full flex items-center justify-center text-xs font-bold text-black">3</div>
+                <h3 className="text-lg font-semibold text-white">Contact et localisation</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="edit-email" className="flex items-center gap-2 text-gray-300 mb-2">
+                    <Mail className="w-4 h-4" />
+                    Adresse email
+                  </Label>
+                  <Input
+                    id="edit-email"
+                    type="email"
+                    value={newClient.email}
+                    onChange={(e) => setNewClient({...newClient, email: e.target.value})}
+                    placeholder="Ex: client@exemple.com"
+                    className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="edit-telephone" className="flex items-center gap-2 text-gray-300 mb-2">
+                    <Phone className="w-4 h-4" />
+                    Numéro de téléphone
+                  </Label>
+                  <Input
+                    id="edit-telephone"
+                    value={newClient.telephone}
+                    onChange={(e) => setNewClient({...newClient, telephone: e.target.value})}
+                    placeholder="Ex: 06 12 34 56 78 ou +212 6 12 34 56 78"
+                    className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="edit-adresse" className="flex items-center gap-2 text-gray-300 mb-2">
+                    <MapPin className="w-4 h-4" />
+                    Adresse complète
+                  </Label>
+                  <Textarea
+                    id="edit-adresse"
+                    value={newClient.adresse}
+                    onChange={(e) => setNewClient({...newClient, adresse: e.target.value})}
+                    placeholder="Ex: 123 Avenue Mohammed V, Appartement 4, Casablanca 20000"
+                    rows={3}
+                    className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Champ ICE pour les sociétés */}
-            {newClient.type_client === 'societe' && (
-              <div>
-                <Label htmlFor="edit-ice">Numéro ICE *</Label>
-                <Input
-                  id="edit-ice"
-                  value={newClient.ice}
-                  onChange={(e) => setNewClient({...newClient, ice: e.target.value})}
-                  placeholder="Numéro ICE de la société"
-                />
+            {/* Section 4: Paramètres du compte */}
+            <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-6 bg-gaming-yellow rounded-full flex items-center justify-center text-xs font-bold text-black">4</div>
+                <h3 className="text-lg font-semibold text-white">Paramètres du compte</h3>
               </div>
-            )}
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-statut" className="flex items-center gap-2 text-gray-300 mb-2">
+                    <Badge className="w-4 h-4" />
+                    Statut du client
+                  </Label>
+                  <Select value={newClient.statut} onValueChange={(value: any) => setNewClient({...newClient, statut: value})}>
+                    <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Actif">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          Actif - Client régulier
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="VIP">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                          VIP - Client privilégié
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="Inactif">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                          Inactif - Compte suspendu
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="edit-notes" className="flex items-center gap-2 text-gray-300 mb-2">
+                    <Receipt className="w-4 h-4" />
+                    Notes additionnelles
+                  </Label>
+                  <Textarea
+                    id="edit-notes"
+                    value={newClient.notes}
+                    onChange={(e) => setNewClient({...newClient, notes: e.target.value})}
+                    placeholder="Préférences, remarques, historique..."
+                    rows={3}
+                    className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                  />
+                </div>
+              </div>
+            </div>
 
-            <div>
-              <Label htmlFor="edit-email">Email *</Label>
-              <Input
-                id="edit-email"
-                type="email"
-                value={newClient.email}
-                onChange={(e) => setNewClient({...newClient, email: e.target.value})}
-                placeholder="email@exemple.com"
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-telephone">Téléphone</Label>
-              <Input
-                id="edit-telephone"
-                value={newClient.telephone}
-                onChange={(e) => setNewClient({...newClient, telephone: e.target.value})}
-                placeholder="06 12 34 56 78"
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-adresse">Adresse</Label>
-              <Textarea
-                id="edit-adresse"
-                value={newClient.adresse}
-                onChange={(e) => setNewClient({...newClient, adresse: e.target.value})}
-                placeholder="Adresse complète"
-                rows={2}
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-statut">Statut</Label>
-              <Select value={newClient.statut} onValueChange={(value: any) => setNewClient({...newClient, statut: value})}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Actif">Actif</SelectItem>
-                  <SelectItem value="Inactif">Inactif</SelectItem>
-                  <SelectItem value="VIP">VIP</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="edit-notes">Notes</Label>
-              <Textarea
-                id="edit-notes"
-                value={newClient.notes}
-                onChange={(e) => setNewClient({...newClient, notes: e.target.value})}
-                placeholder="Notes additionnelles"
-                rows={2}
-              />
-            </div>
-            <div className="flex gap-2">
+            {/* Boutons d'action */}
+            <div className="flex gap-3 pt-4">
               <Button 
                 onClick={handleEditClient}
-                className="gaming-gradient flex-1"
-                disabled={!newClient.nom || !newClient.prenom || !newClient.email || (newClient.type_client === 'societe' && !newClient.ice?.trim())}
+                className="bg-gaming-yellow hover:bg-gaming-yellow/80 text-black flex-1 h-12 text-base font-medium"
+                disabled={!newClient.nom}
               >
-                Modifier
+                <Edit className="w-4 h-4 mr-2" />
+                Sauvegarder les modifications
               </Button>
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsEditDialogOpen(false)}
+                className="px-6 h-12 border-gray-600 hover:bg-gray-800"
+              >
                 Annuler
               </Button>
             </div>

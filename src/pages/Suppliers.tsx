@@ -172,121 +172,297 @@ export default function Suppliers() {
               Nouveau fournisseur
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Ajouter un nouveau fournisseur</DialogTitle>
-              <DialogDescription>
-                Remplissez les informations du nouveau fournisseur
+              <DialogTitle className="flex items-center gap-2 text-xl">
+                <Plus className="w-5 h-5 text-gaming-cyan" />
+                Ajouter un nouveau fournisseur
+              </DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Créez un nouveau profil fournisseur pour gérer vos partenaires commerciaux
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="nom">Nom de l'entreprise *</Label>
-                <Input
-                  id="nom"
-                  value={newSupplier.nom}
-                  onChange={(e) => setNewSupplier({...newSupplier, nom: e.target.value})}
-                  placeholder="Nom de l'entreprise"
-                />
+            
+            <div className="space-y-6">
+              {/* Section 1: Informations entreprise */}
+              <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 bg-gaming-cyan rounded-full flex items-center justify-center text-xs font-bold text-black">1</div>
+                  <h3 className="text-lg font-semibold text-white">Informations entreprise</h3>
+                  <span className="text-xs text-red-400 font-medium">* Obligatoire</span>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="nom" className="flex items-center gap-2 text-gray-300 mb-2">
+                      <Building className="w-4 h-4" />
+                      Nom de l'entreprise *
+                    </Label>
+                    <Input
+                      id="nom"
+                      value={newSupplier.nom}
+                      onChange={(e) => setNewSupplier({...newSupplier, nom: e.target.value})}
+                      placeholder="Ex: TechDistrib Solutions, Gaming Hardware Pro..."
+                      className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="contact" className="flex items-center gap-2 text-gray-300 mb-2">
+                      <Phone className="w-4 h-4" />
+                      Contact principal *
+                    </Label>
+                    <Input
+                      id="contact"
+                      value={newSupplier.contact_principal}
+                      onChange={(e) => setNewSupplier({...newSupplier, contact_principal: e.target.value})}
+                      placeholder="Ex: Ahmed Benali, Fatima Zghouri..."
+                      className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Personne responsable des relations commerciales
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="specialite" className="flex items-center gap-2 text-gray-300 mb-2">
+                      <Package className="w-4 h-4" />
+                      Spécialité principale
+                    </Label>
+                    <Select value={newSupplier.specialite} onValueChange={(value) => setNewSupplier({...newSupplier, specialite: value})}>
+                      <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                        <SelectValue placeholder="Sélectionnez une spécialité" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Composants PC">
+                          <div className="flex items-center gap-2">
+                            <Package className="w-4 h-4" />
+                            Composants PC
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Périphériques gaming">
+                          <div className="flex items-center gap-2">
+                            <Package className="w-4 h-4" />
+                            Périphériques gaming
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="PC portables">
+                          <div className="flex items-center gap-2">
+                            <Package className="w-4 h-4" />
+                            PC portables
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Moniteurs">
+                          <div className="flex items-center gap-2">
+                            <Package className="w-4 h-4" />
+                            Moniteurs
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Chaises gaming">
+                          <div className="flex items-center gap-2">
+                            <Package className="w-4 h-4" />
+                            Chaises gaming
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Accessoires">
+                          <div className="flex items-center gap-2">
+                            <Package className="w-4 h-4" />
+                            Accessoires
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
-              <div>
-                <Label htmlFor="contact">Contact principal *</Label>
-                <Input
-                  id="contact"
-                  value={newSupplier.contact_principal}
-                  onChange={(e) => setNewSupplier({...newSupplier, contact_principal: e.target.value})}
-                  placeholder="Nom du contact"
-                />
+
+              {/* Section 2: Contact et localisation */}
+              <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 bg-gaming-cyan rounded-full flex items-center justify-center text-xs font-bold text-black">2</div>
+                  <h3 className="text-lg font-semibold text-white">Contact et localisation</h3>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="email" className="flex items-center gap-2 text-gray-300 mb-2">
+                      <Mail className="w-4 h-4" />
+                      Adresse email *
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={newSupplier.email}
+                      onChange={(e) => setNewSupplier({...newSupplier, email: e.target.value})}
+                      placeholder="Ex: contact@fournisseur.com"
+                      className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="telephone" className="flex items-center gap-2 text-gray-300 mb-2">
+                      <Phone className="w-4 h-4" />
+                      Numéro de téléphone
+                    </Label>
+                    <Input
+                      id="telephone"
+                      value={newSupplier.telephone}
+                      onChange={(e) => setNewSupplier({...newSupplier, telephone: e.target.value})}
+                      placeholder="Ex: 05 22 12 34 56 ou +212 5 22 12 34 56"
+                      className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="adresse" className="flex items-center gap-2 text-gray-300 mb-2">
+                      <MapPin className="w-4 h-4" />
+                      Adresse complète
+                    </Label>
+                    <Textarea
+                      id="adresse"
+                      value={newSupplier.adresse}
+                      onChange={(e) => setNewSupplier({...newSupplier, adresse: e.target.value})}
+                      placeholder="Ex: Zone Industrielle Sidi Bernoussi, Lot 25, Casablanca 20000"
+                      rows={3}
+                      className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                    />
+                  </div>
+                </div>
               </div>
-              <div>
-                <Label htmlFor="email">Email *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={newSupplier.email}
-                  onChange={(e) => setNewSupplier({...newSupplier, email: e.target.value})}
-                  placeholder="email@exemple.com"
-                />
+
+              {/* Section 3: Conditions commerciales */}
+              <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 bg-gaming-cyan rounded-full flex items-center justify-center text-xs font-bold text-black">3</div>
+                  <h3 className="text-lg font-semibold text-white">Conditions commerciales</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="conditions" className="flex items-center gap-2 text-gray-300 mb-2">
+                      <Calendar className="w-4 h-4" />
+                      Conditions de paiement
+                    </Label>
+                    <Select value={newSupplier.conditions_paiement} onValueChange={(value) => setNewSupplier({...newSupplier, conditions_paiement: value})}>
+                      <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                        <SelectValue placeholder="Sélectionnez les conditions" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Comptant">Paiement comptant</SelectItem>
+                        <SelectItem value="15 jours net">15 jours net</SelectItem>
+                        <SelectItem value="30 jours net">30 jours net</SelectItem>
+                        <SelectItem value="45 jours net">45 jours net</SelectItem>
+                        <SelectItem value="60 jours net">60 jours net</SelectItem>
+                        <SelectItem value="Fin de mois">Fin de mois</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="delai" className="flex items-center gap-2 text-gray-300 mb-2">
+                      <Truck className="w-4 h-4" />
+                      Délai de livraison (jours)
+                    </Label>
+                    <Input
+                      id="delai"
+                      type="number"
+                      value={newSupplier.delai_livraison_moyen || ''}
+                      onChange={(e) => setNewSupplier({...newSupplier, delai_livraison_moyen: e.target.value ? parseInt(e.target.value) : undefined})}
+                      placeholder="Ex: 5"
+                      className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Délai moyen de livraison en jours ouvrés
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <Label htmlFor="statut" className="flex items-center gap-2 text-gray-300 mb-2">
+                    <Badge className="w-4 h-4" />
+                    Statut du fournisseur
+                  </Label>
+                  <Select value={newSupplier.statut} onValueChange={(value: any) => setNewSupplier({...newSupplier, statut: value})}>
+                    <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Actif">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          Actif - Fournisseur régulier
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="Privilégié">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                          Privilégié - Partenaire préférentiel
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="Inactif">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                          Inactif - Collaboration suspendue
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div>
-                <Label htmlFor="telephone">Téléphone</Label>
-                <Input
-                  id="telephone"
-                  value={newSupplier.telephone}
-                  onChange={(e) => setNewSupplier({...newSupplier, telephone: e.target.value})}
-                  placeholder="01 23 45 67 89"
-                />
+
+              {/* Section 4: Notes et remarques */}
+              <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 bg-gaming-cyan rounded-full flex items-center justify-center text-xs font-bold text-black">4</div>
+                  <h3 className="text-lg font-semibold text-white">Notes et remarques</h3>
+                </div>
+                
+                <div>
+                  <Label htmlFor="notes" className="flex items-center gap-2 text-gray-300 mb-2">
+                    <Edit className="w-4 h-4" />
+                    Notes additionnelles
+                  </Label>
+                  <Textarea
+                    id="notes"
+                    value={newSupplier.notes}
+                    onChange={(e) => setNewSupplier({...newSupplier, notes: e.target.value})}
+                    placeholder="Qualité des produits, ponctualité, conditions spéciales, historique de collaboration..."
+                    rows={4}
+                    className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="adresse">Adresse</Label>
-                <Textarea
-                  id="adresse"
-                  value={newSupplier.adresse}
-                  onChange={(e) => setNewSupplier({...newSupplier, adresse: e.target.value})}
-                  placeholder="Adresse complète"
-                  rows={2}
-                />
+
+              {/* Résumé et validation */}
+              <div className="p-4 bg-gaming-blue/10 border border-gaming-blue/30 rounded-lg">
+                <h4 className="text-white font-medium mb-2">Récapitulatif</h4>
+                <div className="text-sm text-gray-300 space-y-1">
+                  <p><strong>Entreprise:</strong> {newSupplier.nom || 'Non renseigné'}</p>
+                  <p><strong>Contact:</strong> {newSupplier.contact_principal || 'Non renseigné'}</p>
+                  <p><strong>Email:</strong> {newSupplier.email || 'Non renseigné'}</p>
+                  <p><strong>Spécialité:</strong> {newSupplier.specialite || 'Non renseignée'}</p>
+                  <p><strong>Conditions:</strong> {newSupplier.conditions_paiement || 'Non définies'}</p>
+                  {newSupplier.delai_livraison_moyen && (
+                    <p><strong>Délai livraison:</strong> {newSupplier.delai_livraison_moyen} jours</p>
+                  )}
+                </div>
               </div>
-              <div>
-                <Label htmlFor="specialite">Spécialité</Label>
-                <Input
-                  id="specialite"
-                  value={newSupplier.specialite}
-                  onChange={(e) => setNewSupplier({...newSupplier, specialite: e.target.value})}
-                  placeholder="ex: Composants PC, Périphériques..."
-                />
-              </div>
-              <div>
-                <Label htmlFor="statut">Statut</Label>
-                <Select value={newSupplier.statut} onValueChange={(value: any) => setNewSupplier({...newSupplier, statut: value})}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Actif">Actif</SelectItem>
-                    <SelectItem value="Inactif">Inactif</SelectItem>
-                    <SelectItem value="Privilégié">Privilégié</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="conditions">Conditions de paiement</Label>
-                <Input
-                  id="conditions"
-                  value={newSupplier.conditions_paiement}
-                  onChange={(e) => setNewSupplier({...newSupplier, conditions_paiement: e.target.value})}
-                  placeholder="ex: 30 jours net"
-                />
-              </div>
-              <div>
-                <Label htmlFor="delai">Délai de livraison moyen (jours)</Label>
-                <Input
-                  id="delai"
-                  type="number"
-                  value={newSupplier.delai_livraison_moyen || ''}
-                  onChange={(e) => setNewSupplier({...newSupplier, delai_livraison_moyen: e.target.value ? parseInt(e.target.value) : undefined})}
-                  placeholder="ex: 5"
-                />
-              </div>
-              <div>
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  value={newSupplier.notes}
-                  onChange={(e) => setNewSupplier({...newSupplier, notes: e.target.value})}
-                  placeholder="Notes additionnelles"
-                  rows={2}
-                />
-              </div>
-              <div className="flex gap-2">
+
+              {/* Boutons d'action */}
+              <div className="flex gap-3 pt-4">
                 <Button 
                   onClick={handleAddSupplier}
-                  className="gaming-gradient flex-1"
+                  className="gaming-gradient flex-1 h-12 text-base font-medium"
                   disabled={!newSupplier.nom || !newSupplier.contact_principal || !newSupplier.email}
                 >
-                  Ajouter
+                  <Plus className="w-4 h-4 mr-2" />
+                  Créer le fournisseur
                 </Button>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsAddDialogOpen(false)}
+                  className="px-6 h-12 border-gray-600 hover:bg-gray-800"
+                >
                   Annuler
                 </Button>
               </div>
@@ -487,121 +663,282 @@ export default function Suppliers() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Modifier le fournisseur</DialogTitle>
-            <DialogDescription>
-              Modifiez les informations du fournisseur
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Edit className="w-5 h-5 text-gaming-yellow" />
+              Modifier le fournisseur
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Modifiez les informations du fournisseur sélectionné
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="edit-nom">Nom de l'entreprise *</Label>
-              <Input
-                id="edit-nom"
-                value={newSupplier.nom}
-                onChange={(e) => setNewSupplier({...newSupplier, nom: e.target.value})}
-                placeholder="Nom de l'entreprise"
-              />
+          
+          <div className="space-y-6">
+            {/* Section 1: Informations entreprise */}
+            <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-6 bg-gaming-yellow rounded-full flex items-center justify-center text-xs font-bold text-black">1</div>
+                <h3 className="text-lg font-semibold text-white">Informations entreprise</h3>
+                <span className="text-xs text-red-400 font-medium">* Obligatoire</span>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="edit-nom" className="flex items-center gap-2 text-gray-300 mb-2">
+                    <Building className="w-4 h-4" />
+                    Nom de l'entreprise *
+                  </Label>
+                  <Input
+                    id="edit-nom"
+                    value={newSupplier.nom}
+                    onChange={(e) => setNewSupplier({...newSupplier, nom: e.target.value})}
+                    placeholder="Ex: TechDistrib Solutions, Gaming Hardware Pro..."
+                    className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-contact" className="flex items-center gap-2 text-gray-300 mb-2">
+                    <Phone className="w-4 h-4" />
+                    Contact principal *
+                  </Label>
+                  <Input
+                    id="edit-contact"
+                    value={newSupplier.contact_principal}
+                    onChange={(e) => setNewSupplier({...newSupplier, contact_principal: e.target.value})}
+                    placeholder="Ex: Ahmed Benali, Fatima Zghouri..."
+                    className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Personne responsable des relations commerciales
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-specialite" className="flex items-center gap-2 text-gray-300 mb-2">
+                    <Package className="w-4 h-4" />
+                    Spécialité principale
+                  </Label>
+                  <Select value={newSupplier.specialite} onValueChange={(value) => setNewSupplier({...newSupplier, specialite: value})}>
+                    <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                      <SelectValue placeholder="Sélectionnez une spécialité" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Composants PC">
+                        <div className="flex items-center gap-2">
+                          <Package className="w-4 h-4" />
+                          Composants PC
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="Périphériques gaming">
+                        <div className="flex items-center gap-2">
+                          <Package className="w-4 h-4" />
+                          Périphériques gaming
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="PC portables">
+                        <div className="flex items-center gap-2">
+                          <Package className="w-4 h-4" />
+                          PC portables
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="Moniteurs">
+                        <div className="flex items-center gap-2">
+                          <Package className="w-4 h-4" />
+                          Moniteurs
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="Chaises gaming">
+                        <div className="flex items-center gap-2">
+                          <Package className="w-4 h-4" />
+                          Chaises gaming
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="Accessoires">
+                        <div className="flex items-center gap-2">
+                          <Package className="w-4 h-4" />
+                          Accessoires
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
-            <div>
-              <Label htmlFor="edit-contact">Contact principal *</Label>
-              <Input
-                id="edit-contact"
-                value={newSupplier.contact_principal}
-                onChange={(e) => setNewSupplier({...newSupplier, contact_principal: e.target.value})}
-                placeholder="Nom du contact"
-              />
+
+            {/* Section 2: Contact et localisation */}
+            <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-6 bg-gaming-yellow rounded-full flex items-center justify-center text-xs font-bold text-black">2</div>
+                <h3 className="text-lg font-semibold text-white">Contact et localisation</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="edit-email" className="flex items-center gap-2 text-gray-300 mb-2">
+                    <Mail className="w-4 h-4" />
+                    Adresse email *
+                  </Label>
+                  <Input
+                    id="edit-email"
+                    type="email"
+                    value={newSupplier.email}
+                    onChange={(e) => setNewSupplier({...newSupplier, email: e.target.value})}
+                    placeholder="Ex: contact@fournisseur.com"
+                    className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-telephone" className="flex items-center gap-2 text-gray-300 mb-2">
+                    <Phone className="w-4 h-4" />
+                    Numéro de téléphone
+                  </Label>
+                  <Input
+                    id="edit-telephone"
+                    value={newSupplier.telephone}
+                    onChange={(e) => setNewSupplier({...newSupplier, telephone: e.target.value})}
+                    placeholder="Ex: 05 22 12 34 56 ou +212 5 22 12 34 56"
+                    className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-adresse" className="flex items-center gap-2 text-gray-300 mb-2">
+                    <MapPin className="w-4 h-4" />
+                    Adresse complète
+                  </Label>
+                  <Textarea
+                    id="edit-adresse"
+                    value={newSupplier.adresse}
+                    onChange={(e) => setNewSupplier({...newSupplier, adresse: e.target.value})}
+                    placeholder="Ex: Zone Industrielle Sidi Bernoussi, Lot 25, Casablanca 20000"
+                    rows={3}
+                    className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                  />
+                </div>
+              </div>
             </div>
-            <div>
-              <Label htmlFor="edit-email">Email *</Label>
-              <Input
-                id="edit-email"
-                type="email"
-                value={newSupplier.email}
-                onChange={(e) => setNewSupplier({...newSupplier, email: e.target.value})}
-                placeholder="email@exemple.com"
-              />
+
+            {/* Section 3: Conditions commerciales */}
+            <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-6 bg-gaming-yellow rounded-full flex items-center justify-center text-xs font-bold text-black">3</div>
+                <h3 className="text-lg font-semibold text-white">Conditions commerciales</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-conditions" className="flex items-center gap-2 text-gray-300 mb-2">
+                    <Calendar className="w-4 h-4" />
+                    Conditions de paiement
+                  </Label>
+                  <Select value={newSupplier.conditions_paiement} onValueChange={(value) => setNewSupplier({...newSupplier, conditions_paiement: value})}>
+                    <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                      <SelectValue placeholder="Sélectionnez les conditions" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Comptant">Paiement comptant</SelectItem>
+                      <SelectItem value="15 jours net">15 jours net</SelectItem>
+                      <SelectItem value="30 jours net">30 jours net</SelectItem>
+                      <SelectItem value="45 jours net">45 jours net</SelectItem>
+                      <SelectItem value="60 jours net">60 jours net</SelectItem>
+                      <SelectItem value="Fin de mois">Fin de mois</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="edit-delai" className="flex items-center gap-2 text-gray-300 mb-2">
+                    <Truck className="w-4 h-4" />
+                    Délai de livraison (jours)
+                  </Label>
+                  <Input
+                    id="edit-delai"
+                    type="number"
+                    value={newSupplier.delai_livraison_moyen || ''}
+                    onChange={(e) => setNewSupplier({...newSupplier, delai_livraison_moyen: e.target.value ? parseInt(e.target.value) : undefined})}
+                    placeholder="Ex: 5"
+                    className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Délai moyen de livraison en jours ouvrés
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <Label htmlFor="edit-statut" className="flex items-center gap-2 text-gray-300 mb-2">
+                  <Badge className="w-4 h-4" />
+                  Statut du fournisseur
+                </Label>
+                <Select value={newSupplier.statut} onValueChange={(value: any) => setNewSupplier({...newSupplier, statut: value})}>
+                  <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Actif">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        Actif - Fournisseur régulier
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="Privilégié">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                        Privilégié - Partenaire préférentiel
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="Inactif">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                        Inactif - Collaboration suspendue
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div>
-              <Label htmlFor="edit-telephone">Téléphone</Label>
-              <Input
-                id="edit-telephone"
-                value={newSupplier.telephone}
-                onChange={(e) => setNewSupplier({...newSupplier, telephone: e.target.value})}
-                placeholder="01 23 45 67 89"
-              />
+
+            {/* Section 4: Notes et remarques */}
+            <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-6 bg-gaming-yellow rounded-full flex items-center justify-center text-xs font-bold text-black">4</div>
+                <h3 className="text-lg font-semibold text-white">Notes et remarques</h3>
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-notes" className="flex items-center gap-2 text-gray-300 mb-2">
+                  <Edit className="w-4 h-4" />
+                  Notes additionnelles
+                </Label>
+                <Textarea
+                  id="edit-notes"
+                  value={newSupplier.notes}
+                  onChange={(e) => setNewSupplier({...newSupplier, notes: e.target.value})}
+                  placeholder="Qualité des produits, ponctualité, conditions spéciales, historique de collaboration..."
+                  rows={4}
+                  className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                />
+              </div>
             </div>
-            <div>
-              <Label htmlFor="edit-adresse">Adresse</Label>
-              <Textarea
-                id="edit-adresse"
-                value={newSupplier.adresse}
-                onChange={(e) => setNewSupplier({...newSupplier, adresse: e.target.value})}
-                placeholder="Adresse complète"
-                rows={2}
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-specialite">Spécialité</Label>
-              <Input
-                id="edit-specialite"
-                value={newSupplier.specialite}
-                onChange={(e) => setNewSupplier({...newSupplier, specialite: e.target.value})}
-                placeholder="ex: Composants PC, Périphériques..."
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-statut">Statut</Label>
-              <Select value={newSupplier.statut} onValueChange={(value: any) => setNewSupplier({...newSupplier, statut: value})}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Actif">Actif</SelectItem>
-                  <SelectItem value="Inactif">Inactif</SelectItem>
-                  <SelectItem value="Privilégié">Privilégié</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="edit-conditions">Conditions de paiement</Label>
-              <Input
-                id="edit-conditions"
-                value={newSupplier.conditions_paiement}
-                onChange={(e) => setNewSupplier({...newSupplier, conditions_paiement: e.target.value})}
-                placeholder="ex: 30 jours net"
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-delai">Délai de livraison moyen (jours)</Label>
-              <Input
-                id="edit-delai"
-                type="number"
-                value={newSupplier.delai_livraison_moyen || ''}
-                onChange={(e) => setNewSupplier({...newSupplier, delai_livraison_moyen: e.target.value ? parseInt(e.target.value) : undefined})}
-                placeholder="ex: 5"
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-notes">Notes</Label>
-              <Textarea
-                id="edit-notes"
-                value={newSupplier.notes}
-                onChange={(e) => setNewSupplier({...newSupplier, notes: e.target.value})}
-                placeholder="Notes additionnelles"
-                rows={2}
-              />
-            </div>
-            <div className="flex gap-2">
+
+            {/* Boutons d'action */}
+            <div className="flex gap-3 pt-4">
               <Button 
                 onClick={handleEditSupplier}
-                className="gaming-gradient flex-1"
+                className="bg-gaming-yellow hover:bg-gaming-yellow/80 text-black flex-1 h-12 text-base font-medium"
                 disabled={!newSupplier.nom || !newSupplier.contact_principal || !newSupplier.email}
               >
-                Modifier
+                <Edit className="w-4 h-4 mr-2" />
+                Sauvegarder les modifications
               </Button>
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsEditDialogOpen(false)}
+                className="px-6 h-12 border-gray-600 hover:bg-gray-800"
+              >
                 Annuler
               </Button>
             </div>
