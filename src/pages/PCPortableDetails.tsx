@@ -48,7 +48,7 @@ export default function PCPortableDetails() {
           title: "Produit supprimé",
           description: `${product.nom_produit} a été supprimé avec succès`,
         });
-        navigate('/pc-portable');
+        navigate('/stock?tab=pc-portables');
       } catch (error) {
         toast({
           title: "Erreur",
@@ -61,16 +61,16 @@ export default function PCPortableDetails() {
 
   const getStatutColor = (statut: string) => {
     switch (statut) {
-      case 'Disponible': return 'bg-green-500/20 text-green-400 border-green-500/50';
-      case 'Stock faible': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50';
-      case 'Rupture': return 'bg-red-500/20 text-red-400 border-red-500/50';
-      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/50';
+      case 'Disponible': return 'bg-green-500/20 text-green-700 border-green-500/50';
+      case 'Stock faible': return 'bg-yellow-500/20 text-yellow-700 border-yellow-500/50';
+      case 'Rupture': return 'bg-red-500/20 text-red-700 border-red-500/50';
+      default: return 'bg-gray-500/20 text-gray-700 border-gray-500/50';
     }
   };
 
   if (loading) {
     return (
-      <div className="p-6 space-y-6 bg-background min-h-screen">
+      <div className="p-6 space-y-6 bg-white min-h-screen">
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gaming-cyan"></div>
         </div>
@@ -80,11 +80,11 @@ export default function PCPortableDetails() {
 
   if (!product) {
     return (
-      <div className="p-6 space-y-6 bg-background min-h-screen">
+      <div className="p-6 space-y-6 bg-white min-h-screen">
         <div className="flex items-center gap-4">
           <SidebarTrigger />
           <Button
-            onClick={() => navigate('/pc-portable')}
+            onClick={() => navigate('/stock?tab=pc-portables')}
             variant="ghost"
             className="text-gaming-cyan hover:bg-gaming-cyan/20"
           >
@@ -94,22 +94,22 @@ export default function PCPortableDetails() {
         </div>
         
         <div className="text-center py-12">
-          <Laptop className="w-16 h-16 mx-auto text-gray-600 mb-4" />
-          <h2 className="text-2xl font-bold text-white mb-2">Produit non trouvé</h2>
-          <p className="text-gray-400">Le PC portable demandé n'existe pas ou a été supprimé.</p>
+          <Laptop className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Produit non trouvé</h2>
+          <p className="text-gray-600">Le PC portable demandé n'existe pas ou a été supprimé.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6 bg-background min-h-screen">
+    <div className="p-6 space-y-6 bg-white min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <SidebarTrigger />
           <Button
-            onClick={() => navigate('/pc-portable')}
+            onClick={() => navigate('/stock?tab=pc-portables')}
             variant="ghost"
             className="text-gaming-cyan hover:bg-gaming-cyan/20"
           >
@@ -120,7 +120,7 @@ export default function PCPortableDetails() {
         
         <div className="flex gap-2">
           <Button
-            onClick={() => navigate(`/pc-portable/edit/${product.id}`)}
+            onClick={() => navigate(`/stock?tab=pc-portables&edit=${product.id}`)}
             variant="outline"
             className="border-gaming-purple text-gaming-purple hover:bg-gaming-purple hover:text-white"
           >
@@ -139,7 +139,7 @@ export default function PCPortableDetails() {
       </div>
 
       {/* Product Header */}
-      <Card className="bg-gray-900/50 border-gray-700">
+      <Card className="bg-white border-gray-200">
         <CardContent className="p-6">
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Image */}
@@ -148,11 +148,11 @@ export default function PCPortableDetails() {
                 <img
                   src={product.image_url}
                   alt={product.nom_produit}
-                  className="w-full h-64 object-cover rounded-lg border border-gray-700"
+                  className="w-full h-64 object-contain rounded-lg border border-gray-200"
                 />
               ) : (
-                <div className="w-full h-64 bg-gray-800 border border-gray-700 rounded-lg flex items-center justify-center">
-                  <Laptop className="w-16 h-16 text-gray-600" />
+                <div className="w-full h-64 bg-gray-100 border border-gray-200 rounded-lg flex items-center justify-center">
+                  <Laptop className="w-16 h-16 text-gray-400" />
                 </div>
               )}
             </div>
@@ -161,7 +161,7 @@ export default function PCPortableDetails() {
             <div className="lg:w-2/3 space-y-4">
               <div className="flex items-start justify-between">
                 <div>
-                  <h1 className="text-3xl font-bold text-white mb-2">{product.nom_produit}</h1>
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.nom_produit}</h1>
                   <div className="flex items-center gap-3 mb-4">
                     <Badge className="bg-gaming-purple/20 text-gaming-purple border-gaming-purple/50">
                       {product.marque}
@@ -174,42 +174,42 @@ export default function PCPortableDetails() {
                 
                 <div className="text-right">
                   <p className="text-2xl font-bold text-gaming-cyan">{product.prix_vente.toLocaleString()} MAD</p>
-                  <p className="text-sm text-gray-400">Prix de vente</p>
+                  <p className="text-sm text-gray-600">Prix de vente</p>
                 </div>
               </div>
               
               {/* Quick Stats */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-gray-800/50 p-3 rounded-lg">
+                <div className="bg-gray-50 p-3 rounded-lg">
                   <div className="flex items-center gap-2 mb-1">
                     <Package className="w-4 h-4 text-gaming-cyan" />
-                    <span className="text-sm text-gray-400">Stock</span>
+                    <span className="text-sm text-gray-600">Stock</span>
                   </div>
-                  <p className="text-lg font-semibold text-white">{product.stock_actuel}</p>
+                  <p className="text-lg font-semibold text-gray-900">{product.stock_actuel}</p>
                 </div>
                 
-                <div className="bg-gray-800/50 p-3 rounded-lg">
+                <div className="bg-gray-50 p-3 rounded-lg">
                   <div className="flex items-center gap-2 mb-1">
                     <DollarSign className="w-4 h-4 text-gaming-green" />
-                    <span className="text-sm text-gray-400">Prix d'achat</span>
+                    <span className="text-sm text-gray-600">Prix d'achat</span>
                   </div>
                   <p className="text-lg font-semibold text-gaming-green">{product.prix_achat.toLocaleString()} MAD</p>
                 </div>
                 
-                <div className="bg-gray-800/50 p-3 rounded-lg">
+                <div className="bg-gray-50 p-3 rounded-lg">
                   <div className="flex items-center gap-2 mb-1">
-                    <Shield className="w-4 h-4 text-yellow-400" />
-                    <span className="text-sm text-gray-400">Garantie</span>
+                    <Shield className="w-4 h-4 text-yellow-600" />
+                    <span className="text-sm text-gray-600">Garantie</span>
                   </div>
-                  <p className="text-lg font-semibold text-white">{product.garantie || 'N/A'}</p>
+                  <p className="text-lg font-semibold text-gray-900">{product.garantie || 'N/A'}</p>
                 </div>
                 
-                <div className="bg-gray-800/50 p-3 rounded-lg">
+                <div className="bg-gray-50 p-3 rounded-lg">
                   <div className="flex items-center gap-2 mb-1">
                     <Calendar className="w-4 h-4 text-gaming-purple" />
-                    <span className="text-sm text-gray-400">Ajouté le</span>
+                    <span className="text-sm text-gray-600">Ajouté le</span>
                   </div>
-                  <p className="text-lg font-semibold text-white">
+                  <p className="text-lg font-semibold text-gray-900">
                     {product.created_at ? new Date(product.created_at).toLocaleDateString('fr-FR') : 'N/A'}
                   </p>
                 </div>
@@ -222,86 +222,82 @@ export default function PCPortableDetails() {
       {/* Detailed Specifications */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Technical Specs */}
-        <Card className="bg-gray-900/50 border-gray-700">
+        <Card className="bg-white border-gray-200">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-gray-900 flex items-center gap-2">
               <Cpu className="w-5 h-5 text-gaming-cyan" />
               Spécifications techniques
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-3">
-              <div className="flex justify-between py-2 border-b border-gray-800">
-                <span className="text-gray-400">Processeur:</span>
-                <span className="text-white font-medium">{product.processeur || 'N/A'}</span>
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-gray-600">Processeur:</span>
+                <span className="text-gray-900 font-medium">{product.processeur || 'N/A'}</span>
               </div>
-              <div className="flex justify-between py-2 border-b border-gray-800">
-                <span className="text-gray-400">Mémoire RAM:</span>
-                <span className="text-white font-medium">{product.ram || 'N/A'}</span>
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-gray-600">Mémoire RAM:</span>
+                <span className="text-gray-900 font-medium">{product.ram || 'N/A'}</span>
               </div>
-              <div className="flex justify-between py-2 border-b border-gray-800">
-                <span className="text-gray-400">Stockage:</span>
-                <span className="text-white font-medium">{product.stockage || 'N/A'}</span>
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-gray-600">Stockage:</span>
+                <span className="text-gray-900 font-medium">{product.stockage || 'N/A'}</span>
               </div>
-              <div className="flex justify-between py-2 border-b border-gray-800">
-                <span className="text-gray-400">Carte graphique:</span>
-                <span className="text-white font-medium">{product.carte_graphique || 'N/A'}</span>
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-gray-600">Carte graphique:</span>
+                <span className="text-gray-900 font-medium">{product.carte_graphique || 'N/A'}</span>
               </div>
-              <div className="flex justify-between py-2 border-b border-gray-800">
-                <span className="text-gray-400">Écran:</span>
-                <span className="text-white font-medium">{product.ecran || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-800">
-                <span className="text-gray-400">Système d'exploitation:</span>
-                <span className="text-white font-medium">{product.systeme_exploitation || 'N/A'}</span>
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-gray-600">Écran:</span>
+                <span className="text-gray-900 font-medium">{product.ecran || 'N/A'}</span>
               </div>
               <div className="flex justify-between py-2">
-                <span className="text-gray-400">Code-barres:</span>
-                <span className="text-white font-mono text-sm">{product.code_barre || 'N/A'}</span>
+                <span className="text-gray-600">Code-barres:</span>
+                <span className="text-gray-900 font-mono text-sm">{product.code_barre || 'N/A'}</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Business Info */}
-        <Card className="bg-gray-900/50 border-gray-700">
+        <Card className="bg-white border-gray-200">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-gray-900 flex items-center gap-2">
               <Building className="w-5 h-5 text-gaming-green" />
               Informations commerciales
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-3">
-              <div className="flex justify-between py-2 border-b border-gray-800">
-                <span className="text-gray-400">Fournisseur:</span>
-                <span className="text-white font-medium">{product.fournisseur_nom || 'N/A'}</span>
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-gray-600">Fournisseur:</span>
+                <span className="text-gray-900 font-medium">{(product as any).fournisseurs?.nom || 'N/A'}</span>
               </div>
-              <div className="flex justify-between py-2 border-b border-gray-800">
-                <span className="text-gray-400">Stock minimum:</span>
-                <span className="text-white font-medium">{product.stock_minimum}</span>
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-gray-600">Stock minimum:</span>
+                <span className="text-gray-900 font-medium">{product.stock_minimum}</span>
               </div>
-              <div className="flex justify-between py-2 border-b border-gray-800">
-                <span className="text-gray-400">Marge bénéficiaire:</span>
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-gray-600">Marge bénéficiaire:</span>
                 <span className="text-gaming-green font-medium">
                   {((product.prix_vente - product.prix_achat) / product.prix_achat * 100).toFixed(1)}%
                 </span>
               </div>
-              <div className="flex justify-between py-2 border-b border-gray-800">
-                <span className="text-gray-400">Bénéfice unitaire:</span>
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-gray-600">Bénéfice unitaire:</span>
                 <span className="text-gaming-green font-medium">
                   {(product.prix_vente - product.prix_achat).toLocaleString()} MAD
                 </span>
               </div>
-              <div className="flex justify-between py-2 border-b border-gray-800">
-                <span className="text-gray-400">Valeur stock:</span>
-                <span className="text-white font-medium">
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-gray-600">Valeur stock:</span>
+                <span className="text-gray-900 font-medium">
                   {(product.prix_achat * product.stock_actuel).toLocaleString()} MAD
                 </span>
               </div>
               <div className="flex justify-between py-2">
-                <span className="text-gray-400">Dernière modification:</span>
-                <span className="text-white font-medium">
+                <span className="text-gray-600">Dernière modification:</span>
+                <span className="text-gray-900 font-medium">
                   {product.updated_at ? new Date(product.updated_at).toLocaleDateString('fr-FR') : 'N/A'}
                 </span>
               </div>
@@ -310,17 +306,7 @@ export default function PCPortableDetails() {
         </Card>
       </div>
 
-      {/* Additional Info */}
-      {product.notes && (
-        <Card className="bg-gray-900/50 border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-white">Notes et commentaires</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-300 leading-relaxed">{product.notes}</p>
-          </CardContent>
-        </Card>
-      )}
+
     </div>
   );
 } 

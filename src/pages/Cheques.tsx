@@ -318,10 +318,10 @@ export default function Cheques() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <SidebarTrigger className="text-white hover:text-gaming-cyan lg:hidden" />
+          <SidebarTrigger className="text-gray-700 hover:text-gaming-cyan lg:hidden" />
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-white">Gestion des Chèques</h1>
-            <p className="text-gray-400 text-sm lg:text-base">Suivi des échéances et encaissement</p>
+            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Gestion des Chèques</h1>
+            <p className="text-gray-600 text-sm lg:text-base">Suivi des échéances et encaissement</p>
           </div>
         </div>
       </div>
@@ -356,43 +356,43 @@ export default function Cheques() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900/50 border-gray-700">
+        <Card className="bg-white border-gray-200">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
                 <CheckCircle className="w-5 h-5 text-green-400" />
               </div>
               <div>
-                <p className="text-sm text-gray-400">Encaissés</p>
-                <p className="text-xl font-bold text-white">{stats.total_encaisses}</p>
+                <p className="text-sm text-gray-600">Encaissés</p>
+                <p className="text-xl font-bold text-gray-900">{stats.total_encaisses}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900/50 border-gray-700">
+        <Card className="bg-white border-gray-200">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
                 <DollarSign className="w-5 h-5 text-green-400" />
               </div>
               <div>
-                <p className="text-sm text-gray-400">Montant encaissé</p>
-                <p className="text-xl font-bold text-white">{stats.montant_encaisse.toFixed(2)} MAD</p>
+                <p className="text-sm text-gray-600">Montant encaissé</p>
+                <p className="text-xl font-bold text-gray-900">{stats.montant_encaisse.toFixed(2)} MAD</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900/50 border-gray-700">
+        <Card className="bg-white border-gray-200">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
                 <AlertTriangle className="w-5 h-5 text-red-400" />
               </div>
               <div>
-                <p className="text-sm text-gray-400">Échus</p>
-                <p className="text-xl font-bold text-white">{stats.echus}</p>
+                <p className="text-sm text-gray-600">Échus</p>
+                <p className="text-xl font-bold text-gray-900">{stats.echus}</p>
               </div>
             </div>
           </CardContent>

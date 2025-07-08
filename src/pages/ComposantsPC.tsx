@@ -204,8 +204,8 @@ export default function ComposantsPC({ embedded = false }: { embedded?: boolean 
       case 'Stock faible': return 'bg-yellow-600';
       case 'Rupture': return 'bg-red-600';
       case 'Réservé': return 'bg-blue-600';
-      case 'Archivé': return 'bg-gray-600';
-      default: return 'bg-gray-600';
+      case 'Archivé': return 'bg-gray-200';
+      default: return 'bg-gray-200';
     }
   };
 
@@ -385,13 +385,13 @@ export default function ComposantsPC({ embedded = false }: { embedded?: boolean 
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <SidebarTrigger className="text-white hover:text-gaming-cyan" />
+              <SidebarTrigger className="text-gray-700 hover:text-gaming-cyan" />
               <div>
-                <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+                <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
                   <Cpu className="w-8 h-8 text-gaming-cyan" />
                   Composants PC
                 </h1>
-                <p className="text-gray-400">Gestion du stock des composants informatiques</p>
+                <p className="text-gray-600">Gestion du stock des composants informatiques</p>
               </div>
             </div>
           </div>
@@ -402,11 +402,11 @@ export default function ComposantsPC({ embedded = false }: { embedded?: boolean 
       <div className="flex items-center justify-between">
         {embedded && (
           <div>
-            <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
               <Cpu className="w-6 h-6 text-gaming-cyan" />
               Composants PC
             </h2>
-            <p className="text-gray-400">Gestion du stock des composants informatiques</p>
+            <p className="text-gray-600">Gestion du stock des composants informatiques</p>
           </div>
         )}
         
@@ -423,12 +423,12 @@ export default function ComposantsPC({ embedded = false }: { embedded?: boolean 
               Nouveau Composant
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="bg-white border-gray-200 text-gray-900 max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingProduct ? "Modifier le Composant PC" : "Ajouter un nouveau Composant PC"}
               </DialogTitle>
-              <DialogDescription className="text-gray-400">
+              <DialogDescription className="text-gray-600">
                 Remplissez les informations du composant PC
               </DialogDescription>
             </DialogHeader>
@@ -442,17 +442,17 @@ export default function ComposantsPC({ embedded = false }: { embedded?: boolean 
                     id="nom_produit"
                     value={newProduct.nom_produit}
                     onChange={(e) => setNewProduct({ ...newProduct, nom_produit: e.target.value })}
-                    className="bg-gray-800 border-gray-600"
+                    className="bg-white border-gray-200"
                     placeholder="Ex: Intel Core i7-13700K"
                   />
                 </div>
                 <div>
                   <Label htmlFor="categorie">Catégorie *</Label>
                   <Select value={newProduct.categorie} onValueChange={(value: any) => setNewProduct({ ...newProduct, categorie: value })}>
-                    <SelectTrigger className="bg-gray-800 border-gray-600">
+                    <SelectTrigger className="bg-white border-gray-200">
                       <SelectValue placeholder="Sélectionner une catégorie" />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-600">
+                    <SelectContent className="bg-white border-gray-200">
                       {categories.map((cat) => (
                         <SelectItem key={cat.value} value={cat.value}>
                           <div className="flex items-center gap-2">
@@ -473,17 +473,17 @@ export default function ComposantsPC({ embedded = false }: { embedded?: boolean 
                     id="code_barre"
                     value={newProduct.code_barre}
                     onChange={(e) => setNewProduct({ ...newProduct, code_barre: e.target.value })}
-                    className="bg-gray-800 border-gray-600"
+                    className="bg-white border-gray-200"
                     placeholder="Scannez ou saisissez le code-barres"
                   />
                 </div>
                 <div>
                   <Label htmlFor="fournisseur_id">Fournisseur</Label>
                   <Select value={newProduct.fournisseur_id || "none"} onValueChange={(value) => setNewProduct({ ...newProduct, fournisseur_id: value === "none" ? undefined : value })}>
-                    <SelectTrigger className="bg-gray-800 border-gray-600">
+                    <SelectTrigger className="bg-white border-gray-200">
                       <SelectValue placeholder="Sélectionner un fournisseur" />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-600">
+                    <SelectContent className="bg-white border-gray-200">
                       <SelectItem value="none">Aucun fournisseur</SelectItem>
                       {activeFournisseurs.map((fournisseur) => (
                         <SelectItem key={fournisseur.id} value={fournisseur.id}>{fournisseur.nom}</SelectItem>
@@ -498,10 +498,10 @@ export default function ComposantsPC({ embedded = false }: { embedded?: boolean 
                 <div>
                   <Label htmlFor="etat">État *</Label>
                   <Select value={newProduct.etat} onValueChange={(value: any) => setNewProduct({ ...newProduct, etat: value })}>
-                    <SelectTrigger className="bg-gray-800 border-gray-600">
+                    <SelectTrigger className="bg-white border-gray-200">
                       <SelectValue placeholder="Sélectionner l'état" />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-600">
+                    <SelectContent className="bg-white border-gray-200">
                       {etats.map((etat) => (
                         <SelectItem key={etat} value={etat}>{etat}</SelectItem>
                       ))}
@@ -511,10 +511,10 @@ export default function ComposantsPC({ embedded = false }: { embedded?: boolean 
                 <div>
                   <Label htmlFor="garantie">Garantie *</Label>
                   <Select value={newProduct.garantie} onValueChange={(value: any) => setNewProduct({ ...newProduct, garantie: value })}>
-                    <SelectTrigger className="bg-gray-800 border-gray-600">
+                    <SelectTrigger className="bg-white border-gray-200">
                       <SelectValue placeholder="Sélectionner la garantie" />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-600">
+                    <SelectContent className="bg-white border-gray-200">
                       {garanties.map((garantie) => (
                         <SelectItem key={garantie} value={garantie}>
                           {garantie}
@@ -537,7 +537,7 @@ export default function ComposantsPC({ embedded = false }: { embedded?: boolean 
                       type="number"
                       value={newProduct.prix_achat}
                       onChange={(e) => setNewProduct({ ...newProduct, prix_achat: parseFloat(e.target.value) || 0 })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                       placeholder="0"
                     />
                   </div>
@@ -548,7 +548,7 @@ export default function ComposantsPC({ embedded = false }: { embedded?: boolean 
                       type="number"
                       value={newProduct.prix_vente}
                       onChange={(e) => setNewProduct({ ...newProduct, prix_vente: parseFloat(e.target.value) || 0 })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                       placeholder="0"
                     />
                   </div>
@@ -571,7 +571,7 @@ export default function ComposantsPC({ embedded = false }: { embedded?: boolean 
                       type="number"
                       value={newProduct.stock_actuel}
                       onChange={(e) => setNewProduct({ ...newProduct, stock_actuel: parseInt(e.target.value) || 0 })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                       placeholder="0"
                     />
                   </div>
@@ -582,7 +582,7 @@ export default function ComposantsPC({ embedded = false }: { embedded?: boolean 
                       type="number"
                       value={newProduct.stock_minimum}
                       onChange={(e) => setNewProduct({ ...newProduct, stock_minimum: parseInt(e.target.value) || 1 })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                       placeholder="1"
                     />
                   </div>
@@ -595,7 +595,7 @@ export default function ComposantsPC({ embedded = false }: { embedded?: boolean 
                 
                 <div className="space-y-4">
                   {imagePreview && (
-                    <div className="w-32 h-32 bg-gray-700 rounded-lg overflow-hidden">
+                    <div className="w-32 h-32 bg-gray-100 rounded-lg overflow-hidden">
                       <img 
                         src={imagePreview} 
                         alt="Aperçu"
@@ -664,7 +664,7 @@ export default function ComposantsPC({ embedded = false }: { embedded?: boolean 
                   id="notes"
                   value={newProduct.notes}
                   onChange={(e) => setNewProduct({ ...newProduct, notes: e.target.value })}
-                  className="bg-gray-800 border-gray-600"
+                  className="bg-white border-gray-200"
                   placeholder="Informations supplémentaires sur le composant..."
                   rows={3}
                 />
@@ -794,14 +794,14 @@ export default function ComposantsPC({ embedded = false }: { embedded?: boolean 
                 placeholder="Rechercher par nom, catégorie, code-barres ou notes..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-gray-800 border-gray-600"
+                className="pl-10 bg-white border-gray-200"
               />
             </div>
             <Select value={filterCategorie} onValueChange={setFilterCategorie}>
-              <SelectTrigger className="w-48 bg-gray-800 border-gray-600">
+              <SelectTrigger className="w-48 bg-white border-gray-200">
                 <SelectValue placeholder="Toutes les catégories" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-600">
+              <SelectContent className="bg-white border-gray-200">
                 <SelectItem value="all">Toutes les catégories</SelectItem>
                 {categories.map((cat) => (
                   <SelectItem key={cat.value} value={cat.value}>
@@ -836,7 +836,7 @@ export default function ComposantsPC({ embedded = false }: { embedded?: boolean 
                 <Card key={product.id} className="bg-gray-800 border-gray-700 hover:border-gaming-purple/50 transition-all">
                   <CardContent className="p-4">
                     {/* Image */}
-                    <div className="w-full h-48 bg-gray-700 rounded-lg mb-4 flex items-center justify-center">
+                    <div className="w-full h-48 bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
                       {product.image_url ? (
                         <img 
                           src={product.image_url} 
@@ -856,7 +856,7 @@ export default function ComposantsPC({ embedded = false }: { embedded?: boolean 
                           <IconComponent className="w-4 h-4 text-gaming-cyan" />
                           <p className="text-gaming-cyan text-sm">{getCategoryLabel(product.categorie)}</p>
                         </div>
-                        <Badge className="mt-1 text-xs bg-gray-600">{product.etat}</Badge>
+                        <Badge className="mt-1 text-xs bg-gray-200">{product.etat}</Badge>
                       </div>
                       <Badge className={`${getStatutColor(product.statut)} text-xs ml-2`}>
                         {product.statut}
@@ -880,7 +880,7 @@ export default function ComposantsPC({ embedded = false }: { embedded?: boolean 
                       {product.notes && (
                         <div className="text-sm">
                           <span className="text-gray-400">Notes:</span>
-                          <p className="text-gray-300 text-xs mt-1 line-clamp-2">{product.notes}</p>
+                          <p className="text-gray-600 text-xs mt-1 line-clamp-2">{product.notes}</p>
                         </div>
                       )}
                     </div>

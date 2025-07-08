@@ -115,14 +115,14 @@ const CashRegister = () => {
   }
 
   return (
-    <div className="p-6 space-y-6 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 min-h-screen">
+    <div className="p-6 space-y-6 bg-background min-h-screen">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
             <Wallet className="w-8 h-8 text-gaming-cyan" />
             Gestion Financière
           </h1>
-          <p className="text-gray-400 mt-2">Caisse physique et comptes bancaires en dirham marocain (MAD)</p>
+          <p className="text-gray-600 mt-2">Caisse physique et comptes bancaires en dirham marocain (MAD)</p>
         </div>
       </div>
 

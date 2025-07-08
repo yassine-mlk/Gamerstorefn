@@ -37,7 +37,7 @@ import { Badge } from "@/components/ui/badge";
 
 const adminMenuItems = [
   {
-    title: "Tableau de bord",
+    title: "Dashboard",
     url: "/dashboard",
     icon: BarChart3,
   },
@@ -113,7 +113,7 @@ const vendeurMenuItems = [
 
 const memberMenuItems = [
   {
-    title: "Tableau de bord",
+    title: "Dashboard",
     url: "/member-dashboard",
     icon: BarChart3,
   },
@@ -162,23 +162,23 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
   };
 
   return (
-    <Sidebar className="tech-gradient border-r border-gray-700/50 shadow-2xl">
-      <SidebarHeader className="border-b border-gray-700/50 p-6">
+    <Sidebar className="bg-white border-r border-gray-200 shadow-lg">
+      <SidebarHeader className="border-b border-gray-200 p-6 bg-white">
         <div className="flex items-center gap-4">
           <div className="relative">
-            <div className="w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center shadow-lg">
+            <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center shadow-sm border border-gray-200">
               <img 
                 src="/logo-gamer-store.jpg" 
                 alt="Logo Gamerstore" 
                 className="w-8 h-8 object-contain rounded"
               />
             </div>
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-gaming-cyan rounded-full border-2 border-gray-800"></div>
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-gaming-cyan rounded-full border-2 border-white"></div>
           </div>
           <div className="flex-1">
-            <h2 className="text-xl font-bold text-white tracking-tight">Gamerstore</h2>
+            <h2 className="text-xl font-bold text-gray-900 tracking-tight">Gamerstore</h2>
             <div className="flex items-center gap-2">
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-600">
                 {userRole === "vendeur" ? "Caisse Tactile" : "Gestion Magasin"}
               </p>
               <Badge variant="outline" className={`text-xs ${getRoleColor(userRole)}`}>
@@ -187,12 +187,12 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
             </div>
           </div>
         </div>
-        <SidebarTrigger className="ml-auto text-white hover:text-gaming-cyan lg:hidden" />
+        <SidebarTrigger className="ml-auto text-gray-600 hover:text-gaming-cyan lg:hidden" />
       </SidebarHeader>
       
-      <SidebarContent className="px-4 py-6">
+      <SidebarContent className="px-4 py-6 bg-white">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-gray-400 text-xs uppercase tracking-wider font-semibold px-3 mb-3">
+          <SidebarGroupLabel className="text-gray-600 text-xs uppercase tracking-wider font-semibold px-3 mb-3">
             Navigation
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -202,19 +202,19 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
                   <SidebarMenuButton
                     asChild
                     isActive={location.pathname === item.url}
-                    className="text-gray-300 hover:text-white hover:bg-gaming-purple/20 data-[active=true]:bg-gaming-purple/30 data-[active=true]:text-white data-[active=true]:shadow-lg transition-all duration-300 rounded-xl group"
+                    className="text-gray-700 hover:text-gray-900 hover:bg-gray-100 data-[active=true]:bg-gaming-cyan/10 data-[active=true]:text-gaming-cyan data-[active=true]:shadow-sm transition-all duration-300 rounded-xl group"
                   >
                     <button
                       onClick={() => navigate(item.url)}
-                      className="w-full flex items-center gap-4 px-4 py-3 rounded-xl font-medium"
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium"
                     >
                       <div className="relative">
-                        <item.icon className="w-5 h-5 transition-transform group-hover:scale-110" />
+                        <item.icon className="w-5 h-5 transition-transform group-hover:scale-105" />
                         {location.pathname === item.url && (
-                          <div className="absolute -inset-1 bg-gaming-cyan/20 rounded-lg blur-sm"></div>
+                          <div className="absolute -inset-1 bg-gaming-cyan/10 rounded-lg"></div>
                         )}
                       </div>
-                      <span className="text-sm lg:text-base">{item.title}</span>
+                      <span className="text-sm lg:text-base truncate">{item.title}</span>
                       {location.pathname === item.url && (
                         <div className="ml-auto w-2 h-2 bg-gaming-cyan rounded-full"></div>
                       )}

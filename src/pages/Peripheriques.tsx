@@ -360,8 +360,8 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
             <div className="flex items-center gap-4">
               <SidebarTrigger />
               <div>
-                <h1 className="text-3xl font-bold text-white">Gestion des Périphériques</h1>
-                <p className="text-gray-400">Gérer l'inventaire des périphériques</p>
+                <h1 className="text-3xl font-bold text-gray-900">Gestion des Périphériques</h1>
+                <p className="text-gray-600">Gérer l'inventaire des périphériques</p>
               </div>
             </div>
           </div>
@@ -372,11 +372,11 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
       <div className="flex items-center justify-between">
         {embedded && (
           <div>
-            <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
               <Mouse className="w-6 h-6 text-gaming-cyan" />
               Périphériques
             </h2>
-            <p className="text-gray-400">Gérer l'inventaire des périphériques</p>
+            <p className="text-gray-600">Gérer l'inventaire des périphériques</p>
           </div>
         )}
         
@@ -387,12 +387,12 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
               Ajouter un périphérique
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gray-900 border-gray-700">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white border-gray-200">
             <DialogHeader>
-              <DialogTitle className="text-white">
+              <DialogTitle className="text-gray-900">
                 {editingPeripherique ? "Modifier le périphérique" : "Ajouter un nouveau périphérique"}
               </DialogTitle>
-              <DialogDescription className="text-gray-400">
+              <DialogDescription className="text-gray-600">
                 {editingPeripherique 
                   ? "Modifiez les informations du périphérique ci-dessous."
                   : "Remplissez les informations du nouveau périphérique."
@@ -403,7 +403,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
             <div className="grid gap-6">
               {/* Informations de base */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-white border-b border-gray-700 pb-2">
+                <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
                   Informations de base
                 </h3>
                 
@@ -414,7 +414,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                       id="nom_produit"
                       value={newPeripherique.nom_produit}
                       onChange={(e) => setNewPeripherique({ ...newPeripherique, nom_produit: e.target.value })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                       placeholder="Ex: Clavier Gaming RGB"
                     />
                   </div>
@@ -424,7 +424,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                       id="code_barre"
                       value={newPeripherique.code_barre}
                       onChange={(e) => setNewPeripherique({ ...newPeripherique, code_barre: e.target.value })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                       placeholder="Ex: 1234567890123"
                     />
                   </div>
@@ -437,10 +437,10 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                       value={newPeripherique.categorie}
                       onValueChange={(value: any) => setNewPeripherique({ ...newPeripherique, categorie: value })}
                     >
-                      <SelectTrigger className="bg-gray-800 border-gray-600">
+                      <SelectTrigger className="bg-white border-gray-200">
                         <SelectValue placeholder="Sélectionner une catégorie" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-600">
+                      <SelectContent className="bg-white border-gray-200">
                         {categories.map((cat) => (
                           <SelectItem key={cat.value} value={cat.value}>
                             <div className="flex items-center space-x-2">
@@ -458,10 +458,10 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                       value={newPeripherique.marque}
                       onValueChange={(value) => setNewPeripherique({ ...newPeripherique, marque: value })}
                     >
-                      <SelectTrigger className="bg-gray-800 border-gray-600">
+                      <SelectTrigger className="bg-white border-gray-200">
                         <SelectValue placeholder="Sélectionner une marque" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-600">
+                      <SelectContent className="bg-white border-gray-200">
                         {settings.marquesPeripheriques.map((marque) => (
                           <SelectItem key={marque} value={marque}>
                             {marque}
@@ -479,7 +479,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                       id="modele"
                       value={newPeripherique.modele}
                       onChange={(e) => setNewPeripherique({ ...newPeripherique, modele: e.target.value })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                       placeholder="Ex: K95 RGB Platinum"
                     />
                   </div>
@@ -489,7 +489,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                       id="reference"
                       value={newPeripherique.reference}
                       onChange={(e) => setNewPeripherique({ ...newPeripherique, reference: e.target.value })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                       placeholder="Référence interne"
                     />
                   </div>
@@ -502,10 +502,10 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                       value={newPeripherique.etat}
                       onValueChange={(value: any) => setNewPeripherique({ ...newPeripherique, etat: value })}
                     >
-                      <SelectTrigger className="bg-gray-800 border-gray-600">
+                      <SelectTrigger className="bg-white border-gray-200">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-600">
+                      <SelectContent className="bg-white border-gray-200">
                         {etats.map((etat) => (
                           <SelectItem key={etat} value={etat}>
                             {etat}
@@ -520,10 +520,10 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                       value={newPeripherique.garantie}
                       onValueChange={(value) => setNewPeripherique({ ...newPeripherique, garantie: value })}
                     >
-                      <SelectTrigger className="bg-gray-800 border-gray-600">
+                      <SelectTrigger className="bg-white border-gray-200">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-600">
+                      <SelectContent className="bg-white border-gray-200">
                         {garanties.map((garantie) => (
                           <SelectItem key={garantie} value={garantie}>
                             {garantie}
@@ -537,7 +537,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
 
               {/* Prix et Stock */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-white border-b border-gray-700 pb-2">
+                <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
                   Prix et stock
                 </h3>
                 
@@ -550,7 +550,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                       step="0.01"
                       value={newPeripherique.prix_achat}
                       onChange={(e) => setNewPeripherique({ ...newPeripherique, prix_achat: parseFloat(e.target.value) || 0 })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                     />
                   </div>
                   <div>
@@ -561,7 +561,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                       step="0.01"
                       value={newPeripherique.prix_vente}
                       onChange={(e) => setNewPeripherique({ ...newPeripherique, prix_vente: parseFloat(e.target.value) || 0 })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                     />
                   </div>
                 </div>
@@ -574,7 +574,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                       type="number"
                       value={newPeripherique.stock_actuel}
                       onChange={(e) => setNewPeripherique({ ...newPeripherique, stock_actuel: parseInt(e.target.value) || 0 })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                     />
                   </div>
                   <div>
@@ -584,7 +584,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                       type="number"
                       value={newPeripherique.stock_minimum}
                       onChange={(e) => setNewPeripherique({ ...newPeripherique, stock_minimum: parseInt(e.target.value) || 1 })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                     />
                   </div>
                 </div>
@@ -596,10 +596,10 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                       value={newPeripherique.fournisseur_id}
                       onValueChange={(value) => setNewPeripherique({ ...newPeripherique, fournisseur_id: value })}
                     >
-                      <SelectTrigger className="bg-gray-800 border-gray-600">
+                      <SelectTrigger className="bg-white border-gray-200">
                         <SelectValue placeholder="Sélectionner un fournisseur" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-600">
+                      <SelectContent className="bg-white border-gray-200">
                         {suppliers.map((supplier) => (
                           <SelectItem key={supplier.id} value={supplier.id}>
                             {supplier.nom}
@@ -614,7 +614,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                       id="emplacement"
                       value={newPeripherique.emplacement}
                       onChange={(e) => setNewPeripherique({ ...newPeripherique, emplacement: e.target.value })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                       placeholder="Ex: Étagère A-1"
                     />
                   </div>
@@ -626,7 +626,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                     id="description"
                     value={newPeripherique.description}
                     onChange={(e) => setNewPeripherique({ ...newPeripherique, description: e.target.value })}
-                    className="bg-gray-800 border-gray-600"
+                    className="bg-white border-gray-200"
                     placeholder="Description du produit..."
                     rows={3}
                   />
@@ -638,7 +638,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                     id="notes"
                     value={newPeripherique.notes}
                     onChange={(e) => setNewPeripherique({ ...newPeripherique, notes: e.target.value })}
-                    className="bg-gray-800 border-gray-600"
+                    className="bg-white border-gray-200"
                     placeholder="Notes internes..."
                     rows={2}
                   />
@@ -647,7 +647,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
 
               {/* Image du produit */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-white border-b border-gray-700 pb-2">
+                <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
                   Image du produit
                 </h3>
                 
@@ -657,7 +657,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                       <img 
                         src={imagePreview} 
                         alt="Aperçu" 
-                        className="w-full h-48 object-cover rounded-lg border border-gray-600"
+                        className="w-full h-48 object-cover rounded-lg border border-gray-200"
                       />
                     </div>
                   )}
@@ -673,7 +673,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                     <Button 
                       type="button"
                       variant="outline" 
-                      className="border-gray-600"
+                      className="border-gray-200"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploading}
                     >
@@ -683,7 +683,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                     <Button 
                       type="button"
                       variant="outline" 
-                      className="border-gray-600"
+                      className="border-gray-200"
                       onClick={showCamera ? stopCamera : startCamera}
                       disabled={uploading}
                     >
@@ -698,7 +698,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                         ref={videoRef}
                         autoPlay
                         playsInline
-                        className="max-w-md rounded-lg border border-gray-600"
+                        className="max-w-md rounded-lg border border-gray-200"
                       />
                       <Button onClick={takePhoto} disabled={uploading} className="gaming-gradient">
                         {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2 h-4 w-4" />}
@@ -718,7 +718,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                   setIsAddDialogOpen(false);
                   resetForm();
                 }}
-                className="border-gray-600 text-gray-300 hover:bg-gray-800"
+                className="border-gray-200 text-gray-600 hover:bg-gray-100"
               >
                 Annuler
               </Button>
@@ -742,7 +742,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100 text-sm font-medium">Total Périphériques</p>
-                <p className="text-white text-3xl font-bold">{stats.total}</p>
+                <p className="text-gray-900 text-3xl font-bold">{stats.total}</p>
               </div>
               <Mouse className="w-8 h-8 text-blue-200" />
             </div>
@@ -754,7 +754,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-100 text-sm font-medium">Disponibles</p>
-                <p className="text-white text-3xl font-bold">{stats.disponibles}</p>
+                <p className="text-gray-900 text-3xl font-bold">{stats.disponibles}</p>
               </div>
               <CheckCircle className="w-8 h-8 text-green-200" />
             </div>
@@ -766,7 +766,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-yellow-100 text-sm font-medium">À commander</p>
-                <p className="text-white text-3xl font-bold">{stats.commande}</p>
+                <p className="text-gray-900 text-3xl font-bold">{stats.commande}</p>
               </div>
               <AlertTriangle className="w-8 h-8 text-yellow-200" />
             </div>
@@ -778,7 +778,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-red-100 text-sm font-medium">Rupture</p>
-                <p className="text-white text-3xl font-bold">{stats.rupture}</p>
+                <p className="text-gray-900 text-3xl font-bold">{stats.rupture}</p>
               </div>
               <XCircle className="w-8 h-8 text-red-200" />
             </div>
@@ -790,7 +790,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-cyan-100 text-sm font-medium">Prix Total Achat</p>
-                <p className="text-white text-3xl font-bold">{priceStats.totalAchat.toLocaleString()} MAD</p>
+                <p className="text-gray-900 text-3xl font-bold">{priceStats.totalAchat.toLocaleString()} MAD</p>
               </div>
               <DollarSign className="w-8 h-8 text-cyan-200" />
             </div>
@@ -802,7 +802,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-emerald-100 text-sm font-medium">Prix Total Vente</p>
-                <p className="text-white text-3xl font-bold">{priceStats.totalVente.toLocaleString()} MAD</p>
+                <p className="text-gray-900 text-3xl font-bold">{priceStats.totalVente.toLocaleString()} MAD</p>
               </div>
               <TrendingUp className="w-8 h-8 text-emerald-200" />
             </div>
@@ -811,9 +811,9 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
       </div>
 
       {/* Search and Filter */}
-      <Card className="bg-gray-900/50 border-gray-700">
+      <Card className="bg-white border-gray-200">
         <CardHeader>
-          <CardTitle className="text-white">Recherche et filtres</CardTitle>
+          <CardTitle className="text-gray-900">Recherche et filtres</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4">
@@ -823,7 +823,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                 placeholder="Rechercher par nom, marque, modèle, catégorie ou code barre..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-gray-800 border-gray-600 text-white"
+                className="pl-10 bg-white border-gray-200 text-gray-900"
               />
             </div>
           </div>
@@ -831,22 +831,22 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
       </Card>
 
       {/* Périphériques List */}
-      <Card className="bg-gray-900/50 border-gray-700">
+      <Card className="bg-white border-gray-200">
         <CardHeader>
-          <CardTitle className="text-white">Liste des Périphériques</CardTitle>
-          <CardDescription className="text-gray-400">
+          <CardTitle className="text-gray-900">Liste des Périphériques</CardTitle>
+          <CardDescription className="text-gray-600">
             {filteredPeripheriques.length} périphérique(s) trouvé(s)
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPeripheriques.map((peripherique) => (
-              <Card key={peripherique.id} className="bg-gray-800 border-gray-600 hover:border-gaming-cyan transition-colors">
+              <Card key={peripherique.id} className="bg-white border-gray-200 hover:border-gaming-cyan transition-colors">
                 <CardContent className="p-4">
                   <div className="space-y-3">
                     {/* Image */}
                     {peripherique.image_url ? (
-                      <div className="w-full h-32 bg-gray-700 rounded-lg overflow-hidden">
+                      <div className="w-full h-32 bg-gray-100 rounded-lg overflow-hidden">
                         <img 
                           src={peripherique.image_url} 
                           alt={peripherique.nom_produit}
@@ -854,7 +854,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                         />
                       </div>
                     ) : (
-                      <div className="w-full h-32 bg-gray-700 rounded-lg flex items-center justify-center">
+                      <div className="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center">
                         {getCategorieIcon(peripherique.categorie)}
                       </div>
                     )}
@@ -862,12 +862,12 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                     {/* Header */}
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h3 className="text-white font-semibold text-sm line-clamp-2">
+                        <h3 className="text-gray-900 font-semibold text-sm line-clamp-2">
                           {peripherique.nom_produit}
                         </h3>
                         <p className="text-gaming-cyan text-xs">{peripherique.marque}</p>
                       </div>
-                      <Badge className={`${getStatutColor(peripherique.statut)} text-white text-xs`}>
+                      <Badge className={`${getStatutColor(peripherique.statut)} text-gray-900 text-xs`}>
                         <div className="flex items-center gap-1">
                           {getStatutIcon(peripherique.statut)}
                           {peripherique.statut}
@@ -876,40 +876,40 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                     </div>
 
                     {/* Specs */}
-                    <div className="space-y-1 text-xs text-gray-300">
+                    <div className="space-y-1 text-xs text-gray-600">
                       <div className="flex justify-between">
                         <span>Catégorie:</span>
                         <div className="flex items-center gap-1">
                           {getCategorieIcon(peripherique.categorie)}
-                          <span className="text-white">{getCategorieLabel(peripherique.categorie)}</span>
+                          <span className="text-gray-900">{getCategorieLabel(peripherique.categorie)}</span>
                         </div>
                       </div>
                       {peripherique.modele && (
                         <div className="flex justify-between">
                           <span>Modèle:</span>
-                          <span className="text-white">{peripherique.modele}</span>
+                          <span className="text-gray-900">{peripherique.modele}</span>
                         </div>
                       )}
                       <div className="flex justify-between">
                         <span>État:</span>
-                        <span className="text-white">{peripherique.etat}</span>
+                        <span className="text-gray-900">{peripherique.etat}</span>
                       </div>
                     </div>
 
                     {/* Prix et Stock */}
                     <div className="space-y-1 text-xs">
-                      <div className="flex justify-between text-gray-300">
+                      <div className="flex justify-between text-gray-600">
                         <span>Prix vente:</span>
                         <span className="text-gaming-green font-medium">{peripherique.prix_vente.toFixed(2)} MAD</span>
                       </div>
-                      <div className="flex justify-between text-gray-300">
+                      <div className="flex justify-between text-gray-600">
                         <span>Stock:</span>
-                        <span className="text-white font-medium">{peripherique.stock_actuel}</span>
+                        <span className="text-gray-900 font-medium">{peripherique.stock_actuel}</span>
                       </div>
                       {peripherique.code_barre && (
-                        <div className="flex justify-between text-gray-300">
+                        <div className="flex justify-between text-gray-600">
                           <span>Code-barres:</span>
-                          <span className="text-white text-xs">{peripherique.code_barre}</span>
+                          <span className="text-gray-900 text-xs">{peripherique.code_barre}</span>
                         </div>
                       )}
                     </div>
@@ -920,7 +920,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                         variant="outline"
                         size="sm"
                         onClick={() => openEditDialog(peripherique)}
-                        className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700"
+                        className="flex-1 border-gray-200 text-gray-600 hover:bg-gray-100"
                       >
                         <Edit className="w-3 h-3 mr-1" />
                         Modifier
@@ -929,7 +929,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                         variant="outline"
                         size="sm"
                         onClick={() => handleDeletePeripherique(peripherique.id)}
-                        className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                        className="border-red-600 text-red-400 hover:bg-red-600 hover:text-gray-900"
                       >
                         <Trash2 className="w-3 h-3" />
                       </Button>
@@ -943,7 +943,7 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
           {filteredPeripheriques.length === 0 && (
             <div className="text-center py-12">
               <Mouse className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400 text-lg">
+              <p className="text-gray-600 text-lg">
                 {searchTerm
                   ? "Aucun périphérique ne correspond à votre recherche."
                   : "Aucun périphérique trouvé"}

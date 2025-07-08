@@ -199,10 +199,10 @@ export default function Sales() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <SidebarTrigger className="text-white hover:text-gaming-cyan lg:hidden" />
+          <SidebarTrigger className="text-gray-700 hover:text-gaming-cyan lg:hidden" />
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-white">Historique des ventes</h1>
-            <p className="text-gray-400 text-sm lg:text-base">Consultez et analysez toutes les ventes</p>
+            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Historique des ventes</h1>
+            <p className="text-gray-600 text-sm lg:text-base">Consultez et analysez toutes les ventes</p>
           </div>
         </div>
         <div className="flex items-center gap-2">

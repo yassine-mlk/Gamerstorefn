@@ -62,10 +62,10 @@ export default function Profile() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <SidebarTrigger className="text-white hover:text-gaming-cyan lg:hidden" />
+          <SidebarTrigger className="text-gray-700 hover:text-gaming-cyan lg:hidden" />
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-white">Mon Profil</h1>
-            <p className="text-gray-400 text-sm lg:text-base">Gérez vos informations personnelles</p>
+            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Mon Profil</h1>
+            <p className="text-gray-600 text-sm lg:text-base">Gérez vos informations personnelles</p>
           </div>
         </div>
         {!isEditing ? (
@@ -79,7 +79,7 @@ export default function Profile() {
               <Save className="w-4 h-4 mr-2" />
               Sauvegarder
             </Button>
-            <Button onClick={handleCancel} variant="outline" className="border-gray-600">
+            <Button onClick={handleCancel} variant="outline" className="border-gray-200">
               <X className="w-4 h-4 mr-2" />
               Annuler
             </Button>
@@ -252,10 +252,10 @@ export default function Profile() {
       </div>
 
       {/* Statistiques d'activité */}
-      <Card className="bg-gray-900/50 border-gray-700">
+      <Card className="bg-white border-gray-200">
         <CardHeader>
-          <CardTitle className="text-white">Statistiques d'activité</CardTitle>
-          <CardDescription className="text-gray-400">
+          <CardTitle className="text-gray-900">Statistiques d'activité</CardTitle>
+          <CardDescription className="text-gray-600">
             Votre activité dans l'application
           </CardDescription>
         </CardHeader>
@@ -266,8 +266,8 @@ export default function Profile() {
                 <User className="w-6 h-6 text-gaming-purple" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">156</p>
-                <p className="text-xs text-gray-400">Clients gérés</p>
+                <p className="text-2xl font-bold text-gray-900">156</p>
+                <p className="text-xs text-gray-600">Clients gérés</p>
               </div>
             </div>
             
@@ -276,8 +276,8 @@ export default function Profile() {
                 <Calendar className="w-6 h-6 text-gaming-cyan" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">89</p>
-                <p className="text-xs text-gray-400">Ventes ce mois</p>
+                <p className="text-2xl font-bold text-gray-900">89</p>
+                <p className="text-xs text-gray-600">Ventes ce mois</p>
               </div>
             </div>
             
@@ -286,8 +286,8 @@ export default function Profile() {
                 <Clock className="w-6 h-6 text-gaming-green" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">24h</p>
-                <p className="text-xs text-gray-400">Temps connecté</p>
+                <p className="text-2xl font-bold text-gray-900">24h</p>
+                <p className="text-xs text-gray-600">Temps connecté</p>
               </div>
             </div>
             
@@ -296,8 +296,8 @@ export default function Profile() {
                 <Shield className="w-6 h-6 text-yellow-500" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">Admin</p>
-                <p className="text-xs text-gray-400">Niveau d'accès</p>
+                <p className="text-2xl font-bold text-gray-900">Admin</p>
+                <p className="text-xs text-gray-600">Niveau d'accès</p>
               </div>
             </div>
           </div>

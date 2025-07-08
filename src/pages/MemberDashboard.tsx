@@ -29,11 +29,11 @@ const MemberDashboard = () => {
   ];
 
   return (
-    <div className="flex-1 space-y-6 p-6 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 min-h-screen">
+    <div className="flex-1 space-y-6 p-6 bg-background min-h-screen">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-white">Mon Espace de Travail</h2>
-          <p className="text-gray-400 mt-1">Gérez vos tâches et produits assignés</p>
+          <h2 className="text-3xl font-bold tracking-tight text-gray-900">Mon Espace de Travail</h2>
+          <p className="text-gray-600 mt-1">Gérez vos tâches et produits assignés</p>
         </div>
         <Badge variant="outline" className="border-gaming-purple text-gaming-purple bg-gaming-purple/10">
           Membre de l'équipe
@@ -42,47 +42,47 @@ const MemberDashboard = () => {
 
       {/* Statistiques personnelles */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-gray-800/50 border-gray-700 hover:bg-gray-800/70 transition-all duration-300">
+        <Card className="bg-white border-gray-200 hover:shadow-md transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-300">Tâches Terminées</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">Tâches Terminées</CardTitle>
             <CheckSquare className="h-4 w-4 text-gaming-green" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{memberStats.tasksCompleted}</div>
-            <p className="text-xs text-gray-400">Ce mois-ci</p>
+            <div className="text-2xl font-bold text-gray-900">{memberStats.tasksCompleted}</div>
+            <p className="text-xs text-gray-500">Ce mois-ci</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-800/50 border-gray-700 hover:bg-gray-800/70 transition-all duration-300">
+        <Card className="bg-white border-gray-200 hover:shadow-md transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-300">Tâches En Cours</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">Tâches En Cours</CardTitle>
             <Clock className="h-4 w-4 text-gaming-cyan" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{memberStats.tasksInProgress}</div>
-            <p className="text-xs text-gray-400">À terminer</p>
+            <div className="text-2xl font-bold text-gray-900">{memberStats.tasksInProgress}</div>
+            <p className="text-xs text-gray-500">À terminer</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-800/50 border-gray-700 hover:bg-gray-800/70 transition-all duration-300">
+        <Card className="bg-white border-gray-200 hover:shadow-md transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-300">Produits Assignés</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">Produits Assignés</CardTitle>
             <Package className="h-4 w-4 text-gaming-purple" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{memberStats.productsAssigned}</div>
-            <p className="text-xs text-gray-400">Sous votre responsabilité</p>
+            <div className="text-2xl font-bold text-gray-900">{memberStats.productsAssigned}</div>
+            <p className="text-xs text-gray-500">Sous votre responsabilité</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-800/50 border-gray-700 hover:bg-gray-800/70 transition-all duration-300">
+        <Card className="bg-white border-gray-200 hover:shadow-md transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-300">Performance</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">Performance</CardTitle>
             <Star className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{memberStats.performanceScore}%</div>
-            <p className="text-xs text-gray-400">Score mensuel</p>
+            <div className="text-2xl font-bold text-gray-900">{memberStats.performanceScore}%</div>
+            <p className="text-xs text-gray-500">Score mensuel</p>
           </CardContent>
         </Card>
       </div>

@@ -319,13 +319,13 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <SidebarTrigger className="text-white hover:text-gaming-cyan" />
+              <SidebarTrigger className="text-gray-700 hover:text-gaming-cyan" />
               <div>
-                <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+                <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
                   <Armchair className="w-8 h-8 text-gaming-cyan" />
                   Chaises Gaming
                 </h1>
-                <p className="text-gray-400">Gestion du stock des chaises gaming</p>
+                <p className="text-gray-600">Gestion du stock des chaises gaming</p>
               </div>
             </div>
           </div>
@@ -336,11 +336,11 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
       <div className="flex items-center justify-between">
         {embedded && (
           <div>
-            <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
               <Armchair className="w-6 h-6 text-gaming-cyan" />
               Chaises Gaming
             </h2>
-            <p className="text-gray-400">Gestion du stock des chaises gaming</p>
+            <p className="text-gray-600">Gestion du stock des chaises gaming</p>
           </div>
         )}
         
@@ -357,12 +357,12 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
               Nouvelle Chaise Gaming
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="bg-white border-gray-200 text-gray-900 max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingProduct ? "Modifier la Chaise Gaming" : "Ajouter une nouvelle Chaise Gaming"}
               </DialogTitle>
-              <DialogDescription className="text-gray-400">
+              <DialogDescription className="text-gray-600">
                 Remplissez les informations de la chaise gaming
               </DialogDescription>
             </DialogHeader>
@@ -376,7 +376,7 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
                     id="nom_produit"
                     value={newProduct.nom_produit}
                     onChange={(e) => setNewProduct({ ...newProduct, nom_produit: e.target.value })}
-                    className="bg-gray-800 border-gray-600"
+                    className="bg-white border-gray-200"
                     placeholder="Ex: DXRacer Formula Series"
                   />
                 </div>
@@ -386,7 +386,7 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
                     id="code_barre"
                     value={newProduct.code_barre}
                     onChange={(e) => setNewProduct({ ...newProduct, code_barre: e.target.value })}
-                    className="bg-gray-800 border-gray-600"
+                    className="bg-white border-gray-200"
                     placeholder="Scannez ou saisissez le code-barres"
                   />
                 </div>
@@ -395,10 +395,10 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
               <div>
                 <Label htmlFor="marque">Marque *</Label>
                 <Select value={newProduct.marque} onValueChange={(value) => setNewProduct({ ...newProduct, marque: value })}>
-                  <SelectTrigger className="bg-gray-800 border-gray-600">
+                  <SelectTrigger className="bg-white border-gray-200">
                     <SelectValue placeholder="Sélectionner une marque" />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-600">
+                  <SelectContent className="bg-white border-gray-200">
                     {marques.map((marque) => (
                       <SelectItem key={marque} value={marque}>{marque}</SelectItem>
                     ))}
@@ -407,7 +407,7 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
               </div>
 
               {/* Photo */}
-              <div className="border-t border-gray-700 pt-4">
+              <div className="border-t border-gray-200 pt-4">
                 <Label htmlFor="image">Photo du produit</Label>
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
@@ -415,7 +415,7 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
                       id="image"
                       value={newProduct.image_url}
                       onChange={(e) => setNewProduct({ ...newProduct, image_url: e.target.value })}
-                      className="bg-gray-800 border-gray-600 flex-1"
+                      className="bg-white border-gray-200 flex-1"
                       placeholder="URL de l'image"
                     />
                     <input
@@ -486,8 +486,8 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
               </div>
 
               {/* Informations commerciales */}
-              <div className="border-t border-gray-700 pt-4">
-                <h3 className="text-lg font-semibold text-white mb-4">Informations commerciales</h3>
+              <div className="border-t border-gray-200 pt-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Informations commerciales</h3>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -497,7 +497,7 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
                       type="number"
                       value={newProduct.prix_achat || ""}
                       onChange={(e) => setNewProduct({ ...newProduct, prix_achat: parseFloat(e.target.value) || 0 })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                       placeholder="0"
                     />
                   </div>
@@ -508,7 +508,7 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
                       type="number"
                       value={newProduct.prix_vente || ""}
                       onChange={(e) => setNewProduct({ ...newProduct, prix_vente: parseFloat(e.target.value) || 0 })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                       placeholder="0"
                     />
                   </div>
@@ -522,7 +522,7 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
                       type="number"
                       value={newProduct.stock_actuel || ""}
                       onChange={(e) => setNewProduct({ ...newProduct, stock_actuel: parseInt(e.target.value) || 0 })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                       placeholder="0"
                     />
                   </div>
@@ -533,7 +533,7 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
                       type="number"
                       value={newProduct.stock_minimum || ""}
                       onChange={(e) => setNewProduct({ ...newProduct, stock_minimum: parseInt(e.target.value) || 1 })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                       placeholder="1"
                     />
                   </div>
@@ -542,10 +542,10 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
                 <div className="mt-4">
                   <Label htmlFor="fournisseur_id">Fournisseur</Label>
                   <Select value={newProduct.fournisseur_id} onValueChange={(value) => setNewProduct({ ...newProduct, fournisseur_id: value })}>
-                    <SelectTrigger className="bg-gray-800 border-gray-600">
+                    <SelectTrigger className="bg-white border-gray-200">
                       <SelectValue placeholder="Sélectionner un fournisseur" />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-600">
+                    <SelectContent className="bg-white border-gray-200">
                       {suppliers.map((supplier) => (
                         <SelectItem key={supplier.id} value={supplier.id}>{supplier.nom}</SelectItem>
                       ))}
@@ -556,10 +556,10 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
                 <div className="mt-4">
                   <Label htmlFor="garantie">Garantie</Label>
                   <Select value={newProduct.garantie} onValueChange={(value) => setNewProduct({ ...newProduct, garantie: value })}>
-                    <SelectTrigger className="bg-gray-800 border-gray-600">
+                    <SelectTrigger className="bg-white border-gray-200">
                       <SelectValue placeholder="Sélectionner la garantie" />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-600">
+                    <SelectContent className="bg-white border-gray-200">
                       {garanties.map((garantie) => (
                         <SelectItem key={garantie} value={garantie}>{garantie}</SelectItem>
                       ))}
@@ -569,7 +569,7 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
               </div>
             </div>
             
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-700">
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
               <Button
                 variant="outline"
                 onClick={() => {
@@ -601,8 +601,8 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
             <div className="flex items-center gap-3">
               <Armchair className="w-8 h-8 text-gaming-purple" />
               <div>
-                <p className="text-sm text-gray-400">Total Chaises</p>
-                <p className="text-2xl font-bold text-white">{stats.total}</p>
+                <p className="text-sm text-gray-600">Total Chaises</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
               </div>
             </div>
           </CardContent>
@@ -613,8 +613,8 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
             <div className="flex items-center gap-3">
               <CheckCircle className="w-8 h-8 text-gaming-green" />
               <div>
-                <p className="text-sm text-gray-400">Disponibles</p>
-                <p className="text-2xl font-bold text-white">{stats.disponible}</p>
+                <p className="text-sm text-gray-600">Disponibles</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.disponible}</p>
               </div>
             </div>
           </CardContent>
@@ -625,8 +625,8 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
             <div className="flex items-center gap-3">
               <AlertTriangle className="w-8 h-8 text-yellow-600" />
               <div>
-                <p className="text-sm text-gray-400">Stock faible</p>
-                <p className="text-2xl font-bold text-white">{stats.stockFaible}</p>
+                <p className="text-sm text-gray-600">Stock faible</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.stockFaible}</p>
               </div>
             </div>
           </CardContent>
@@ -637,8 +637,8 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
             <div className="flex items-center gap-3">
               <XCircle className="w-8 h-8 text-red-600" />
               <div>
-                <p className="text-sm text-gray-400">En rupture</p>
-                <p className="text-2xl font-bold text-white">{stats.rupture}</p>
+                <p className="text-sm text-gray-600">En rupture</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.rupture}</p>
               </div>
             </div>
           </CardContent>
@@ -649,8 +649,8 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
             <div className="flex items-center gap-3">
               <DollarSign className="w-8 h-8 text-blue-400" />
               <div>
-                <p className="text-sm text-gray-400">Prix Total Achat</p>
-                <p className="text-2xl font-bold text-white">{priceStats.totalAchat.toLocaleString()} MAD</p>
+                <p className="text-sm text-gray-600">Prix Total Achat</p>
+                <p className="text-2xl font-bold text-gray-900">{priceStats.totalAchat.toLocaleString()} MAD</p>
               </div>
             </div>
           </CardContent>
@@ -661,8 +661,8 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
             <div className="flex items-center gap-3">
               <TrendingUp className="w-8 h-8 text-emerald-400" />
               <div>
-                <p className="text-sm text-gray-400">Prix Total Vente</p>
-                <p className="text-2xl font-bold text-white">{priceStats.totalVente.toLocaleString()} MAD</p>
+                <p className="text-sm text-gray-600">Prix Total Vente</p>
+                <p className="text-2xl font-bold text-gray-900">{priceStats.totalVente.toLocaleString()} MAD</p>
               </div>
             </div>
           </CardContent>
@@ -672,12 +672,12 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
       {/* Search */}
       <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 w-4 h-4" />
           <Input
             placeholder="Rechercher par nom, marque ou code-barres..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 bg-gray-800 border-gray-600 text-white"
+            className="pl-10 bg-white border-gray-200 text-gray-900"
           />
         </div>
       </div>
@@ -685,14 +685,14 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
       {/* Products Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredProducts.map((product) => (
-          <Card key={product.id} className="bg-gray-800 border-gray-700 hover:border-gaming-purple/50 transition-all">
+          <Card key={product.id} className="bg-gray-800 border-gray-200 hover:border-gaming-purple/50 transition-all">
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <CardTitle className="text-lg text-white mb-1">{product.nom_produit}</CardTitle>
-                  <CardDescription className="text-gray-400">{product.marque}</CardDescription>
+                  <CardTitle className="text-lg text-gray-900 mb-1">{product.nom_produit}</CardTitle>
+                  <CardDescription className="text-gray-600">{product.marque}</CardDescription>
                 </div>
-                <Badge className={`${getStatusColor(product.statut)} text-white flex items-center gap-1`}>
+                <Badge className={`${getStatusColor(product.statut)} text-gray-900 flex items-center gap-1`}>
                   {getStatusIcon(product.statut)}
                   {product.statut}
                 </Badge>
@@ -702,7 +702,7 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
             <CardContent className="space-y-4">
               {/* Image */}
               {product.image_url && (
-                <div className="w-full h-32 bg-gray-700 rounded-lg overflow-hidden">
+                <div className="w-full h-32 bg-gray-100 rounded-lg overflow-hidden">
                   <img 
                     src={product.image_url} 
                     alt={product.nom_produit}
@@ -712,33 +712,33 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
               )}
 
               {/* Commercial Info */}
-              <div className="border-t border-gray-700 pt-3 space-y-2">
+              <div className="border-t border-gray-200 pt-3 space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-gray-400 text-sm">Prix d'achat:</span>
+                  <span className="text-gray-600 text-sm">Prix d'achat:</span>
                   <span className="text-gaming-green font-semibold">{product.prix_achat} MAD</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400 text-sm">Prix de vente:</span>
+                  <span className="text-gray-600 text-sm">Prix de vente:</span>
                   <span className="text-gaming-green font-semibold">{product.prix_vente} MAD</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400 text-sm">Stock:</span>
-                  <span className="text-white">{product.stock_actuel} / {product.stock_minimum}</span>
+                  <span className="text-gray-600 text-sm">Stock:</span>
+                  <span className="text-gray-900">{product.stock_actuel} / {product.stock_minimum}</span>
                 </div>
                 {product.code_barre && (
                   <div className="flex justify-between">
-                    <span className="text-gray-400 text-sm">Code-barres:</span>
-                    <span className="text-gray-300 text-sm">{product.code_barre}</span>
+                    <span className="text-gray-600 text-sm">Code-barres:</span>
+                    <span className="text-gray-600 text-sm">{product.code_barre}</span>
                   </div>
                 )}
               </div>
 
               {/* Actions */}
-              <div className="flex gap-2 pt-3 border-t border-gray-700">
+              <div className="flex gap-2 pt-3 border-t border-gray-200">
                 <Button
                   size="sm"
                   variant="outline"
-                  className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700"
+                  className="flex-1 border-gray-600 text-gray-600 hover:bg-gray-100"
                   onClick={() => openEditDialog(product)}
                 >
                   <Edit className="w-4 h-4 mr-1" />
@@ -747,7 +747,7 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
                 <Button
                   size="sm"
                   variant="outline"
-                  className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                  className="border-red-600 text-red-400 hover:bg-red-600 hover:text-gray-900"
                   onClick={() => handleDeleteProduct(product.id)}
                 >
                   <Trash2 className="w-4 h-4" />
@@ -759,11 +759,11 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
       </div>
 
       {filteredProducts.length === 0 && (
-        <Card className="bg-gray-800 border-gray-700">
+        <Card className="bg-gray-800 border-gray-200">
           <CardContent className="p-8 text-center">
             <Armchair className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">Aucune chaise gaming trouvée</h3>
-            <p className="text-gray-400 mb-4">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucune chaise gaming trouvée</h3>
+            <p className="text-gray-600 mb-4">
               {searchTerm ? "Aucun résultat pour votre recherche" : "Commencez par ajouter votre première chaise gaming"}
             </p>
             {!searchTerm && (

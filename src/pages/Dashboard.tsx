@@ -135,21 +135,21 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <SidebarTrigger className="text-white hover:text-gaming-cyan lg:hidden" />
+          <SidebarTrigger className="text-gray-700 hover:text-gaming-cyan lg:hidden" />
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-white flex items-center gap-3">
+            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-3">
               <BarChart3 className="w-8 h-8 text-gaming-cyan" />
               Tableau de bord
             </h1>
-            <p className="text-gray-400 text-sm lg:text-base">Vue d'ensemble de votre activité</p>
+            <p className="text-gray-600 text-sm lg:text-base">Vue d'ensemble de votre activité</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="bg-gray-800 border-gray-600 w-48">
+            <SelectTrigger className="bg-white border-gray-200 w-48">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-gray-800 border-gray-600">
+            <SelectContent className="bg-white border-gray-200">
               <SelectItem value="aujourd_hui">Aujourd'hui</SelectItem>
               <SelectItem value="cette_semaine">Cette semaine</SelectItem>
               <SelectItem value="ce_mois">Ce mois</SelectItem>
@@ -176,7 +176,7 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gaming-cyan">Chiffre d'affaires</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-2xl font-bold text-gray-900">
                   {loadingStats ? '...' : `${(stats?.total_ventes || 0).toLocaleString()} MAD`}
                 </p>
                 <div className="flex items-center gap-1 mt-1">
@@ -198,7 +198,7 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gaming-purple">Nombre de ventes</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-2xl font-bold text-gray-900">
                   {loadingStats ? '...' : (stats?.nombre_ventes || 0)}
                 </p>
                 <div className="flex items-center gap-1 mt-1">
@@ -220,7 +220,7 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gaming-green">Vente moyenne</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-2xl font-bold text-gray-900">
                   {loadingStats ? '...' : `${(stats?.vente_moyenne || 0).toFixed(0)} MAD`}
                 </p>
                 <div className="flex items-center gap-1 mt-1">
@@ -242,7 +242,7 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-yellow-400">Clients uniques</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-2xl font-bold text-gray-900">
                   {loadingStats ? '...' : (stats?.nombre_clients || 0)}
                 </p>
                 <div className="flex items-center gap-1 mt-1">
@@ -262,13 +262,13 @@ export default function Dashboard() {
 
       {/* Métriques de stock */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        <Card className="bg-gray-900/50 border-gray-700">
+        <Card className="bg-white border-gray-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-400">Total produits</p>
-                <p className="text-2xl font-bold text-white">{stockStats.totalProducts}</p>
-                <p className="text-xs text-gray-400 mt-1">Articles en catalogue</p>
+                <p className="text-sm font-medium text-gray-600">Total produits</p>
+                <p className="text-2xl font-bold text-gray-900">{stockStats.totalProducts}</p>
+                <p className="text-xs text-gray-500 mt-1">Articles en catalogue</p>
               </div>
               <div className="p-3 bg-blue-500/20 rounded-full">
                 <Package className="w-6 h-6 text-blue-400" />
@@ -277,13 +277,13 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900/50 border-gray-700">
+        <Card className="bg-white border-gray-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-400">Stock total</p>
-                <p className="text-2xl font-bold text-white">{stockStats.totalStock}</p>
-                <p className="text-xs text-gray-400 mt-1">Unités disponibles</p>
+                <p className="text-sm font-medium text-gray-600">Stock total</p>
+                <p className="text-2xl font-bold text-gray-900">{stockStats.totalStock}</p>
+                <p className="text-xs text-gray-500 mt-1">Unités disponibles</p>
               </div>
               <div className="p-3 bg-gaming-cyan/20 rounded-full">
                 <ShoppingCart className="w-6 h-6 text-gaming-cyan" />
@@ -292,13 +292,13 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900/50 border-gray-700">
+        <Card className="bg-white border-gray-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-400">Alertes stock</p>
+                <p className="text-sm font-medium text-gray-600">Alertes stock</p>
                 <p className="text-2xl font-bold text-orange-400">{stockStats.stockFaible}</p>
-                <p className="text-xs text-gray-400 mt-1">Produits en stock faible</p>
+                <p className="text-xs text-gray-500 mt-1">Produits en stock faible</p>
               </div>
               <div className="p-3 bg-orange-500/20 rounded-full">
                 <Zap className="w-6 h-6 text-orange-400" />
@@ -307,13 +307,13 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-900/50 border-gray-700">
+        <Card className="bg-white border-gray-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-400">Valeur stock</p>
-                <p className="text-2xl font-bold text-white">{stockStats.valeurStock.toLocaleString()} MAD</p>
-                <p className="text-xs text-gray-400 mt-1">Valeur totale</p>
+                <p className="text-sm font-medium text-gray-600">Valeur stock</p>
+                <p className="text-2xl font-bold text-gray-900">{stockStats.valeurStock.toLocaleString()} MAD</p>
+                <p className="text-xs text-gray-500 mt-1">Valeur totale</p>
               </div>
               <div className="p-3 bg-green-500/20 rounded-full">
                 <DollarSign className="w-6 h-6 text-green-400" />
@@ -325,13 +325,13 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Répartition par statut */}
-        <Card className="bg-gray-900/50 border-gray-700">
+        <Card className="bg-white border-gray-200">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-gray-900 flex items-center gap-2">
               <Receipt className="w-5 h-5" />
               Répartition des ventes - {formatPeriodLabel(period)}
             </CardTitle>
-            <CardDescription className="text-gray-400">
+            <CardDescription className="text-gray-600">
               Statut des ventes de la période sélectionnée
             </CardDescription>
           </CardHeader>
@@ -377,13 +377,13 @@ export default function Dashboard() {
         </Card>
 
         {/* Répartition par mode de paiement */}
-        <Card className="bg-gray-900/50 border-gray-700">
+        <Card className="bg-white border-gray-200">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-gray-900 flex items-center gap-2">
               <DollarSign className="w-5 h-5" />
               Modes de paiement - {formatPeriodLabel(period)}
             </CardTitle>
-            <CardDescription className="text-gray-400">
+            <CardDescription className="text-gray-600">
               Répartition des modes de paiement
             </CardDescription>
           </CardHeader>
@@ -400,10 +400,10 @@ export default function Dashboard() {
                       <Badge variant="outline" className="border-gaming-cyan text-gaming-cyan capitalize">
                         {mode}
                       </Badge>
-                      <span className="text-gray-300">{count} vente(s)</span>
+                      <span className="text-gray-700">{count} vente(s)</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-20 bg-gray-700 rounded-full h-2">
+                      <div className="w-20 bg-gray-200 rounded-full h-2">
                         <div 
                           className="h-2 rounded-full bg-gaming-cyan"
                           style={{ 
@@ -411,7 +411,7 @@ export default function Dashboard() {
                           }}
                         />
                       </div>
-                      <span className="text-sm text-gray-400 w-12 text-right">
+                      <span className="text-sm text-gray-600 w-12 text-right">
                         {((count / (stats?.nombre_ventes || 1)) * 100).toFixed(0)}%
                       </span>
                     </div>

@@ -422,13 +422,13 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <SidebarTrigger className="text-white hover:text-gaming-cyan" />
+              <SidebarTrigger className="text-gray-700 hover:text-gaming-cyan" />
               <div>
-                <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+                <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
                   <Settings className="w-8 h-8 text-gaming-cyan" />
                   PC Gamer - Configurations
                 </h1>
-                <p className="text-gray-400">Créez des configurations PC complètes à partir des composants en stock</p>
+                <p className="text-gray-600">Créez des configurations PC complètes à partir des composants en stock</p>
               </div>
             </div>
           </div>
@@ -439,11 +439,11 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
       <div className="flex items-center justify-between">
         {embedded && (
           <div>
-            <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
               <Settings className="w-6 h-6 text-gaming-cyan" />
               PC Gamer - Configurations
             </h2>
-            <p className="text-gray-400">Créez des configurations PC complètes à partir des composants en stock</p>
+            <p className="text-gray-600">Créez des configurations PC complètes à partir des composants en stock</p>
           </div>
         )}
         
@@ -463,12 +463,12 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
               Nouvelle Configuration
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="bg-white border-gray-200 text-gray-900 max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingConfig ? "Modifier la Configuration PC" : "Créer une nouvelle Configuration PC"}
               </DialogTitle>
-              <DialogDescription className="text-gray-400">
+              <DialogDescription className="text-gray-600">
                 Assemblez une configuration PC complète à partir des composants en stock
               </DialogDescription>
             </DialogHeader>
@@ -482,7 +482,7 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
                     id="nom_config"
                     value={newConfig.nom_config}
                     onChange={(e) => setNewConfig({ ...newConfig, nom_config: e.target.value })}
-                    className="bg-gray-800 border-gray-600"
+                    className="bg-white border-gray-200"
                     placeholder="Ex: Gaming Pro RTX 4080"
                   />
                 </div>
@@ -492,7 +492,7 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
                     id="code_barre"
                     value={newConfig.code_barre}
                     onChange={(e) => setNewConfig({ ...newConfig, code_barre: e.target.value })}
-                    className="bg-gray-800 border-gray-600"
+                    className="bg-white border-gray-200"
                     placeholder="Auto-généré si vide"
                   />
                 </div>
@@ -504,7 +504,7 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
                   id="description"
                   value={newConfig.description}
                   onChange={(e) => setNewConfig({ ...newConfig, description: e.target.value })}
-                  className="bg-gray-800 border-gray-600"
+                  className="bg-white border-gray-200"
                   placeholder="Configuration gaming haut de gamme..."
                 />
               </div>
@@ -513,10 +513,10 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
                 <div>
                   <Label htmlFor="garantie">Garantie (mois) *</Label>
                   <Select value={newConfig.garantie} onValueChange={(value: any) => setNewConfig({ ...newConfig, garantie: value })}>
-                    <SelectTrigger className="bg-gray-800 border-gray-600">
+                    <SelectTrigger className="bg-white border-gray-200">
                       <SelectValue placeholder="Sélectionner la garantie" />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-600">
+                    <SelectContent className="bg-white border-gray-200">
                       {garanties.map((garantie) => (
                         <SelectItem key={garantie} value={garantie}>
                           {garantie}
@@ -528,10 +528,10 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
                 <div>
                   <Label htmlFor="statut">Statut</Label>
                   <Select value={newConfig.statut} onValueChange={(value: any) => setNewConfig({ ...newConfig, statut: value })}>
-                    <SelectTrigger className="bg-gray-800 border-gray-600">
+                    <SelectTrigger className="bg-white border-gray-200">
                       <SelectValue placeholder="Sélectionner le statut" />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-600">
+                    <SelectContent className="bg-white border-gray-200">
                       <SelectItem value="Actif">Actif</SelectItem>
                       <SelectItem value="Inactif">Inactif</SelectItem>
                       <SelectItem value="Archivé">Archivé</SelectItem>
@@ -541,10 +541,10 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
               </div>
 
               {/* Sélection des composants */}
-              <div className="border-t border-gray-700 pt-6">
+              <div className="border-t border-gray-200 pt-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-white">Composants de la configuration</h3>
-                  <div className="text-sm text-gray-400">
+                  <h3 className="text-lg font-semibold text-gray-900">Composants de la configuration</h3>
+                  <div className="text-sm text-gray-600">
                     Configuration PC complète
                   </div>
                 </div>
@@ -553,12 +553,12 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
                 {loadingComposants ? (
                   <div className="text-center py-8">
                     <Loader2 className="w-8 h-8 animate-spin text-gaming-cyan mx-auto mb-4" />
-                    <p className="text-gray-400">Chargement des composants...</p>
+                    <p className="text-gray-600">Chargement des composants...</p>
                   </div>
                 ) : composantsPC.length === 0 ? (
                   <div className="text-center py-8">
                     <Package className="w-12 h-12 mx-auto text-gray-600 mb-4" />
-                    <p className="text-gray-400">Aucun composant PC trouvé</p>
+                    <p className="text-gray-600">Aucun composant PC trouvé</p>
                     <p className="text-gray-500 text-sm">Ajoutez d'abord des composants dans la section "Composants PC"</p>
                   </div>
                 ) : (
@@ -569,17 +569,17 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
                     const categoryComposants = selectedComposants.filter(c => c.type_composant === category.value);
                     
                     return (
-                      <Card key={category.value} className="bg-gray-800 border-gray-700">
+                      <Card key={category.value} className="bg-gray-800 border-gray-200">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-3">
                               <Icon className="w-6 h-6 text-gaming-cyan" />
                               <div>
-                                <h4 className="font-semibold text-white flex items-center gap-2">
+                                <h4 className="font-semibold text-gray-900 flex items-center gap-2">
                                   {category.label}
                                   {category.required && <span className="text-red-400 text-sm">*</span>}
                                 </h4>
-                                <p className="text-xs text-gray-400">
+                                <p className="text-xs text-gray-600">
                                   {category.required ? 'Obligatoire' : 'Optionnel'} 
                                   {category.max > 1 && ` - Maximum ${category.max}`}
                                 </p>
@@ -607,18 +607,18 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
                               const selectedComposant = composantsPC.find(c => c.id === comp.composant_id);
                               
                               return (
-                                <div key={globalIndex} className="flex items-center gap-4 p-3 bg-gray-700 rounded-lg">
+                                <div key={globalIndex} className="flex items-center gap-4 p-3 bg-gray-100 rounded-lg">
                                   <div className="flex-1 grid grid-cols-4 gap-4">
                                     <div className="col-span-2">
-                                      <Label className="text-xs text-gray-300">Composant</Label>
+                                      <Label className="text-xs text-gray-600">Composant</Label>
                                       <Select 
                                         value={comp.composant_id || ""} 
                                         onValueChange={(value) => updateComposant(globalIndex, 'composant_id', value)}
                                       >
-                                        <SelectTrigger className="bg-gray-600 border-gray-500 h-8">
+                                        <SelectTrigger className="bg-gray-200 border-gray-500 h-8">
                                           <SelectValue placeholder="Choisir un composant" />
                                         </SelectTrigger>
-                                        <SelectContent className="bg-gray-800 border-gray-600">
+                                        <SelectContent className="bg-white border-gray-200">
                                           {availableComposants.map((composant) => (
                                             <SelectItem key={composant.id} value={composant.id}>
                                               <div className="flex items-center justify-between w-full">
@@ -633,9 +633,9 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
                                       </Select>
                                     </div>
                                     <div>
-                                      <Label className="text-xs text-gray-300">Quantité</Label>
+                                      <Label className="text-xs text-gray-600">Quantité</Label>
                                       {category.max === 1 ? (
-                                        <div className="bg-gray-600 rounded px-2 py-1 h-8 flex items-center text-gray-300 text-sm">
+                                        <div className="bg-gray-200 rounded px-2 py-1 h-8 flex items-center text-gray-600 text-sm">
                                           1 (fixe)
                                         </div>
                                       ) : (
@@ -645,13 +645,13 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
                                           max={category.max}
                                           value={comp.quantite}
                                           onChange={(e) => updateComposant(globalIndex, 'quantite', parseInt(e.target.value) || 1)}
-                                          className="bg-gray-600 border-gray-500 h-8"
+                                          className="bg-gray-200 border-gray-500 h-8"
                                         />
                                       )}
                                     </div>
                                     <div>
-                                      <Label className="text-xs text-gray-300">Sous-total</Label>
-                                      <div className="text-gaming-green font-semibold text-sm bg-gray-600 rounded px-2 py-1 h-8 flex items-center">
+                                      <Label className="text-xs text-gray-600">Sous-total</Label>
+                                      <div className="text-gaming-green font-semibold text-sm bg-gray-200 rounded px-2 py-1 h-8 flex items-center">
                                         {selectedComposant ? `${(selectedComposant.prix_achat * comp.quantite).toFixed(2)} MAD` : '0 MAD'}
                                       </div>
                                     </div>
@@ -677,7 +677,7 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
                             )}
                             
                             {categoryComposants.length === 0 && !category.required && (
-                              <div className="text-center py-4 text-gray-500 bg-gray-700/50 rounded-lg">
+                              <div className="text-center py-4 text-gray-500 bg-gray-100/50 rounded-lg">
                                 <Icon className="w-8 h-8 mx-auto mb-2 opacity-50" />
                                 <p className="text-sm">Aucun {category.label.toLowerCase()} ajouté</p>
                               </div>
@@ -696,21 +696,21 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
                     <CardContent className="p-4">
                       <div className="grid grid-cols-4 gap-4 text-center">
                         <div>
-                          <div className="text-sm text-gray-400">Prix coûtant total</div>
+                          <div className="text-sm text-gray-600">Prix coûtant total</div>
                           <div className="text-2xl font-bold text-gaming-green">{prixCoutant.toFixed(2)} MAD</div>
                         </div>
                         <div>
-                          <div className="text-sm text-gray-400">Prix de vente</div>
+                          <div className="text-sm text-gray-600">Prix de vente</div>
                           <Input
                             type="number"
                             value={newConfig.prix_vente}
                             onChange={(e) => setNewConfig({ ...newConfig, prix_vente: parseFloat(e.target.value) || 0 })}
-                            className="bg-gray-800 border-gray-600 text-center font-bold"
+                            className="bg-white border-gray-200 text-center font-bold"
                             placeholder="0"
                           />
                         </div>
                         <div>
-                          <div className="text-sm text-gray-400">Marge</div>
+                          <div className="text-sm text-gray-600">Marge</div>
                           <div className="text-2xl font-bold text-gaming-cyan">
                             {newConfig.prix_vente && prixCoutant 
                               ? `${(((newConfig.prix_vente - prixCoutant) / prixCoutant) * 100).toFixed(1)}%`
@@ -719,8 +719,8 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
                           </div>
                         </div>
                         <div>
-                          <div className="text-sm text-gray-400">Stock possible</div>
-                          <div className="text-2xl font-bold text-white flex items-center justify-center gap-2">
+                          <div className="text-sm text-gray-600">Stock possible</div>
+                          <div className="text-2xl font-bold text-gray-900 flex items-center justify-center gap-2">
                             {getStatutIcon(stockPossible)}
                             {stockPossible}
                           </div>
@@ -732,12 +732,12 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
               </div>
 
               {/* Image */}
-              <div className="border-t border-gray-700 pt-4">
-                <h3 className="text-lg font-semibold text-white mb-4">Image de la configuration</h3>
+              <div className="border-t border-gray-200 pt-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Image de la configuration</h3>
                 
                 <div className="space-y-4">
                   {imagePreview && (
-                    <div className="w-32 h-32 bg-gray-700 rounded-lg overflow-hidden">
+                    <div className="w-32 h-32 bg-gray-100 rounded-lg overflow-hidden">
                       <img 
                         src={imagePreview} 
                         alt="Aperçu"
@@ -800,13 +800,13 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
               </div>
 
               {/* Notes */}
-              <div className="border-t border-gray-700 pt-4">
+              <div className="border-t border-gray-200 pt-4">
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea
                   id="notes"
                   value={newConfig.notes}
                   onChange={(e) => setNewConfig({ ...newConfig, notes: e.target.value })}
-                  className="bg-gray-800 border-gray-600"
+                  className="bg-white border-gray-200"
                   placeholder="Informations supplémentaires sur cette configuration..."
                   rows={3}
                 />
@@ -836,8 +836,8 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
             <div className="flex items-center gap-3">
               <Settings className="w-8 h-8 text-gaming-purple" />
               <div>
-                <p className="text-sm text-gray-400">Total Configurations</p>
-                <p className="text-2xl font-bold text-white">{pcGamerConfigs.length}</p>
+                <p className="text-sm text-gray-600">Total Configurations</p>
+                <p className="text-2xl font-bold text-gray-900">{pcGamerConfigs.length}</p>
               </div>
             </div>
           </CardContent>
@@ -848,8 +848,8 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
             <div className="flex items-center gap-3">
               <CheckCircle className="w-8 h-8 text-gaming-green" />
               <div>
-                <p className="text-sm text-gray-400">Disponibles</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-sm text-gray-600">Disponibles</p>
+                <p className="text-2xl font-bold text-gray-900">
                   {pcGamerConfigs.filter(c => c.stock_possible > 0).length}
                 </p>
               </div>
@@ -862,8 +862,8 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
             <div className="flex items-center gap-3">
               <AlertTriangle className="w-8 h-8 text-yellow-600" />
               <div>
-                <p className="text-sm text-gray-400">Stock faible</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-sm text-gray-600">Stock faible</p>
+                <p className="text-2xl font-bold text-gray-900">
                   {pcGamerConfigs.filter(c => c.stock_possible > 0 && c.stock_possible <= 3).length}
                 </p>
               </div>
@@ -876,8 +876,8 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
             <div className="flex items-center gap-3">
               <XCircle className="w-8 h-8 text-red-600" />
               <div>
-                <p className="text-sm text-gray-400">Rupture</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-sm text-gray-600">Rupture</p>
+                <p className="text-2xl font-bold text-gray-900">
                   {pcGamerConfigs.filter(c => c.stock_possible === 0).length}
                 </p>
               </div>
@@ -887,38 +887,38 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
       </div>
 
       {/* Search Bar */}
-      <Card className="bg-gray-900/50 border-gray-700">
+      <Card className="bg-white border-gray-200">
         <CardContent className="p-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 w-4 h-4" />
             <Input
               placeholder="Rechercher une configuration..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-gray-800 border-gray-600"
+              className="pl-10 bg-white border-gray-200"
             />
           </div>
         </CardContent>
       </Card>
 
       {/* Configurations Grid */}
-      <Card className="bg-gray-900/50 border-gray-700">
+      <Card className="bg-white border-gray-200">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-gray-900 flex items-center gap-2">
             <Settings className="w-5 h-5" />
             Configurations PC Gamer
           </CardTitle>
-          <CardDescription className="text-gray-400">
+          <CardDescription className="text-gray-600">
             {filteredConfigs.length} configuration(s) trouvée(s)
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredConfigs.map((config) => (
-              <Card key={config.id} className="bg-gray-800 border-gray-700 hover:border-gaming-purple/50 transition-all">
+              <Card key={config.id} className="bg-gray-800 border-gray-200 hover:border-gaming-purple/50 transition-all">
                 <CardContent className="p-4">
                   {/* Image */}
-                  <div className="w-full h-48 bg-gray-700 rounded-lg mb-4 flex items-center justify-center">
+                  <div className="w-full h-48 bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
                     {config.image_url ? (
                       <img 
                         src={config.image_url} 
@@ -933,9 +933,9 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
                   {/* Header */}
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
-                      <h3 className="text-white font-medium text-lg">{config.nom_config}</h3>
+                      <h3 className="text-gray-900 font-medium text-lg">{config.nom_config}</h3>
                       {config.description && (
-                        <p className="text-gray-400 text-sm mt-1 line-clamp-2">{config.description}</p>
+                        <p className="text-gray-600 text-sm mt-1 line-clamp-2">{config.description}</p>
                       )}
                       <Badge className="mt-2 text-xs bg-gaming-purple/20 text-gaming-purple">
                         {config.statut}
@@ -950,30 +950,30 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
                   <div className="space-y-2 mb-4">
                     {config.code_barre && (
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-400">Code-barres:</span>
-                        <span className="text-white font-mono text-xs">{config.code_barre}</span>
+                        <span className="text-gray-600">Code-barres:</span>
+                        <span className="text-gray-900 font-mono text-xs">{config.code_barre}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Garantie:</span>
-                      <span className="text-white">
+                      <span className="text-gray-600">Garantie:</span>
+                      <span className="text-gray-900">
                         {config.garantie}
                       </span>
                     </div>
                   </div>
 
                   {/* Commercial Info */}
-                  <div className="border-t border-gray-700 pt-3 space-y-2 mb-3">
+                  <div className="border-t border-gray-200 pt-3 space-y-2 mb-3">
                     <div className="flex justify-between">
-                      <span className="text-gray-400 text-sm">Prix coûtant:</span>
+                      <span className="text-gray-600 text-sm">Prix coûtant:</span>
                       <span className="text-gaming-green font-semibold">{config.prix_coutant} MAD</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400 text-sm">Prix de vente:</span>
+                      <span className="text-gray-600 text-sm">Prix de vente:</span>
                       <span className="text-gaming-green font-semibold">{config.prix_vente} MAD</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400 text-sm">Marge:</span>
+                      <span className="text-gray-600 text-sm">Marge:</span>
                       <span className="text-gaming-cyan font-semibold">
                         {config.prix_coutant > 0 
                           ? `${(((config.prix_vente - config.prix_coutant) / config.prix_coutant) * 100).toFixed(1)}%`
@@ -984,7 +984,7 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
                   </div>
                   
                   {/* Actions */}
-                  <div className="border-t border-gray-700 pt-3 space-y-3">
+                  <div className="border-t border-gray-200 pt-3 space-y-3">
                     <div className="flex justify-between gap-2">
                       <Button
                         variant="ghost"
@@ -1025,7 +1025,7 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="w-full border-gaming-purple text-gaming-purple hover:bg-gaming-purple hover:text-white"
+                          className="w-full border-gaming-purple text-gaming-purple hover:bg-gaming-purple hover:text-gray-900"
                         >
                           <UserPlus className="w-4 h-4 mr-2" />
                           Assigner à l'équipe
@@ -1040,7 +1040,7 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
             {filteredConfigs.length === 0 && (
               <div className="col-span-full text-center py-8">
                 <Settings className="w-12 h-12 mx-auto text-gray-600 mb-4" />
-                <p className="text-gray-400">Aucune configuration PC Gamer trouvée</p>
+                <p className="text-gray-600">Aucune configuration PC Gamer trouvée</p>
               </div>
             )}
           </div>

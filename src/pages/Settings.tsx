@@ -289,21 +289,21 @@ export default function Settings() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Notifications */}
-        <Card className="bg-gray-900/50 border-gray-700">
+        <Card className="bg-white border-gray-200">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-gray-900 flex items-center gap-2">
               <Bell className="w-5 h-5" />
               Notifications
             </CardTitle>
-            <CardDescription className="text-gray-400">
+            <CardDescription className="text-gray-600">
               Gérez vos préférences de notifications
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-white">Notifications par email</Label>
-                <p className="text-sm text-gray-400">Recevoir les alertes par email</p>
+                <Label className="text-gray-900">Notifications par email</Label>
+                <p className="text-sm text-gray-600">Recevoir les alertes par email</p>
               </div>
               <Switch
                 checked={settings.emailNotifications}
@@ -313,8 +313,8 @@ export default function Settings() {
             
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-white">Notifications push</Label>
-                <p className="text-sm text-gray-400">Notifications en temps réel</p>
+                <Label className="text-gray-900">Notifications push</Label>
+                <p className="text-sm text-gray-600">Notifications en temps réel</p>
               </div>
               <Switch
                 checked={settings.pushNotifications}
@@ -324,8 +324,8 @@ export default function Settings() {
             
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-white">Alertes de vente</Label>
-                <p className="text-sm text-gray-400">Notifications des nouvelles ventes</p>
+                <Label className="text-gray-900">Alertes de vente</Label>
+                <p className="text-sm text-gray-600">Notifications des nouvelles ventes</p>
               </div>
               <Switch
                 checked={settings.saleAlerts}
@@ -347,21 +347,21 @@ export default function Settings() {
         </Card>
 
         {/* Affichage */}
-        <Card className="bg-gray-900/50 border-gray-700">
+        <Card className="bg-white border-gray-200">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-gray-900 flex items-center gap-2">
               <Monitor className="w-5 h-5" />
               Affichage
             </CardTitle>
-            <CardDescription className="text-gray-400">
+            <CardDescription className="text-gray-600">
               Personnalisez l'apparence de l'application
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-white">Mode sombre</Label>
-                <p className="text-sm text-gray-400">Interface en mode sombre</p>
+                <Label className="text-gray-900">Mode sombre</Label>
+                <p className="text-sm text-gray-600">Interface en mode sombre</p>
               </div>
               <Switch
                 checked={settings.darkMode}
@@ -370,12 +370,12 @@ export default function Settings() {
             </div>
             
             <div className="space-y-2">
-              <Label className="text-white">Langue</Label>
+              <Label className="text-gray-900">Langue</Label>
               <Select value={settings.language} onValueChange={(value) => updateSettings({language: value})}>
-                <SelectTrigger className="bg-gray-800 border-gray-600">
+                <SelectTrigger className="bg-white border-gray-200">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-gray-800 border-gray-600">
+                <SelectContent className="bg-white border-gray-200">
                   <SelectItem value="fr">Français</SelectItem>
                   <SelectItem value="ar">العربية</SelectItem>
                   <SelectItem value="en">English</SelectItem>
@@ -384,12 +384,12 @@ export default function Settings() {
             </div>
             
             <div className="space-y-2">
-              <Label className="text-white">Devise</Label>
+              <Label className="text-gray-900">Devise</Label>
               <Select value={settings.currency} onValueChange={(value) => updateSettings({currency: value})}>
-                <SelectTrigger className="bg-gray-800 border-gray-600">
+                <SelectTrigger className="bg-white border-gray-200">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-gray-800 border-gray-600">
+                <SelectContent className="bg-white border-gray-200">
                   <SelectItem value="MAD">MAD (Dirham)</SelectItem>
                   <SelectItem value="EUR">EUR (Euro)</SelectItem>
                   <SelectItem value="USD">USD (Dollar)</SelectItem>
@@ -465,21 +465,21 @@ export default function Settings() {
         </Card>
 
         {/* Système et sécurité */}
-        <Card className="bg-gray-900/50 border-gray-700">
+        <Card className="bg-white border-gray-200">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+            <CardTitle className="text-gray-900 flex items-center gap-2">
               <Shield className="w-5 h-5" />
               Système et sécurité
             </CardTitle>
-            <CardDescription className="text-gray-400">
+            <CardDescription className="text-gray-600">
               Configuration du système et sécurité
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-white">Sauvegarde automatique</Label>
-                <p className="text-sm text-gray-400">Sauvegarde périodique des données</p>
+                <Label className="text-gray-900">Sauvegarde automatique</Label>
+                <p className="text-sm text-gray-600">Sauvegarde périodique des données</p>
               </div>
               <Switch
                 checked={settings.autoBackup}
@@ -488,12 +488,12 @@ export default function Settings() {
             </div>
             
             <div className="space-y-2">
-              <Label className="text-white">Fréquence de sauvegarde</Label>
+              <Label className="text-gray-900">Fréquence de sauvegarde</Label>
               <Select value={settings.backupFrequency} onValueChange={(value) => updateSettings({backupFrequency: value})}>
-                <SelectTrigger className="bg-gray-800 border-gray-600">
+                <SelectTrigger className="bg-white border-gray-200">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-gray-800 border-gray-600">
+                <SelectContent className="bg-white border-gray-200">
                   <SelectItem value="hourly">Toutes les heures</SelectItem>
                   <SelectItem value="daily">Quotidienne</SelectItem>
                   <SelectItem value="weekly">Hebdomadaire</SelectItem>
@@ -633,15 +633,15 @@ export default function Settings() {
         </Card>
 
         {/* Comptes Bancaires */}
-        <Card className="bg-gray-900/50 border-gray-700 lg:col-span-2">
+        <Card className="bg-white border-gray-200 lg:col-span-2">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-gray-900 flex items-center gap-2">
                   <Building2 className="w-5 h-5" />
                   Comptes Bancaires
                 </CardTitle>
-                <CardDescription className="text-gray-400">
+                <CardDescription className="text-gray-600">
                   Gérez les comptes bancaires de l'entreprise
                 </CardDescription>
               </div>
@@ -975,21 +975,21 @@ export default function Settings() {
       </div>
 
       {/* Actions avancées */}
-      <Card className="bg-gray-900/50 border-gray-700">
+      <Card className="bg-white border-gray-200">
         <CardHeader>
-          <CardTitle className="text-white">Actions avancées</CardTitle>
-          <CardDescription className="text-gray-400">
+          <CardTitle className="text-gray-900">Actions avancées</CardTitle>
+          <CardDescription className="text-gray-600">
             Import/export et gestion des données
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Button onClick={handleExport} variant="outline" className="border-gray-600">
+            <Button onClick={handleExport} variant="outline" className="border-gray-200">
               <Download className="w-4 h-4 mr-2" />
               Exporter paramètres
             </Button>
             
-            <Button onClick={handleImport} variant="outline" className="border-gray-600">
+            <Button onClick={handleImport} variant="outline" className="border-gray-200">
               <Upload className="w-4 h-4 mr-2" />
               Importer paramètres
             </Button>

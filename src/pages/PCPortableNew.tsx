@@ -180,6 +180,15 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
   const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
 
+  // États pour la saisie manuelle des spécifications
+  const [customSpecs, setCustomSpecs] = useState({
+    processeur: { isCustom: false, value: "" },
+    ram: { isCustom: false, value: "" },
+    stockage: { isCustom: false, value: "" },
+    carte_graphique: { isCustom: false, value: "" },
+    ecran: { isCustom: false, value: "" }
+  });
+
   const [newProduct, setNewProduct] = useState<NewPcPortable>({
     nom_produit: "",
     code_barre: "",
@@ -225,11 +234,19 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
         ? "Stock faible" 
         : "Disponible";
 
-    const result = await addPcPortable({
+    // Utiliser les valeurs personnalisées si elles sont définies
+    const finalProduct: NewPcPortable = {
       ...newProduct,
+      processeur: customSpecs.processeur.isCustom ? customSpecs.processeur.value : newProduct.processeur,
+      ram: customSpecs.ram.isCustom ? customSpecs.ram.value : newProduct.ram,
+      stockage: customSpecs.stockage.isCustom ? customSpecs.stockage.value : newProduct.stockage,
+      carte_graphique: customSpecs.carte_graphique.isCustom ? customSpecs.carte_graphique.value : newProduct.carte_graphique,
+      ecran: customSpecs.ecran.isCustom ? customSpecs.ecran.value : newProduct.ecran,
       code_barre: newProduct.code_barre || `PC${Date.now()}`,
-      statut,
-    });
+      statut: statut as "Disponible" | "Stock faible" | "Rupture" | "Réservé" | "Archivé",
+    };
+
+    const result = await addPcPortable(finalProduct);
 
     if (result) {
       resetForm();
@@ -253,10 +270,18 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
         ? "Stock faible" 
         : "Disponible";
 
-    const result = await updatePcPortable(editingProduct.id, {
+    // Utiliser les valeurs personnalisées si elles sont définies
+    const finalProduct = {
       ...newProduct,
-      statut,
-    });
+      processeur: customSpecs.processeur.isCustom ? customSpecs.processeur.value : newProduct.processeur,
+      ram: customSpecs.ram.isCustom ? customSpecs.ram.value : newProduct.ram,
+      stockage: customSpecs.stockage.isCustom ? customSpecs.stockage.value : newProduct.stockage,
+      carte_graphique: customSpecs.carte_graphique.isCustom ? customSpecs.carte_graphique.value : newProduct.carte_graphique,
+      ecran: customSpecs.ecran.isCustom ? customSpecs.ecran.value : newProduct.ecran,
+      statut: statut as "Disponible" | "Stock faible" | "Rupture" | "Réservé" | "Archivé",
+    };
+
+    const result = await updatePcPortable(editingProduct.id, finalProduct);
 
     if (result) {
       resetForm();
@@ -291,22 +316,45 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
       fournisseur_id: "",
       garantie: ""
     });
+    setCustomSpecs({
+      processeur: { isCustom: false, value: "" },
+      ram: { isCustom: false, value: "" },
+      stockage: { isCustom: false, value: "" },
+      carte_graphique: { isCustom: false, value: "" },
+      ecran: { isCustom: false, value: "" }
+    });
     setImagePreview("");
     stopCamera();
   };
 
   const openEditDialog = (product: PcPortable) => {
     setEditingProduct(product);
+    
+    // Vérifier si les valeurs existent dans les listes prédéfinies
+    const processeurIsCustom = !processeurs.includes(product.processeur);
+    const ramIsCustom = !typesRAM.includes(product.ram);
+    const stockageIsCustom = !typesStockage.includes(product.stockage);
+    const carteGraphiqueIsCustom = product.carte_graphique && !cartesGraphiques.includes(product.carte_graphique);
+    const ecranIsCustom = product.ecran && ![...taillesEcran, ...resolutionsEcran].includes(product.ecran);
+
+    setCustomSpecs({
+      processeur: { isCustom: processeurIsCustom, value: processeurIsCustom ? product.processeur : "" },
+      ram: { isCustom: ramIsCustom, value: ramIsCustom ? product.ram : "" },
+      stockage: { isCustom: stockageIsCustom, value: stockageIsCustom ? product.stockage : "" },
+      carte_graphique: { isCustom: carteGraphiqueIsCustom, value: carteGraphiqueIsCustom ? product.carte_graphique || "" : "" },
+      ecran: { isCustom: ecranIsCustom, value: ecranIsCustom ? product.ecran || "" : "" }
+    });
+
     setNewProduct({
       nom_produit: product.nom_produit,
       code_barre: product.code_barre || "",
       marque: product.marque,
       modele: product.modele || "",
-      processeur: product.processeur,
-      ram: product.ram,
-      stockage: product.stockage,
-      carte_graphique: product.carte_graphique || "",
-      ecran: product.ecran || "",
+      processeur: processeurIsCustom ? "CUSTOM" : product.processeur,
+      ram: ramIsCustom ? "CUSTOM" : product.ram,
+      stockage: stockageIsCustom ? "CUSTOM" : product.stockage,
+      carte_graphique: carteGraphiqueIsCustom ? "CUSTOM" : (product.carte_graphique || ""),
+      ecran: ecranIsCustom ? "CUSTOM" : (product.ecran || ""),
       etat: product.etat,
       prix_achat: product.prix_achat,
       prix_vente: product.prix_vente,
@@ -326,8 +374,8 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
       case 'Stock faible': return 'bg-yellow-600';
       case 'Rupture': return 'bg-red-600';
       case 'Réservé': return 'bg-blue-600';
-      case 'Archivé': return 'bg-gray-600';
-      default: return 'bg-gray-600';
+      case 'Archivé': return 'bg-gray-200';
+      default: return 'bg-gray-200';
     }
   };
 
@@ -467,6 +515,31 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
     };
   };
 
+  // Fonction pour gérer les changements de spécifications
+  const handleSpecChange = (field: keyof typeof customSpecs, value: string) => {
+    if (value === "CUSTOM") {
+      setCustomSpecs(prev => ({
+        ...prev,
+        [field]: { isCustom: true, value: "" }
+      }));
+      setNewProduct(prev => ({ ...prev, [field]: "CUSTOM" }));
+    } else {
+      setCustomSpecs(prev => ({
+        ...prev,
+        [field]: { isCustom: false, value: "" }
+      }));
+      setNewProduct(prev => ({ ...prev, [field]: value }));
+    }
+  };
+
+  // Fonction pour gérer les changements de valeurs personnalisées
+  const handleCustomValueChange = (field: keyof typeof customSpecs, value: string) => {
+    setCustomSpecs(prev => ({
+      ...prev,
+      [field]: { ...prev[field], value }
+    }));
+  };
+
   const stats = getStockStats();
   const priceStats = getPriceStats(filteredProducts);
 
@@ -489,13 +562,13 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <SidebarTrigger className="text-white hover:text-gaming-cyan" />
+              <SidebarTrigger className="text-gray-700 hover:text-gaming-cyan" />
               <div>
-                <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+                <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
                   <Laptop className="w-8 h-8 text-gaming-cyan" />
                   PC Portables
                 </h1>
-                <p className="text-gray-400">Gestion du stock des ordinateurs portables</p>
+                <p className="text-gray-600">Gestion du stock des ordinateurs portables</p>
               </div>
             </div>
           </div>
@@ -506,11 +579,11 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
       <div className="flex items-center justify-between">
         {embedded && (
           <div>
-            <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
               <Laptop className="w-6 h-6 text-gaming-cyan" />
               PC Portables
             </h2>
-            <p className="text-gray-400">Gestion du stock des ordinateurs portables</p>
+            <p className="text-gray-600">Gestion du stock des ordinateurs portables</p>
           </div>
         )}
         
@@ -527,12 +600,12 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
               Nouveau PC Portable
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-gray-900 border-gray-700 text-white max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="bg-white border-gray-200 text-gray-900 max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingProduct ? "Modifier le PC Portable" : "Ajouter un nouveau PC Portable"}
               </DialogTitle>
-              <DialogDescription className="text-gray-400">
+              <DialogDescription className="text-gray-600">
                 Remplissez les informations du PC portable
               </DialogDescription>
             </DialogHeader>
@@ -546,7 +619,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                     id="nom_produit"
                     value={newProduct.nom_produit}
                     onChange={(e) => setNewProduct({ ...newProduct, nom_produit: e.target.value })}
-                    className="bg-gray-800 border-gray-600"
+                    className="bg-white border-gray-200"
                     placeholder="Ex: ASUS ROG Strix G15"
                   />
                 </div>
@@ -556,7 +629,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                     id="code_barre"
                     value={newProduct.code_barre}
                     onChange={(e) => setNewProduct({ ...newProduct, code_barre: e.target.value })}
-                    className="bg-gray-800 border-gray-600"
+                    className="bg-white border-gray-200"
                     placeholder="Scannez ou saisissez le code-barres"
                   />
                 </div>
@@ -566,10 +639,10 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                 <div>
                   <Label htmlFor="marque">Marque *</Label>
                   <Select value={newProduct.marque} onValueChange={(value) => setNewProduct({ ...newProduct, marque: value })}>
-                    <SelectTrigger className="bg-gray-800 border-gray-600">
+                    <SelectTrigger className="bg-white border-gray-200">
                       <SelectValue placeholder="Sélectionner une marque" />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-600">
+                    <SelectContent className="bg-white border-gray-200">
                       {marques.map((marque) => (
                         <SelectItem key={marque} value={marque}>{marque}</SelectItem>
                       ))}
@@ -582,7 +655,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                     id="modele"
                     value={newProduct.modele}
                     onChange={(e) => setNewProduct({ ...newProduct, modele: e.target.value })}
-                    className="bg-gray-800 border-gray-600"
+                    className="bg-white border-gray-200"
                     placeholder="Ex: ROG Strix G15"
                   />
                 </div>
@@ -591,28 +664,40 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="ecran">Écran</Label>
-                  <Select value={newProduct.ecran} onValueChange={(value) => setNewProduct({ ...newProduct, ecran: value })}>
-                    <SelectTrigger className="bg-gray-800 border-gray-600">
+                  <Select value={newProduct.ecran} onValueChange={(value) => handleSpecChange('ecran', value)}>
+                    <SelectTrigger className="bg-white border-gray-200">
                       <SelectValue placeholder="Sélectionner la taille d'écran" />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-600 max-h-[200px]">
+                    <SelectContent className="bg-white border-gray-200 max-h-[200px]">
                       {taillesEcran.map((taille) => (
                         <SelectItem key={taille} value={taille}>{taille}</SelectItem>
                       ))}
-                      <div className="border-t border-gray-600 my-1"></div>
+                      <div className="border-t border-gray-200 my-1"></div>
                       {resolutionsEcran.map((resolution) => (
                         <SelectItem key={resolution} value={resolution}>{resolution}</SelectItem>
                       ))}
+                      <div className="border-t border-gray-200 my-1"></div>
+                      <SelectItem value="CUSTOM" className="text-gaming-cyan font-medium">
+                        ✏️ Autre - Saisie manuelle
+                      </SelectItem>
                     </SelectContent>
                   </Select>
+                  {customSpecs.ecran.isCustom && (
+                    <Input
+                      className="mt-2 bg-white border-gray-200"
+                      placeholder="Saisissez l'écran personnalisé"
+                      value={customSpecs.ecran.value}
+                      onChange={(e) => handleCustomValueChange('ecran', e.target.value)}
+                    />
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="etat">État *</Label>
                   <Select value={newProduct.etat} onValueChange={(value: 'Neuf' | 'Comme neuf' | 'Occasion') => setNewProduct({ ...newProduct, etat: value })}>
-                    <SelectTrigger className="bg-gray-800 border-gray-600">
+                    <SelectTrigger className="bg-white border-gray-200">
                       <SelectValue placeholder="Sélectionner l'état" />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-600">
+                    <SelectContent className="bg-white border-gray-200">
                       {etats.map((etat) => (
                         <SelectItem key={etat} value={etat}>{etat}</SelectItem>
                       ))}
@@ -622,70 +707,118 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
               </div>
 
               {/* Spécifications techniques */}
-              <div className="border-t border-gray-700 pt-4">
-                <h3 className="text-lg font-semibold text-white mb-4">Spécifications techniques</h3>
+              <div className="border-t border-gray-200 pt-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Spécifications techniques</h3>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="processeur">Processeur *</Label>
-                    <Select value={newProduct.processeur} onValueChange={(value) => setNewProduct({ ...newProduct, processeur: value })}>
-                      <SelectTrigger className="bg-gray-800 border-gray-600">
+                    <Select value={newProduct.processeur} onValueChange={(value) => handleSpecChange('processeur', value)}>
+                      <SelectTrigger className="bg-white border-gray-200">
                         <SelectValue placeholder="Sélectionner un processeur" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-600 max-h-[200px]">
+                      <SelectContent className="bg-white border-gray-200 max-h-[200px]">
                         {processeurs.map((processeur) => (
                           <SelectItem key={processeur} value={processeur}>{processeur}</SelectItem>
                         ))}
+                        <div className="border-t border-gray-200 my-1"></div>
+                        <SelectItem value="CUSTOM" className="text-gaming-cyan font-medium">
+                          ✏️ Autre - Saisie manuelle
+                        </SelectItem>
                       </SelectContent>
                     </Select>
+                    {customSpecs.processeur.isCustom && (
+                      <Input
+                        className="mt-2 bg-white border-gray-200"
+                        placeholder="Saisissez le processeur personnalisé"
+                        value={customSpecs.processeur.value}
+                        onChange={(e) => handleCustomValueChange('processeur', e.target.value)}
+                      />
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="ram">Mémoire RAM *</Label>
-                    <Select value={newProduct.ram} onValueChange={(value) => setNewProduct({ ...newProduct, ram: value })}>
-                      <SelectTrigger className="bg-gray-800 border-gray-600">
+                    <Select value={newProduct.ram} onValueChange={(value) => handleSpecChange('ram', value)}>
+                      <SelectTrigger className="bg-white border-gray-200">
                         <SelectValue placeholder="Sélectionner la RAM" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-600 max-h-[200px]">
+                      <SelectContent className="bg-white border-gray-200 max-h-[200px]">
                         {typesRAM.map((ram) => (
                           <SelectItem key={ram} value={ram}>{ram}</SelectItem>
                         ))}
+                        <div className="border-t border-gray-200 my-1"></div>
+                        <SelectItem value="CUSTOM" className="text-gaming-cyan font-medium">
+                          ✏️ Autre - Saisie manuelle
+                        </SelectItem>
                       </SelectContent>
                     </Select>
+                    {customSpecs.ram.isCustom && (
+                      <Input
+                        className="mt-2 bg-white border-gray-200"
+                        placeholder="Saisissez la RAM personnalisée"
+                        value={customSpecs.ram.value}
+                        onChange={(e) => handleCustomValueChange('ram', e.target.value)}
+                      />
+                    )}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <div>
                     <Label htmlFor="stockage">Stockage *</Label>
-                    <Select value={newProduct.stockage} onValueChange={(value) => setNewProduct({ ...newProduct, stockage: value })}>
-                      <SelectTrigger className="bg-gray-800 border-gray-600">
+                    <Select value={newProduct.stockage} onValueChange={(value) => handleSpecChange('stockage', value)}>
+                      <SelectTrigger className="bg-white border-gray-200">
                         <SelectValue placeholder="Sélectionner le stockage" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-600 max-h-[200px]">
+                      <SelectContent className="bg-white border-gray-200 max-h-[200px]">
                         {typesStockage.map((stockage) => (
                           <SelectItem key={stockage} value={stockage}>{stockage}</SelectItem>
                         ))}
+                        <div className="border-t border-gray-200 my-1"></div>
+                        <SelectItem value="CUSTOM" className="text-gaming-cyan font-medium">
+                          ✏️ Autre - Saisie manuelle
+                        </SelectItem>
                       </SelectContent>
                     </Select>
+                    {customSpecs.stockage.isCustom && (
+                      <Input
+                        className="mt-2 bg-white border-gray-200"
+                        placeholder="Saisissez le stockage personnalisé"
+                        value={customSpecs.stockage.value}
+                        onChange={(e) => handleCustomValueChange('stockage', e.target.value)}
+                      />
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="carte_graphique">Carte graphique</Label>
-                    <Select value={newProduct.carte_graphique} onValueChange={(value) => setNewProduct({ ...newProduct, carte_graphique: value })}>
-                      <SelectTrigger className="bg-gray-800 border-gray-600">
+                    <Select value={newProduct.carte_graphique} onValueChange={(value) => handleSpecChange('carte_graphique', value)}>
+                      <SelectTrigger className="bg-white border-gray-200">
                         <SelectValue placeholder="Sélectionner la carte graphique" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-600 max-h-[200px]">
+                      <SelectContent className="bg-white border-gray-200 max-h-[200px]">
                         {cartesGraphiques.map((carte) => (
                           <SelectItem key={carte} value={carte}>{carte}</SelectItem>
                         ))}
+                        <div className="border-t border-gray-200 my-1"></div>
+                        <SelectItem value="CUSTOM" className="text-gaming-cyan font-medium">
+                          ✏️ Autre - Saisie manuelle
+                        </SelectItem>
                       </SelectContent>
                     </Select>
+                    {customSpecs.carte_graphique.isCustom && (
+                      <Input
+                        className="mt-2 bg-white border-gray-200"
+                        placeholder="Saisissez la carte graphique personnalisée"
+                        value={customSpecs.carte_graphique.value}
+                        onChange={(e) => handleCustomValueChange('carte_graphique', e.target.value)}
+                      />
+                    )}
                   </div>
                 </div>
               </div>
 
               {/* Image */}
-              <div className="border-t border-gray-700 pt-4">
+              <div className="border-t border-gray-200 pt-4">
                 <Label>Image du produit</Label>
                 <div className="flex flex-col gap-4 mt-2">
                   {imagePreview && (
@@ -750,8 +883,8 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
               </div>
 
               {/* Informations commerciales */}
-              <div className="border-t border-gray-700 pt-4">
-                <h3 className="text-lg font-semibold text-white mb-4">Informations commerciales</h3>
+              <div className="border-t border-gray-200 pt-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Informations commerciales</h3>
                 
                 <div className="grid grid-cols-4 gap-4">
                   <div>
@@ -761,7 +894,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                       type="number"
                       value={newProduct.prix_achat || ""}
                       onChange={(e) => setNewProduct({ ...newProduct, prix_achat: parseFloat(e.target.value) || 0 })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                       placeholder="0"
                     />
                   </div>
@@ -772,7 +905,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                       type="number"
                       value={newProduct.prix_vente || ""}
                       onChange={(e) => setNewProduct({ ...newProduct, prix_vente: parseFloat(e.target.value) || 0 })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                       placeholder="0"
                     />
                   </div>
@@ -783,7 +916,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                       type="number"
                       value={newProduct.stock_actuel || ""}
                       onChange={(e) => setNewProduct({ ...newProduct, stock_actuel: parseInt(e.target.value) || 0 })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                       placeholder="0"
                     />
                   </div>
@@ -794,7 +927,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                       type="number"
                       value={newProduct.stock_minimum || ""}
                       onChange={(e) => setNewProduct({ ...newProduct, stock_minimum: parseInt(e.target.value) || 1 })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                       placeholder="1"
                     />
                   </div>
@@ -808,10 +941,10 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                       onValueChange={(value) => setNewProduct({ ...newProduct, fournisseur_id: value })}
                       disabled={loadingSuppliers}
                     >
-                      <SelectTrigger className="bg-gray-800 border-gray-600">
+                      <SelectTrigger className="bg-white border-gray-200">
                         <SelectValue placeholder="Sélectionner un fournisseur" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-600">
+                      <SelectContent className="bg-white border-gray-200">
                         {activeFournisseurs.map((fournisseur) => (
                           <SelectItem key={fournisseur.id} value={fournisseur.id}>
                             {fournisseur.nom}
@@ -826,10 +959,10 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                   <div>
                     <Label htmlFor="garantie">Garantie</Label>
                     <Select value={newProduct.garantie} onValueChange={(value) => setNewProduct({ ...newProduct, garantie: value })}>
-                      <SelectTrigger className="bg-gray-800 border-gray-600">
+                      <SelectTrigger className="bg-white border-gray-200">
                         <SelectValue placeholder="Sélectionner la garantie" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-600">
+                      <SelectContent className="bg-white border-gray-200">
                         {garanties.map((garantie) => (
                           <SelectItem key={garantie} value={garantie}>{garantie}</SelectItem>
                         ))}
@@ -848,7 +981,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                   setEditingProduct(null);
                   resetForm();
                 }}
-                className="border-gray-600 text-gray-300 hover:bg-gray-800"
+                className="border-gray-200 text-gray-600 hover:bg-gray-50"
               >
                 Annuler
               </Button>
@@ -870,8 +1003,8 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
             <div className="flex items-center gap-3">
               <Laptop className="w-8 h-8 text-gaming-purple" />
               <div>
-                <p className="text-sm text-gray-400">Total PC Portables</p>
-                <p className="text-2xl font-bold text-white">{stats.total}</p>
+                <p className="text-sm text-gray-600">Total PC Portables</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
               </div>
             </div>
           </CardContent>
@@ -882,8 +1015,8 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
             <div className="flex items-center gap-3">
               <CheckCircle className="w-8 h-8 text-gaming-green" />
               <div>
-                <p className="text-sm text-gray-400">Disponibles</p>
-                <p className="text-2xl font-bold text-white">{stats.disponible}</p>
+                <p className="text-sm text-gray-600">Disponibles</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.disponible}</p>
               </div>
             </div>
           </CardContent>
@@ -894,8 +1027,8 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
             <div className="flex items-center gap-3">
               <AlertTriangle className="w-8 h-8 text-yellow-600" />
               <div>
-                <p className="text-sm text-gray-400">Stock faible</p>
-                <p className="text-2xl font-bold text-white">{stats.stockFaible}</p>
+                <p className="text-sm text-gray-600">Stock faible</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.stockFaible}</p>
               </div>
             </div>
           </CardContent>
@@ -906,8 +1039,8 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
             <div className="flex items-center gap-3">
               <XCircle className="w-8 h-8 text-red-600" />
               <div>
-                <p className="text-sm text-gray-400">En rupture</p>
-                <p className="text-2xl font-bold text-white">{stats.rupture}</p>
+                <p className="text-sm text-gray-600">En rupture</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.rupture}</p>
               </div>
             </div>
           </CardContent>
@@ -918,8 +1051,8 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
             <div className="flex items-center gap-3">
               <DollarSign className="w-8 h-8 text-blue-400" />
               <div>
-                <p className="text-sm text-gray-400">Prix Total Achat</p>
-                <p className="text-2xl font-bold text-white">{priceStats.totalAchat.toLocaleString()} MAD</p>
+                <p className="text-sm text-gray-600">Prix Total Achat</p>
+                <p className="text-2xl font-bold text-gray-900">{priceStats.totalAchat.toLocaleString()} MAD</p>
               </div>
             </div>
           </CardContent>
@@ -930,8 +1063,8 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
             <div className="flex items-center gap-3">
               <TrendingUp className="w-8 h-8 text-emerald-400" />
               <div>
-                <p className="text-sm text-gray-400">Prix Total Vente</p>
-                <p className="text-2xl font-bold text-white">{priceStats.totalVente.toLocaleString()} MAD</p>
+                <p className="text-sm text-gray-600">Prix Total Vente</p>
+                <p className="text-2xl font-bold text-gray-900">{priceStats.totalVente.toLocaleString()} MAD</p>
               </div>
             </div>
           </CardContent>
@@ -939,38 +1072,38 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
       </div>
 
       {/* Search Bar */}
-      <Card className="bg-gray-900/50 border-gray-700">
+      <Card className="bg-white border-gray-200">
         <CardContent className="p-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 w-4 h-4" />
             <Input
               placeholder="Rechercher par nom, marque, modèle ou code-barres..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-gray-800 border-gray-600"
+              className="pl-10 bg-white border-gray-200"
             />
           </div>
         </CardContent>
       </Card>
 
       {/* Products Grid */}
-      <Card className="bg-gray-900/50 border-gray-700">
+      <Card className="bg-white border-gray-200">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-gray-900 flex items-center gap-2">
             <Laptop className="w-5 h-5" />
             PC Portables
           </CardTitle>
-          <CardDescription className="text-gray-400">
+          <CardDescription className="text-gray-600">
             {filteredProducts.length} PC portable(s) trouvé(s)
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProducts.map((product) => (
-              <Card key={product.id} className="bg-gray-800 border-gray-700 hover:border-gaming-purple/50 transition-all">
+              <Card key={product.id} className="bg-white border-gray-200 hover:border-gaming-purple/50 transition-all">
                 <CardContent className="p-4">
                   {/* Image */}
-                  <div className="w-full h-48 bg-gray-700 rounded-lg mb-4 flex items-center justify-center">
+                  <div className="w-full h-48 bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
                     {product.image_url ? (
                       <img 
                         src={product.image_url} 
@@ -985,9 +1118,9 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                   {/* Header */}
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
-                      <h3 className="text-white font-medium text-lg">{product.nom_produit}</h3>
+                      <h3 className="text-gray-900 font-medium text-lg">{product.nom_produit}</h3>
                       <p className="text-gaming-cyan text-sm">{product.marque} {product.modele}</p>
-                      <Badge className="mt-1 text-xs bg-gray-600">{product.etat}</Badge>
+                      <Badge className="mt-1 text-xs bg-gray-200">{product.etat}</Badge>
                     </div>
                     <Badge className={`${getStatutColor(product.statut)} text-xs ml-2`}>
                       {product.statut}
@@ -997,61 +1130,61 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                   {/* Specs */}
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Processeur:</span>
-                      <span className="text-white truncate ml-2">{product.processeur}</span>
+                      <span className="text-gray-600">Processeur:</span>
+                      <span className="text-gray-900 truncate ml-2">{product.processeur}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">RAM:</span>
-                      <span className="text-white">{product.ram}</span>
+                      <span className="text-gray-600">RAM:</span>
+                      <span className="text-gray-900">{product.ram}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Stockage:</span>
-                      <span className="text-white">{product.stockage}</span>
+                      <span className="text-gray-600">Stockage:</span>
+                      <span className="text-gray-900">{product.stockage}</span>
                     </div>
                     {product.carte_graphique && (
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-400">GPU:</span>
-                        <span className="text-white truncate ml-2">{product.carte_graphique}</span>
+                        <span className="text-gray-600">GPU:</span>
+                        <span className="text-gray-900 truncate ml-2">{product.carte_graphique}</span>
                       </div>
                     )}
                     {product.ecran && (
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-400">Écran:</span>
-                        <span className="text-white">{product.ecran}</span>
+                        <span className="text-gray-600">Écran:</span>
+                        <span className="text-gray-900">{product.ecran}</span>
                       </div>
                     )}
                   </div>
 
                   {/* Commercial Info */}
-                  <div className="border-t border-gray-700 pt-3 space-y-2">
+                  <div className="border-t border-gray-200 pt-3 space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-gray-400 text-sm">Prix d'achat:</span>
+                      <span className="text-gray-600 text-sm">Prix d'achat:</span>
                       <span className="text-gaming-green font-semibold">{product.prix_achat} MAD</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400 text-sm">Prix de vente:</span>
+                      <span className="text-gray-600 text-sm">Prix de vente:</span>
                       <span className="text-gaming-green font-semibold">{product.prix_vente} MAD</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400 text-sm">Stock:</span>
-                      <span className="text-white">{product.stock_actuel} / {product.stock_minimum}</span>
+                      <span className="text-gray-600 text-sm">Stock:</span>
+                      <span className="text-gray-900">{product.stock_actuel} / {product.stock_minimum}</span>
                     </div>
                     {product.garantie && (
                       <div className="flex justify-between">
-                        <span className="text-gray-400 text-sm">Garantie:</span>
-                        <span className="text-gray-300 text-sm">{product.garantie}</span>
+                        <span className="text-gray-600 text-sm">Garantie:</span>
+                        <span className="text-gray-600 text-sm">{product.garantie}</span>
                       </div>
                     )}
                   </div>
 
                   {/* Actions */}
-                  <div className="border-t border-gray-700 pt-3 space-y-3">
+                  <div className="border-t border-gray-200 pt-3 space-y-3">
                     <div className="flex justify-between items-center">
                       <Button
-                        onClick={() => navigate(`/pc-portable/${product.id}`)}
+                        onClick={() => navigate(`/pc-portable-details/${product.id}`)}
                         variant="outline"
                         size="sm"
-                        className="border-gaming-cyan text-gaming-cyan hover:bg-gaming-cyan hover:text-white"
+                        className="border-gaming-cyan text-gaming-cyan hover:bg-gaming-cyan hover:text-gray-900"
                       >
                         <Eye className="w-4 h-4 mr-2" />
                         Voir détails
@@ -1087,7 +1220,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                         <Button
                           variant="outline"
                           size="sm"
-                          className="w-full border-gaming-purple text-gaming-purple hover:bg-gaming-purple hover:text-white"
+                          className="w-full border-gaming-purple text-gaming-purple hover:bg-gaming-purple hover:text-gray-900"
                         >
                           <UserPlus className="w-4 h-4 mr-2" />
                           Assigner à l'équipe
@@ -1102,7 +1235,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
             {filteredProducts.length === 0 && (
               <div className="col-span-full text-center py-8">
                 <Laptop className="w-12 h-12 mx-auto text-gray-600 mb-4" />
-                <p className="text-gray-400">Aucun PC portable trouvé</p>
+                <p className="text-gray-600">Aucun PC portable trouvé</p>
               </div>
             )}
           </div>

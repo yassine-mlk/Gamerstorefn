@@ -128,67 +128,67 @@ const StockPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <SidebarTrigger className="text-white hover:text-gaming-cyan" />
+          <SidebarTrigger className="text-gray-700 hover:text-gaming-cyan" />
           <div>
-            <h1 className="text-3xl font-bold text-white">Gestion du Stock</h1>
-            <p className="text-gray-400">Gérez tous vos produits depuis une interface unifiée</p>
+            <h1 className="text-3xl font-bold text-gray-900">Gestion du Stock</h1>
+            <p className="text-gray-600">Gérez tous vos produits depuis une interface unifiée</p>
           </div>
         </div>
       </div>
 
       {/* Statistiques générales */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-card border-gray-800">
+        <Card className="bg-card border-gray-200">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-gaming-blue/20 rounded-lg">
-                <Package className="w-6 h-6 text-gaming-blue" />
+              <div className="p-3 bg-gaming-cyan/20 rounded-lg">
+                <Package className="w-6 h-6 text-gaming-cyan" />
               </div>
               <div>
-                <p className="text-sm text-gray-400">Total Produits</p>
-                <p className="text-2xl font-bold text-white">{totalProducts}</p>
+                <p className="text-sm text-gray-600">Total Produits</p>
+                <p className="text-2xl font-bold text-gray-900">{totalProducts}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-gray-800">
+        <Card className="bg-card border-gray-200">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-gaming-green/20 rounded-lg">
                 <TrendingUp className="w-6 h-6 text-gaming-green" />
               </div>
               <div>
-                <p className="text-sm text-gray-400">Valeur Stock</p>
-                <p className="text-2xl font-bold text-white">{totalValue.toLocaleString()} MAD</p>
+                <p className="text-sm text-gray-600">Valeur Stock</p>
+                <p className="text-2xl font-bold text-gray-900">{totalValue.toLocaleString()} MAD</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-gray-800">
+        <Card className="bg-card border-gray-200">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-gaming-yellow/20 rounded-lg">
-                <AlertTriangle className="w-6 h-6 text-gaming-yellow" />
+              <div className="p-3 bg-yellow-500/20 rounded-lg">
+                <AlertTriangle className="w-6 h-6 text-yellow-500" />
               </div>
               <div>
-                <p className="text-sm text-gray-400">Stock Faible</p>
-                <p className="text-2xl font-bold text-white">{lowStockProducts}</p>
+                <p className="text-sm text-gray-600">Stock Faible</p>
+                <p className="text-2xl font-bold text-gray-900">{lowStockProducts}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-gray-800">
+        <Card className="bg-card border-gray-200">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-gaming-red/20 rounded-lg">
-                <Package className="w-6 h-6 text-gaming-red" />
+              <div className="p-3 bg-red-500/20 rounded-lg">
+                <Package className="w-6 h-6 text-red-500" />
               </div>
               <div>
-                <p className="text-sm text-gray-400">Rupture Stock</p>
-                <p className="text-2xl font-bold text-white">{outOfStockProducts}</p>
+                <p className="text-sm text-gray-600">Rupture Stock</p>
+                <p className="text-2xl font-bold text-gray-900">{outOfStockProducts}</p>
               </div>
             </div>
           </CardContent>
@@ -196,17 +196,17 @@ const StockPage = () => {
       </div>
 
       {/* Onglets des produits */}
-      <Card className="bg-card border-gray-800">
+      <Card className="bg-card border-gray-200">
         <CardContent className="p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 mb-6 bg-gray-800/50">
+            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 mb-6 bg-gray-100">
               {tabsData.map((tab) => {
                 const IconComponent = tab.icon;
                 return (
                   <TabsTrigger 
                     key={tab.id} 
                     value={tab.id}
-                    className="flex items-center gap-2 data-[state=active]:bg-gaming-cyan data-[state=active]:text-black"
+                    className="flex items-center gap-2 data-[state=active]:bg-gaming-cyan data-[state=active]:text-white"
                   >
                     <IconComponent className="w-4 h-4" />
                     <span className="hidden sm:inline">{tab.label}</span>

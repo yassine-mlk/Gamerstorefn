@@ -279,8 +279,8 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
       case 'Stock faible': return 'bg-yellow-600';
       case 'Rupture': return 'bg-red-600';
       case 'Réservé': return 'bg-blue-600';
-      case 'Archivé': return 'bg-gray-600';
-      default: return 'bg-gray-600';
+      case 'Archivé': return 'bg-gray-200';
+      default: return 'bg-gray-200';
     }
   };
 
@@ -339,8 +339,8 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
             <div className="flex items-center gap-4">
               <SidebarTrigger />
               <div>
-                <h1 className="text-3xl font-bold text-white">Gestion des Moniteurs</h1>
-                <p className="text-gray-400">Gérer l'inventaire des moniteurs</p>
+                <h1 className="text-3xl font-bold text-gray-900">Gestion des Moniteurs</h1>
+                <p className="text-gray-600">Gérer l'inventaire des moniteurs</p>
               </div>
             </div>
           </div>
@@ -351,11 +351,11 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
       <div className="flex items-center justify-between">
         {embedded && (
           <div>
-            <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
               <Monitor className="w-6 h-6 text-gaming-cyan" />
               Moniteurs
             </h2>
-            <p className="text-gray-400">Gérer l'inventaire des moniteurs</p>
+            <p className="text-gray-600">Gérer l'inventaire des moniteurs</p>
           </div>
         )}
         
@@ -366,12 +366,12 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
               Ajouter un moniteur
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-gray-900 border-gray-700">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white border-gray-200">
             <DialogHeader>
-              <DialogTitle className="text-white">
+              <DialogTitle className="text-gray-900">
                 {editingMoniteur ? "Modifier le moniteur" : "Ajouter un nouveau moniteur"}
               </DialogTitle>
-              <DialogDescription className="text-gray-400">
+              <DialogDescription className="text-gray-600">
                 Remplissez les informations du moniteur
               </DialogDescription>
             </DialogHeader>
@@ -379,7 +379,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
             <div className="grid gap-6">
               {/* Informations de base */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-white border-b border-gray-700 pb-2">
+                <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
                   Informations de base
                 </h3>
                 
@@ -390,7 +390,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                       id="nom_produit"
                       value={newMoniteur.nom_produit}
                       onChange={(e) => setNewMoniteur({ ...newMoniteur, nom_produit: e.target.value })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                       placeholder="Ex: Dell UltraSharp U2720Q"
                     />
                   </div>
@@ -400,7 +400,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                       id="code_barre"
                       value={newMoniteur.code_barre}
                       onChange={(e) => setNewMoniteur({ ...newMoniteur, code_barre: e.target.value })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                       placeholder="Code-barres du produit"
                     />
                   </div>
@@ -410,10 +410,10 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                   <div>
                     <Label htmlFor="marque">Marque *</Label>
                     <Select value={newMoniteur.marque} onValueChange={(value) => setNewMoniteur({ ...newMoniteur, marque: value })}>
-                      <SelectTrigger className="bg-gray-800 border-gray-600">
+                      <SelectTrigger className="bg-white border-gray-200">
                         <SelectValue placeholder="Sélectionner la marque" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-600">
+                      <SelectContent className="bg-white border-gray-200">
                         {marques.map((marque) => (
                           <SelectItem key={marque} value={marque}>{marque}</SelectItem>
                         ))}
@@ -423,10 +423,10 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                   <div>
                     <Label htmlFor="taille">Taille *</Label>
                     <Select value={newMoniteur.taille} onValueChange={(value) => setNewMoniteur({ ...newMoniteur, taille: value })}>
-                      <SelectTrigger className="bg-gray-800 border-gray-600">
+                      <SelectTrigger className="bg-white border-gray-200">
                         <SelectValue placeholder="Sélectionner la taille" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-600">
+                      <SelectContent className="bg-white border-gray-200">
                         {tailles.map((taille) => (
                           <SelectItem key={taille} value={taille}>{taille}</SelectItem>
                         ))}
@@ -439,10 +439,10 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                   <div>
                     <Label htmlFor="resolution">Résolution *</Label>
                     <Select value={newMoniteur.resolution} onValueChange={(value) => setNewMoniteur({ ...newMoniteur, resolution: value })}>
-                      <SelectTrigger className="bg-gray-800 border-gray-600">
+                      <SelectTrigger className="bg-white border-gray-200">
                         <SelectValue placeholder="Sélectionner la résolution" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-600">
+                      <SelectContent className="bg-white border-gray-200">
                         {resolutions.map((resolution) => (
                           <SelectItem key={resolution} value={resolution}>{resolution}</SelectItem>
                         ))}
@@ -452,10 +452,10 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                   <div>
                     <Label htmlFor="frequence_affichage">Fréquence d'affichage *</Label>
                     <Select value={newMoniteur.frequence_affichage} onValueChange={(value) => setNewMoniteur({ ...newMoniteur, frequence_affichage: value })}>
-                      <SelectTrigger className="bg-gray-800 border-gray-600">
+                      <SelectTrigger className="bg-white border-gray-200">
                         <SelectValue placeholder="Sélectionner la fréquence" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-600">
+                      <SelectContent className="bg-white border-gray-200">
                         {frequences.map((freq) => (
                           <SelectItem key={freq} value={freq}>{freq}</SelectItem>
                         ))}
@@ -468,10 +468,10 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                   <div>
                     <Label htmlFor="etat">État *</Label>
                     <Select value={newMoniteur.etat} onValueChange={(value: 'Neuf' | 'Comme neuf' | 'Occasion') => setNewMoniteur({ ...newMoniteur, etat: value })}>
-                      <SelectTrigger className="bg-gray-800 border-gray-600">
+                      <SelectTrigger className="bg-white border-gray-200">
                         <SelectValue placeholder="Sélectionner l'état" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-600">
+                      <SelectContent className="bg-white border-gray-200">
                         {ETAT_OPTIONS.map((etat) => (
                           <SelectItem key={etat} value={etat}>{etat}</SelectItem>
                         ))}
@@ -481,10 +481,10 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                   <div>
                     <Label htmlFor="garantie">Garantie</Label>
                     <Select value={newMoniteur.garantie} onValueChange={(value: string) => setNewMoniteur({ ...newMoniteur, garantie: value })}>
-                      <SelectTrigger className="bg-gray-800 border-gray-600">
+                      <SelectTrigger className="bg-white border-gray-200">
                         <SelectValue placeholder="Sélectionner la garantie" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-600">
+                      <SelectContent className="bg-white border-gray-200">
                         {GARANTIE_OPTIONS.map((garantie) => (
                           <SelectItem key={garantie} value={garantie}>{garantie}</SelectItem>
                         ))}
@@ -496,7 +496,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
 
               {/* Image du produit */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-white border-b border-gray-700 pb-2">
+                <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
                   Image du produit
                 </h3>
                 
@@ -506,7 +506,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                       <img 
                         src={imagePreview} 
                         alt="Aperçu" 
-                        className="w-full h-48 object-cover rounded-lg border border-gray-600"
+                        className="w-full h-48 object-cover rounded-lg border border-gray-200"
                       />
                     </div>
                   )}
@@ -522,7 +522,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                     <Button 
                       type="button"
                       variant="outline" 
-                      className="border-gray-600"
+                      className="border-gray-200"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploading}
                     >
@@ -532,7 +532,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                     <Button 
                       type="button"
                       variant="outline" 
-                      className="border-gray-600"
+                      className="border-gray-200"
                       onClick={showCamera ? stopCamera : startCamera}
                       disabled={uploading}
                     >
@@ -547,7 +547,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                         ref={videoRef}
                         autoPlay
                         playsInline
-                        className="w-full max-w-md h-48 object-cover rounded-lg border border-gray-600"
+                        className="w-full max-w-md h-48 object-cover rounded-lg border border-gray-200"
                       />
                       <Button 
                         type="button"
@@ -567,7 +567,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
 
               {/* Informations commerciales */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-white border-b border-gray-700 pb-2">
+                <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
                   Informations commerciales
                 </h3>
                 
@@ -580,7 +580,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                       step="0.01"
                       value={newMoniteur.prix_achat || ""}
                       onChange={(e) => setNewMoniteur({ ...newMoniteur, prix_achat: parseFloat(e.target.value) || 0 })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                       placeholder="0.00"
                     />
                   </div>
@@ -592,7 +592,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                       step="0.01"
                       value={newMoniteur.prix_vente || ""}
                       onChange={(e) => setNewMoniteur({ ...newMoniteur, prix_vente: parseFloat(e.target.value) || 0 })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                       placeholder="0.00"
                     />
                   </div>
@@ -606,7 +606,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                       type="number"
                       value={newMoniteur.stock_actuel || ""}
                       onChange={(e) => setNewMoniteur({ ...newMoniteur, stock_actuel: parseInt(e.target.value) || 0 })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                       placeholder="0"
                     />
                   </div>
@@ -617,7 +617,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                       type="number"
                       value={newMoniteur.stock_minimum || ""}
                       onChange={(e) => setNewMoniteur({ ...newMoniteur, stock_minimum: parseInt(e.target.value) || 1 })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                       placeholder="1"
                     />
                   </div>
@@ -631,10 +631,10 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                       onValueChange={(value) => setNewMoniteur({ ...newMoniteur, fournisseur_id: value })}
                       disabled={loadingSuppliers}
                     >
-                      <SelectTrigger className="bg-gray-800 border-gray-600">
+                      <SelectTrigger className="bg-white border-gray-200">
                         <SelectValue placeholder="Sélectionner un fournisseur" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-600">
+                      <SelectContent className="bg-white border-gray-200">
                         {activeFournisseurs.map((fournisseur) => (
                           <SelectItem key={fournisseur.id} value={fournisseur.id}>
                             {fournisseur.nom}
@@ -652,7 +652,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                       id="emplacement"
                       value={newMoniteur.emplacement}
                       onChange={(e) => setNewMoniteur({ ...newMoniteur, emplacement: e.target.value })}
-                      className="bg-gray-800 border-gray-600"
+                      className="bg-white border-gray-200"
                       placeholder="Ex: Rayon A1, Étagère 2"
                     />
                   </div>
@@ -664,7 +664,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                     id="description"
                     value={newMoniteur.description}
                     onChange={(e) => setNewMoniteur({ ...newMoniteur, description: e.target.value })}
-                    className="bg-gray-800 border-gray-600"
+                    className="bg-white border-gray-200"
                     placeholder="Description détaillée du moniteur..."
                     rows={3}
                   />
@@ -676,7 +676,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                     id="notes"
                     value={newMoniteur.notes}
                     onChange={(e) => setNewMoniteur({ ...newMoniteur, notes: e.target.value })}
-                    className="bg-gray-800 border-gray-600"
+                    className="bg-white border-gray-200"
                     placeholder="Notes internes..."
                     rows={2}
                   />
@@ -692,7 +692,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                   setEditingMoniteur(null);
                   resetForm();
                 }}
-                className="border-gray-600 text-gray-300 hover:bg-gray-800"
+                className="border-gray-200 text-gray-600 hover:bg-gray-100"
               >
                 Annuler
               </Button>
@@ -715,7 +715,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100 text-sm font-medium">Total Moniteurs</p>
-                <p className="text-white text-3xl font-bold">{stats.total}</p>
+                <p className="text-gray-900 text-3xl font-bold">{stats.total}</p>
               </div>
               <Monitor className="w-8 h-8 text-blue-200" />
             </div>
@@ -727,7 +727,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-100 text-sm font-medium">Disponibles</p>
-                <p className="text-white text-3xl font-bold">{stats.disponible}</p>
+                <p className="text-gray-900 text-3xl font-bold">{stats.disponible}</p>
               </div>
               <CheckCircle className="w-8 h-8 text-green-200" />
             </div>
@@ -739,7 +739,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-yellow-100 text-sm font-medium">Stock Faible</p>
-                <p className="text-white text-3xl font-bold">{stats.stockFaible}</p>
+                <p className="text-gray-900 text-3xl font-bold">{stats.stockFaible}</p>
               </div>
               <AlertTriangle className="w-8 h-8 text-yellow-200" />
             </div>
@@ -751,7 +751,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-red-100 text-sm font-medium">Rupture</p>
-                <p className="text-white text-3xl font-bold">{stats.rupture}</p>
+                <p className="text-gray-900 text-3xl font-bold">{stats.rupture}</p>
               </div>
               <XCircle className="w-8 h-8 text-red-200" />
             </div>
@@ -763,7 +763,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-cyan-100 text-sm font-medium">Prix Total Achat</p>
-                <p className="text-white text-3xl font-bold">{priceStats.totalAchat.toLocaleString()} MAD</p>
+                <p className="text-gray-900 text-3xl font-bold">{priceStats.totalAchat.toLocaleString()} MAD</p>
               </div>
               <DollarSign className="w-8 h-8 text-cyan-200" />
             </div>
@@ -775,7 +775,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-emerald-100 text-sm font-medium">Prix Total Vente</p>
-                <p className="text-white text-3xl font-bold">{priceStats.totalVente.toLocaleString()} MAD</p>
+                <p className="text-gray-900 text-3xl font-bold">{priceStats.totalVente.toLocaleString()} MAD</p>
               </div>
               <TrendingUp className="w-8 h-8 text-emerald-200" />
             </div>
@@ -784,9 +784,9 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
       </div>
 
       {/* Search and Filter */}
-      <Card className="bg-gray-900/50 border-gray-700">
+      <Card className="bg-white border-gray-200">
         <CardHeader>
-          <CardTitle className="text-white">Recherche et filtres</CardTitle>
+          <CardTitle className="text-gray-900">Recherche et filtres</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4">
@@ -796,7 +796,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                 placeholder="Rechercher par nom, marque, taille, résolution ou code-barres..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-gray-800 border-gray-600 text-white"
+                className="pl-10 bg-white border-gray-200 text-gray-900"
               />
             </div>
           </div>
@@ -804,22 +804,22 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
       </Card>
 
       {/* Moniteurs List */}
-      <Card className="bg-gray-900/50 border-gray-700">
+      <Card className="bg-white border-gray-200">
         <CardHeader>
-          <CardTitle className="text-white">Liste des Moniteurs</CardTitle>
-          <CardDescription className="text-gray-400">
+          <CardTitle className="text-gray-900">Liste des Moniteurs</CardTitle>
+          <CardDescription className="text-gray-600">
             {filteredMoniteurs.length} moniteur(s) trouvé(s)
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredMoniteurs.map((moniteur) => (
-              <Card key={moniteur.id} className="bg-gray-800 border-gray-600 hover:border-gaming-cyan transition-colors">
+              <Card key={moniteur.id} className="bg-white border-gray-200 hover:border-gaming-cyan transition-colors">
                 <CardContent className="p-4">
                   <div className="space-y-3">
                     {/* Image */}
                     {moniteur.image_url && (
-                      <div className="w-full h-32 bg-gray-700 rounded-lg overflow-hidden">
+                      <div className="w-full h-32 bg-gray-100 rounded-lg overflow-hidden">
                         <img 
                           src={moniteur.image_url} 
                           alt={moniteur.nom_produit}
@@ -831,12 +831,12 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                     {/* Header */}
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h3 className="text-white font-semibold text-sm line-clamp-2">
+                        <h3 className="text-gray-900 font-semibold text-sm line-clamp-2">
                           {moniteur.nom_produit}
                         </h3>
                         <p className="text-gaming-cyan text-xs">{moniteur.marque}</p>
                       </div>
-                      <Badge className={`${getStatutColor(moniteur.statut)} text-white text-xs`}>
+                      <Badge className={`${getStatutColor(moniteur.statut)} text-gray-900 text-xs`}>
                         <div className="flex items-center gap-1">
                           {getStatutIcon(moniteur.statut)}
                           {moniteur.statut}
@@ -845,39 +845,39 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                     </div>
 
                     {/* Specs */}
-                    <div className="space-y-1 text-xs text-gray-300">
+                    <div className="space-y-1 text-xs text-gray-600">
                       <div className="flex justify-between">
                         <span>Taille:</span>
-                        <span className="text-white">{moniteur.taille}</span>
+                        <span className="text-gray-900">{moniteur.taille}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Résolution:</span>
-                        <span className="text-white">{moniteur.resolution}</span>
+                        <span className="text-gray-900">{moniteur.resolution}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Fréquence:</span>
-                        <span className="text-white">{moniteur.frequence_affichage}</span>
+                        <span className="text-gray-900">{moniteur.frequence_affichage}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>État:</span>
-                        <span className="text-white">{moniteur.etat}</span>
+                        <span className="text-gray-900">{moniteur.etat}</span>
                       </div>
                     </div>
 
                     {/* Prix et Stock */}
                     <div className="space-y-1 text-xs">
-                      <div className="flex justify-between text-gray-300">
+                      <div className="flex justify-between text-gray-600">
                         <span>Prix vente:</span>
                         <span className="text-gaming-green font-medium">{moniteur.prix_vente.toFixed(2)} MAD</span>
                       </div>
-                      <div className="flex justify-between text-gray-300">
+                      <div className="flex justify-between text-gray-600">
                         <span>Stock:</span>
-                        <span className="text-white font-medium">{moniteur.stock_actuel}</span>
+                        <span className="text-gray-900 font-medium">{moniteur.stock_actuel}</span>
                       </div>
                       {moniteur.code_barre && (
-                        <div className="flex justify-between text-gray-300">
+                        <div className="flex justify-between text-gray-600">
                           <span>Code-barres:</span>
-                          <span className="text-white text-xs">{moniteur.code_barre}</span>
+                          <span className="text-gray-900 text-xs">{moniteur.code_barre}</span>
                         </div>
                       )}
                     </div>
@@ -888,7 +888,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                         variant="outline"
                         size="sm"
                         onClick={() => openEditDialog(moniteur)}
-                        className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700"
+                        className="flex-1 border-gray-200 text-gray-600 hover:bg-gray-100"
                       >
                         <Edit className="w-3 h-3 mr-1" />
                         Modifier
@@ -897,7 +897,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                         variant="outline"
                         size="sm"
                         onClick={() => handleDeleteMoniteur(moniteur.id)}
-                        className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                        className="border-red-600 text-red-400 hover:bg-red-600 hover:text-gray-900"
                       >
                         <Trash2 className="w-3 h-3" />
                       </Button>
@@ -911,7 +911,7 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
           {filteredMoniteurs.length === 0 && (
             <div className="text-center py-12">
               <Monitor className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400 text-lg">Aucun moniteur trouvé</p>
+              <p className="text-gray-600 text-lg">Aucun moniteur trouvé</p>
               <p className="text-gray-500">Commencez par ajouter votre premier moniteur</p>
             </div>
           )}
