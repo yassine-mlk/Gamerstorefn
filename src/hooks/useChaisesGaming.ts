@@ -158,7 +158,7 @@ export const useChaisesGaming = () => {
         id: Date.now().toString(),
         ...newChaise,
         statut: newChaise.stock_actuel === 0 ? 'Rupture' : 
-                newChaise.stock_actuel <= newChaise.stock_minimum ? 'Stock faible' : 'Disponible',
+                newChaise.stock_actuel < newChaise.stock_minimum ? 'Stock faible' : 'Disponible',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -190,7 +190,7 @@ export const useChaisesGaming = () => {
           // Mettre à jour le statut basé sur le stock
           if (updates.stock_actuel !== undefined) {
             updated.statut = updates.stock_actuel === 0 ? 'Rupture' : 
-                            updates.stock_actuel <= (updates.stock_minimum || chaise.stock_minimum) ? 'Stock faible' : 'Disponible';
+                            updates.stock_actuel < (updates.stock_minimum || chaise.stock_minimum) ? 'Stock faible' : 'Disponible';
           }
           return updated;
         }

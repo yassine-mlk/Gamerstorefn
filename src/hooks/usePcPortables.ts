@@ -22,6 +22,7 @@ export interface PcPortable {
   fournisseur_id?: string;
   statut: 'Disponible' | 'Stock faible' | 'Rupture' | 'Réservé' | 'Archivé';
   garantie?: string;
+  depot: 'magasin principal' | 'depot';
   date_ajout: string;
   derniere_modification: string;
   created_at: string;
@@ -47,6 +48,7 @@ export interface NewPcPortable {
   fournisseur_id?: string;
   statut?: 'Disponible' | 'Stock faible' | 'Rupture' | 'Réservé' | 'Archivé';
   garantie?: string;
+  depot?: 'magasin principal' | 'depot';
 }
 
 export interface MouvementStock {

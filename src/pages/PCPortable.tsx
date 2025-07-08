@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,8 @@ import {
   CheckCircle,
   XCircle,
   Upload,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Eye
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -115,6 +117,7 @@ const mockFournisseurs = [
 ];
 
 export default function PCPortable() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<PCPortable[]>(mockPCPortables);
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -720,6 +723,15 @@ export default function PCPortable() {
                   </div>
                   
                   <div className="flex justify-end gap-2 mt-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate(`/pc-portable/${product.id}`)}
+                      className="text-gaming-cyan hover:bg-gaming-cyan/20 h-8 w-8 p-0"
+                    >
+                      <Eye className="w-3 h-3" />
+                    </Button>
+                    
                     <Button
                       variant="ghost"
                       size="sm"

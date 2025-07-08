@@ -109,7 +109,7 @@ export default function ComposantsPC({ embedded = false }: { embedded?: boolean 
 
     const statut = newProduct.stock_actuel === 0 
       ? "Rupture" 
-      : newProduct.stock_actuel! <= (newProduct.stock_minimum || 1) 
+      : newProduct.stock_actuel! < (newProduct.stock_minimum || 1) 
         ? "Stock faible" 
         : "Disponible";
 
@@ -137,7 +137,7 @@ export default function ComposantsPC({ embedded = false }: { embedded?: boolean 
 
     const statut = newProduct.stock_actuel === 0 
       ? "Rupture" 
-      : newProduct.stock_actuel! <= (newProduct.stock_minimum || 1) 
+      : newProduct.stock_actuel! < (newProduct.stock_minimum || 1) 
         ? "Stock faible" 
         : "Disponible";
 

@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Plus,
   Search,
@@ -24,7 +25,8 @@ import {
   Eye,
   UserPlus,
   DollarSign,
-  TrendingUp
+  TrendingUp,
+  Barcode
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePcPortables, PcPortable, NewPcPortable } from "@/hooks/usePcPortables";
@@ -189,6 +191,11 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
     ecran: { isCustom: false, value: "" }
   });
 
+  // États pour la saisie multiple de codes-barres
+  const [isMultipleBarcodeMode, setIsMultipleBarcodeMode] = useState(false);
+  const [multipleBarcodes, setMultipleBarcodes] = useState<string[]>([""]);
+  const [multipleDepots, setMultipleDepots] = useState<('magasin principal' | 'depot')[]>(["magasin principal"]);
+
   const [newProduct, setNewProduct] = useState<NewPcPortable>({
     nom_produit: "",
     code_barre: "",
@@ -206,7 +213,8 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
     stock_minimum: 1,
     image_url: "",
     fournisseur_id: "",
-    garantie: ""
+    garantie: "",
+    depot: "magasin principal"
   });
   
   const { toast } = useToast();
@@ -228,29 +236,109 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
       return;
     }
 
+    // Validation pour le mode multiple codes-barres
+    if (isMultipleBarcodeMode) {
+      const validBarcodes = multipleBarcodes.filter(code => code.trim() !== "");
+      if (validBarcodes.length === 0) {
+        toast({
+          title: "Erreur",
+          description: "Veuillez saisir au moins un code-barres valide",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Vérifier la duplication des codes-barres
+      const uniqueBarcodes = new Set(validBarcodes);
+      if (uniqueBarcodes.size !== validBarcodes.length) {
+        toast({
+          title: "Erreur",
+          description: "Les codes-barres doivent être uniques",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     const statut = newProduct.stock_actuel === 0 
       ? "Rupture" 
-      : newProduct.stock_actuel <= (newProduct.stock_minimum || 1) 
+      : newProduct.stock_actuel < (newProduct.stock_minimum || 1) 
         ? "Stock faible" 
         : "Disponible";
 
-    // Utiliser les valeurs personnalisées si elles sont définies
-    const finalProduct: NewPcPortable = {
+    // Créer le produit de base
+    const baseProduct: NewPcPortable = {
       ...newProduct,
       processeur: customSpecs.processeur.isCustom ? customSpecs.processeur.value : newProduct.processeur,
       ram: customSpecs.ram.isCustom ? customSpecs.ram.value : newProduct.ram,
       stockage: customSpecs.stockage.isCustom ? customSpecs.stockage.value : newProduct.stockage,
       carte_graphique: customSpecs.carte_graphique.isCustom ? customSpecs.carte_graphique.value : newProduct.carte_graphique,
       ecran: customSpecs.ecran.isCustom ? customSpecs.ecran.value : newProduct.ecran,
-      code_barre: newProduct.code_barre || `PC${Date.now()}`,
       statut: statut as "Disponible" | "Stock faible" | "Rupture" | "Réservé" | "Archivé",
     };
 
-    const result = await addPcPortable(finalProduct);
+    try {
+      if (isMultipleBarcodeMode) {
+        // Mode multiple : créer un produit pour chaque code-barres
+        const validBarcodes = multipleBarcodes.filter(code => code.trim() !== "");
+        let successCount = 0;
+        
+        for (let i = 0; i < validBarcodes.length; i++) {
+          const barcode = validBarcodes[i];
+          const depot = multipleDepots[i] || "magasin principal";
+          
+          // Calculer le statut pour cet exemplaire individuel (stock = 1)
+          const stockMinimum = newProduct.stock_minimum || 1;
+          const exemplaireStat = 1 < stockMinimum ? "Stock faible" : "Disponible";
+          
+          const productWithBarcode = {
+            ...baseProduct,
+            code_barre: barcode.trim(),
+            depot: depot,
+            stock_actuel: 1, // Chaque exemplaire est unique
+            statut: exemplaireStat as "Disponible" | "Stock faible" | "Rupture" | "Réservé" | "Archivé"
+          };
+          
+          const result = await addPcPortable(productWithBarcode);
+          if (result) {
+            successCount++;
+          }
+        }
+        
+        if (successCount > 0) {
+          toast({
+            title: "Produits ajoutés avec succès",
+            description: `${successCount} exemplaire(s) de ${newProduct.nom_produit} ajouté(s) avec des codes-barres différents`,
+          });
+          resetForm();
+          setIsAddDialogOpen(false);
+        } else {
+          toast({
+            title: "Erreur",
+            description: "Aucun produit n'a pu être ajouté",
+            variant: "destructive",
+          });
+        }
+      } else {
+        // Mode normal : un seul produit
+        const finalProduct = {
+          ...baseProduct,
+          code_barre: newProduct.code_barre || `PC${Date.now()}`,
+        };
 
-    if (result) {
-      resetForm();
-      setIsAddDialogOpen(false);
+        const result = await addPcPortable(finalProduct);
+
+        if (result) {
+          resetForm();
+          setIsAddDialogOpen(false);
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de l'ajout du/des produit(s)",
+        variant: "destructive",
+      });
     }
   };
 
@@ -266,7 +354,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
 
     const statut = newProduct.stock_actuel === 0 
       ? "Rupture" 
-      : newProduct.stock_actuel <= (newProduct.stock_minimum || 1) 
+      : newProduct.stock_actuel < (newProduct.stock_minimum || 1) 
         ? "Stock faible" 
         : "Disponible";
 
@@ -323,6 +411,9 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
       carte_graphique: { isCustom: false, value: "" },
       ecran: { isCustom: false, value: "" }
     });
+    setIsMultipleBarcodeMode(false);
+    setMultipleBarcodes([""]);
+    setMultipleDepots(["magasin principal"]);
     setImagePreview("");
     stopCamera();
   };
@@ -540,6 +631,31 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
     }));
   };
 
+  // Fonctions pour gérer les codes-barres multiples
+  const addBarcodeField = () => {
+    setMultipleBarcodes([...multipleBarcodes, ""]);
+    setMultipleDepots([...multipleDepots, "magasin principal"]);
+  };
+
+  const removeBarcodeField = (index: number) => {
+    if (multipleBarcodes.length > 1) {
+      setMultipleBarcodes(multipleBarcodes.filter((_, i) => i !== index));
+      setMultipleDepots(multipleDepots.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateBarcodeField = (index: number, value: string) => {
+    const newBarcodes = [...multipleBarcodes];
+    newBarcodes[index] = value;
+    setMultipleBarcodes(newBarcodes);
+  };
+
+  const updateDepotField = (index: number, value: 'magasin principal' | 'depot') => {
+    const newDepots = [...multipleDepots];
+    newDepots[index] = value;
+    setMultipleDepots(newDepots);
+  };
+
   const stats = getStockStats();
   const priceStats = getPriceStats(filteredProducts);
 
@@ -624,14 +740,106 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                   />
                 </div>
                 <div>
-                  <Label htmlFor="code_barre">Code-barres</Label>
-                  <Input
-                    id="code_barre"
-                    value={newProduct.code_barre}
-                    onChange={(e) => setNewProduct({ ...newProduct, code_barre: e.target.value })}
-                    className="bg-white border-gray-200"
-                    placeholder="Scannez ou saisissez le code-barres"
-                  />
+                  <div className="flex items-center justify-between mb-2">
+                    <Label htmlFor="code_barre">Code-barres</Label>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="multiple_barcodes"
+                        checked={isMultipleBarcodeMode}
+                        onCheckedChange={(checked) => {
+                          setIsMultipleBarcodeMode(checked as boolean);
+                          if (checked) {
+                            setMultipleBarcodes([""]);
+                            setMultipleDepots(["magasin principal"]);
+                            setNewProduct({ ...newProduct, code_barre: "" });
+                          } else {
+                            setMultipleBarcodes([""]);
+                            setMultipleDepots(["magasin principal"]);
+                          }
+                        }}
+                      />
+                      <Label htmlFor="multiple_barcodes" className="text-sm text-gaming-cyan font-medium cursor-pointer">
+                        Saisie multiple (traçabilité)
+                      </Label>
+                    </div>
+                  </div>
+                  
+                  {isMultipleBarcodeMode ? (
+                    <div className="space-y-2">
+                      <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                        <div className="flex items-start gap-2">
+                          <Barcode className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                          <div className="text-sm">
+                            <p className="text-blue-800 font-medium">Mode traçabilité activé</p>
+                            <p className="text-blue-600">Saisissez plusieurs codes-barres pour créer plusieurs exemplaires du même produit avec une traçabilité individuelle et des emplacements de stockage spécifiques.</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2 text-sm font-medium text-gray-700 px-1">
+                        <div className="flex-1">Code-barres</div>
+                        <div className="w-48">Lieu de stockage</div>
+                        <div className="w-10"></div>
+                      </div>
+                      
+                      {multipleBarcodes.map((barcode, index) => (
+                        <div key={index} className="flex gap-2">
+                          <div className="flex-1">
+                            <Input
+                              value={barcode}
+                              onChange={(e) => updateBarcodeField(index, e.target.value)}
+                              className="bg-white border-gray-200"
+                              placeholder={`Code-barres ${index + 1}`}
+                            />
+                          </div>
+                          <div className="w-48">
+                            <Select 
+                              value={multipleDepots[index] || "magasin principal"} 
+                              onValueChange={(value: 'magasin principal' | 'depot') => updateDepotField(index, value)}
+                            >
+                              <SelectTrigger className="bg-white border-gray-200">
+                                <SelectValue placeholder="Sélectionner le dépôt" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-white border-gray-200">
+                                <SelectItem value="magasin principal">🏪 Magasin principal</SelectItem>
+                                <SelectItem value="depot">📦 Dépôt</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          {multipleBarcodes.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => removeBarcodeField(index)}
+                              className="px-3 border-red-300 text-red-600 hover:bg-red-50"
+                            >
+                              ✕
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                      
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addBarcodeField}
+                        className="w-full border-gaming-cyan text-gaming-cyan hover:bg-gaming-cyan hover:text-white"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Ajouter un code-barres
+                      </Button>
+                    </div>
+                  ) : (
+                    <Input
+                      id="code_barre"
+                      value={newProduct.code_barre}
+                      onChange={(e) => setNewProduct({ ...newProduct, code_barre: e.target.value })}
+                      className="bg-white border-gray-200"
+                      placeholder="Scannez ou saisissez le code-barres"
+                    />
+                  )}
                 </div>
               </div>
 
@@ -910,15 +1118,32 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                     />
                   </div>
                   <div>
-                    <Label htmlFor="stock_actuel">Stock actuel *</Label>
+                    <Label htmlFor="stock_actuel">
+                      Stock actuel *
+                      {isMultipleBarcodeMode && (
+                        <span className="text-sm text-gray-500 ml-1">
+                          (Auto: {multipleBarcodes.filter(b => b.trim() !== "").length} exemplaires)
+                        </span>
+                      )}
+                    </Label>
                     <Input
                       id="stock_actuel"
                       type="number"
-                      value={newProduct.stock_actuel || ""}
-                      onChange={(e) => setNewProduct({ ...newProduct, stock_actuel: parseInt(e.target.value) || 0 })}
+                      value={isMultipleBarcodeMode ? multipleBarcodes.filter(b => b.trim() !== "").length : (newProduct.stock_actuel || "")}
+                      onChange={(e) => {
+                        if (!isMultipleBarcodeMode) {
+                          setNewProduct({ ...newProduct, stock_actuel: parseInt(e.target.value) || 0 });
+                        }
+                      }}
                       className="bg-white border-gray-200"
                       placeholder="0"
+                      disabled={isMultipleBarcodeMode}
                     />
+                    {isMultipleBarcodeMode && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Le stock est calculé automatiquement selon le nombre de codes-barres saisis
+                      </p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="stock_minimum">Stock minimum</Label>
@@ -966,6 +1191,18 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                         {garanties.map((garantie) => (
                           <SelectItem key={garantie} value={garantie}>{garantie}</SelectItem>
                         ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="depot">Dépôt de stockage</Label>
+                    <Select value={newProduct.depot} onValueChange={(value: 'magasin principal' | 'depot') => setNewProduct({ ...newProduct, depot: value })}>
+                      <SelectTrigger className="bg-white border-gray-200">
+                        <SelectValue placeholder="Sélectionner le dépôt" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-200">
+                        <SelectItem value="magasin principal">🏪 Magasin principal</SelectItem>
+                        <SelectItem value="depot">📦 Dépôt</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1181,7 +1418,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                   <div className="border-t border-gray-200 pt-3 space-y-3">
                     <div className="flex justify-between items-center">
                       <Button
-                        onClick={() => navigate(`/pc-portable-details/${product.id}`)}
+                        onClick={() => navigate(`/pc-portable/${product.id}`)}
                         variant="outline"
                         size="sm"
                         className="border-gaming-cyan text-gaming-cyan hover:bg-gaming-cyan hover:text-gray-900"
