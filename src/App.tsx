@@ -117,6 +117,14 @@ const AppContent = () => {
                   <Route path="/member-dashboard" element={<MemberDashboard />} />
                   <Route path="/my-products" element={<MyProducts />} />
                   <Route path="/my-tasks" element={<MyTasks />} />
+                  {/* Routes des détails de produits accessibles aux membres assignés */}
+                  <Route path="/pc-portable/:id" element={<PCPortableDetails />} />
+                  <Route path="/composants-pc/:id" element={<ComposantsPCDetails />} />
+                  {/* Autres routes de détails de produits (à créer selon les besoins) */}
+                  {/* <Route path="/pc-gamer/:id" element={<PCGamerDetails />} /> */}
+                  {/* <Route path="/moniteur/:id" element={<MoniteurDetails />} /> */}
+                  {/* <Route path="/chaise-gaming/:id" element={<ChaiseGamingDetails />} /> */}
+                  {/* <Route path="/peripherique/:id" element={<PeripheriqueDetails />} /> */}
                 </>
               )}
               <Route path="/profile" element={<Profile />} />

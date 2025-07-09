@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckSquare, Clock, PlayCircle, CheckCircle, AlertCircle, Calendar, Package, User, Target, TrendingUp, Eye, FileText } from "lucide-react";
+import { CheckSquare, Clock, PlayCircle, CheckCircle, AlertCircle, Calendar, Package, User, Target, TrendingUp, Eye, FileText, ExternalLink } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useProductAssignments, type ProductAssignment } from "@/hooks/useProductAssignments";
 import { supabase } from "@/lib/supabase";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useNavigate } from "react-router-dom";
 
 const MyTasks = () => {
   const [userAssignments, setUserAssignments] = useState<ProductAssignment[]>([]);
@@ -18,6 +19,7 @@ const MyTasks = () => {
 
   const { getStatusText, getPriorityText, getProductTypeText, updateAssignmentStatus } = useProductAssignments();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Charger les assignations de l'utilisateur connecté
   useEffect(() => {
@@ -72,6 +74,29 @@ const MyTasks = () => {
   const viewTaskDetails = (task: ProductAssignment) => {
     setSelectedTask(task);
     setShowTaskDetails(true);
+  };
+
+  // Fonction pour naviguer vers les détails du produit
+  const viewProductDetails = (task: ProductAssignment) => {
+    const routeMap: Record<string, string> = {
+      'pc_portable': `/pc-portable/${task.product_id}`,
+      'pc_gamer': `/pc-gamer/${task.product_id}`,
+      'moniteur': `/moniteur/${task.product_id}`,
+      'chaise_gaming': `/chaise-gaming/${task.product_id}`,
+      'peripherique': `/peripherique/${task.product_id}`,
+      'composant_pc': `/composant-pc/${task.product_id}`,
+    };
+
+    const route = routeMap[task.product_type];
+    if (route) {
+      navigate(route);
+    } else {
+      toast({
+        title: "Erreur",
+        description: "Type de produit non reconnu",
+        variant: "destructive",
+      });
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -399,15 +424,27 @@ const MyTasks = () => {
                   </div>
                   
                   <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-600">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => viewTaskDetails(task)}
-                      className="border-gray-600 text-gray-300 hover:text-white"
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      Voir détails
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => viewTaskDetails(task)}
+                        className="border-gray-600 text-gray-300 hover:text-white"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Voir détails
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => viewProductDetails(task)}
+                        className="border-gaming-cyan text-gaming-cyan hover:bg-gaming-cyan hover:text-gray-900"
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Voir le produit
+                      </Button>
+                    </div>
                     
                     <div className="flex gap-2">
                       {task.status === 'en_attente' && (
@@ -566,6 +603,19 @@ const MyTasks = () => {
                   <p className="text-gray-300 mt-1">{selectedTask.task_notes}</p>
                 </div>
               )}
+
+              <div className="flex justify-end pt-4 border-t border-gray-600">
+                <Button
+                  onClick={() => {
+                    viewProductDetails(selectedTask);
+                    setShowTaskDetails(false);
+                  }}
+                  className="bg-gaming-cyan text-gray-900 hover:bg-gaming-cyan/90"
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Voir les détails du produit
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>

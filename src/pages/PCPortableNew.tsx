@@ -1455,6 +1455,24 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                               {isExpanded ? <ChevronDown className="w-4 h-4 mr-2" /> : <ChevronRight className="w-4 h-4 mr-2" />}
                               {isExpanded ? 'Masquer' : 'Voir'} exemplaires
                             </Button>
+
+                            {group.exemplairesCount > 1 && (
+                              <AssignProductDialog
+                                productId={group.id!}
+                                productType="pc_portable"
+                                productName={`${group.nom_produit} - ${group.marque} ${group.modele} (Groupe de ${group.exemplairesCount} exemplaires)`}
+                                trigger={
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="border-gaming-purple text-gaming-purple hover:bg-gaming-purple hover:text-gray-900"
+                                  >
+                                    <UserPlus className="w-4 h-4 mr-2" />
+                                    Assigner un exemplaire
+                                  </Button>
+                                }
+                              />
+                            )}
                             
                             {group.exemplairesCount === 1 && (
                               <>
@@ -1477,6 +1495,22 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                                   <Edit className="w-4 h-4 mr-2" />
                                   Modifier
                                 </Button>
+
+                                <AssignProductDialog
+                                  productId={group.id!}
+                                  productType="pc_portable"
+                                  productName={`${group.nom_produit} - ${group.marque} ${group.modele}`}
+                                  trigger={
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="border-gaming-cyan text-gaming-cyan hover:bg-gaming-cyan hover:text-gray-900"
+                                    >
+                                      <UserPlus className="w-4 h-4 mr-2" />
+                                      Assigner
+                                    </Button>
+                                  }
+                                />
                               </>
                             )}
                           </div>
@@ -1529,6 +1563,21 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                                 >
                                   <Edit className="w-3 h-3" />
                                 </Button>
+
+                                <AssignProductDialog
+                                  productId={exemplaire.id!}
+                                  productType="pc_portable"
+                                  productName={`${exemplaire.nom_produit} - ${exemplaire.marque} ${exemplaire.modele} (${exemplaire.code_barre})`}
+                                  trigger={
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="border-gaming-purple text-gaming-purple hover:bg-gaming-purple hover:text-white h-8 px-2"
+                                    >
+                                      <UserPlus className="w-3 h-3" />
+                                    </Button>
+                                  }
+                                />
                                 
                                 <Button
                                   onClick={() => handleDeleteProduct(exemplaire.id!)}
