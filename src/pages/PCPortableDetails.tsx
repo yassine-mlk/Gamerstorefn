@@ -395,10 +395,20 @@ export default function PCPortableDetails() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-3">
-              <div className="flex justify-between py-2 border-b border-gray-200">
-                <span className="text-gray-600">Fournisseur:</span>
-                <span className="text-gray-900 font-medium">{(product as any).fournisseurs?.nom || 'N/A'}</span>
-              </div>
+              {shouldShowPurchasePrice() ? (
+                <div className="flex justify-between py-2 border-b border-gray-200">
+                  <span className="text-gray-600">Fournisseur:</span>
+                  <span className="text-gray-900 font-medium">{(product as any).fournisseurs?.nom || 'N/A'}</span>
+                </div>
+              ) : (
+                <div className="flex justify-between py-2 border-b border-gray-200">
+                  <span className="text-gray-600">Fournisseur:</span>
+                  <span className="text-gray-400 font-medium">
+                    <Lock className="w-4 h-4 inline mr-1" />
+                    Confidentiel
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between py-2 border-b border-gray-200">
                 <span className="text-gray-600">Stock minimum:</span>
                 <span className="text-gray-900 font-medium">{product.stock_minimum}</span>
