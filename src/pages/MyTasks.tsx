@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckSquare, Clock, PlayCircle, CheckCircle, AlertCircle, Calendar, Package, User, Target, TrendingUp, Eye, FileText, ExternalLink } from "lucide-react";
+import { CheckSquare, Clock, PlayCircle, CheckCircle, AlertCircle, Calendar, Package, User, Target, TrendingUp, Eye, FileText, ExternalLink, Filter, Search, SortAsc, SortDesc } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useProductAssignments, type ProductAssignment } from "@/hooks/useProductAssignments";
 import { supabase } from "@/lib/supabase";
@@ -10,12 +10,20 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const MyTasks = () => {
   const [userAssignments, setUserAssignments] = useState<ProductAssignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTask, setSelectedTask] = useState<ProductAssignment | null>(null);
   const [showTaskDetails, setShowTaskDetails] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("due_date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   const { getStatusText, getPriorityText, getProductTypeText, updateAssignmentStatus } = useProductAssignments();
   const { toast } = useToast();
@@ -55,6 +63,10 @@ const MyTasks = () => {
           ? { ...task, status: 'en_cours', started_date: new Date().toISOString() }
           : task
       ));
+      toast({
+        title: "Tâche démarrée",
+        description: "La tâche a été marquée comme en cours",
+      });
     }
   };
 
@@ -67,6 +79,10 @@ const MyTasks = () => {
           ? { ...task, status: 'terminee', completed_date: new Date().toISOString() }
           : task
       ));
+      toast({
+        title: "Tâche terminée",
+        description: "La tâche a été marquée comme terminée",
+      });
     }
   };
 
@@ -99,45 +115,48 @@ const MyTasks = () => {
     }
   };
 
+  // Fonctions utilitaires
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "terminee": return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case "validee": return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case "en_cours": return <PlayCircle className="h-4 w-4 text-blue-500" />;
-      case "en_attente": return <Clock className="h-4 w-4 text-yellow-500" />;
-      default: return <Clock className="h-4 w-4 text-gray-500" />;
+      case 'en_attente': return <Clock className="w-4 h-4" />;
+      case 'en_cours': return <PlayCircle className="w-4 h-4" />;
+      case 'terminee': return <CheckCircle className="w-4 h-4" />;
+      case 'validee': return <CheckSquare className="w-4 h-4" />;
+      case 'annulee': return <AlertCircle className="w-4 h-4" />;
+      default: return <Clock className="w-4 h-4" />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "terminee": return "bg-green-500/20 text-green-400 border-green-500/50";
-      case "validee": return "bg-green-500/20 text-green-400 border-green-500/50";
-      case "en_cours": return "bg-blue-500/20 text-blue-400 border-blue-500/50";
-      case "en_attente": return "bg-yellow-500/20 text-yellow-400 border-yellow-500/50";
-      default: return "bg-gray-500/20 text-gray-400 border-gray-500/50";
+      case 'en_attente': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'en_cours': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'terminee': return 'bg-green-100 text-green-800 border-green-200';
+      case 'validee': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'annulee': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "urgente": return "bg-red-500/20 text-red-400 border-red-500/50";
-      case "haute": return "bg-orange-500/20 text-orange-400 border-orange-500/50";
-      case "moyenne": return "bg-yellow-500/20 text-yellow-400 border-yellow-500/50";
-      case "basse": return "bg-green-500/20 text-green-400 border-green-500/50";
-      default: return "bg-gray-500/20 text-gray-400 border-gray-500/50";
+      case 'urgente': return 'bg-red-500';
+      case 'haute': return 'bg-orange-500';
+      case 'moyenne': return 'bg-yellow-500';
+      case 'basse': return 'bg-green-500';
+      default: return 'bg-gray-500';
     }
   };
 
   const getProductTypeIcon = (type: string) => {
     switch (type) {
-      case 'pc_portable': return '💻';
-      case 'pc_gamer': return '🖥️';
-      case 'moniteur': return '📺';
-      case 'chaise_gaming': return '🪑';
-      case 'peripherique': return '🖱️';
-      case 'composant_pc': return '🔧';
-      default: return '📦';
+      case 'pc_portable': return <Package className="w-4 h-4" />;
+      case 'pc_gamer': return <Target className="w-4 h-4" />;
+      case 'moniteur': return <TrendingUp className="w-4 h-4" />;
+      case 'chaise_gaming': return <User className="w-4 h-4" />;
+      case 'peripherique': return <FileText className="w-4 h-4" />;
+      case 'composant_pc': return <ExternalLink className="w-4 h-4" />;
+      default: return <Package className="w-4 h-4" />;
     }
   };
 
@@ -152,12 +171,71 @@ const MyTasks = () => {
   };
 
   const isOverdue = (task: ProductAssignment) => {
-    return task.due_date && new Date(task.due_date) < new Date() && !['terminee', 'validee'].includes(task.status);
+    if (!task.due_date) return false;
+    return new Date(task.due_date) < new Date() && task.status !== 'terminee' && task.status !== 'validee';
   };
+
+  // Filtrage et tri des tâches
+  const filteredAndSortedTasks = userAssignments
+    .filter(task => {
+      const matchesSearch = task.task_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           task.product_name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === "all" || task.status === statusFilter;
+      const matchesPriority = priorityFilter === "all" || task.priority === priorityFilter;
+      return matchesSearch && matchesStatus && matchesPriority;
+    })
+    .sort((a, b) => {
+      let comparison = 0;
+      switch (sortBy) {
+        case "due_date":
+          comparison = new Date(a.due_date || '9999').getTime() - new Date(b.due_date || '9999').getTime();
+          break;
+        case "priority":
+          const priorityOrder = { urgente: 4, haute: 3, moyenne: 2, basse: 1 };
+          comparison = (priorityOrder[a.priority as keyof typeof priorityOrder] || 0) - 
+                      (priorityOrder[b.priority as keyof typeof priorityOrder] || 0);
+          break;
+        case "created_at":
+          comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          break;
+        default:
+          comparison = 0;
+      }
+      return sortOrder === "asc" ? comparison : -comparison;
+    });
+
+  // Grouper les tâches par statut
+  const tasksByStatus = {
+    en_attente: filteredAndSortedTasks.filter(task => task.status === 'en_attente'),
+    en_cours: filteredAndSortedTasks.filter(task => task.status === 'en_cours'),
+    terminee: filteredAndSortedTasks.filter(task => task.status === 'terminee'),
+    validee: filteredAndSortedTasks.filter(task => task.status === 'validee'),
+    annulee: filteredAndSortedTasks.filter(task => task.status === 'annulee')
+  };
+
+  // Calculer les statistiques
+  const stats = {
+    total: userAssignments.length,
+    en_attente: tasksByStatus.en_attente.length,
+    en_cours: tasksByStatus.en_cours.length,
+    terminee: tasksByStatus.terminee.length,
+    validee: tasksByStatus.validee.length,
+    annulee: tasksByStatus.annulee.length,
+    overdue: userAssignments.filter(isOverdue).length
+  };
+
+  const progressPercentage = stats.total > 0 ? ((stats.terminee + stats.validee) / stats.total) * 100 : 0;
 
   if (loading) {
     return (
-      <div className="flex-1 space-y-6 p-6 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 min-h-screen">
+      <div className="p-6 space-y-6 bg-background min-h-screen">
+        <div className="flex items-center gap-4">
+          <SidebarTrigger className="text-gray-700 hover:text-gaming-cyan" />
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Mes Tâches</h1>
+            <p className="text-gray-600">Chargement en cours...</p>
+          </div>
+        </div>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gaming-cyan"></div>
         </div>
@@ -165,455 +243,420 @@ const MyTasks = () => {
     );
   }
 
-  // Calculs des statistiques
-  const totalTasks = userAssignments.length;
-  const completedTasks = userAssignments.filter(t => ['terminee', 'validee'].includes(t.status)).length;
-  const inProgressTasks = userAssignments.filter(t => t.status === 'en_cours').length;
-  const pendingTasks = userAssignments.filter(t => t.status === 'en_attente').length;
-  const overdueTasks = userAssignments.filter(t => 
-    t.due_date && new Date(t.due_date) < new Date() && !['terminee', 'validee'].includes(t.status)
-  ).length;
-  const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-  // Statistiques par type de produit
-  const tasksByProductType = userAssignments.reduce((acc, task) => {
-    const type = task.product_type;
-    acc[type] = (acc[type] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  // Statistiques par priorité
-  const tasksByPriority = userAssignments.reduce((acc, task) => {
-    const priority = task.priority;
-    acc[priority] = (acc[priority] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  // Tâches récemment assignées (dernières 7 jours)
-  const recentTasks = userAssignments.filter(task => {
-    const assignedDate = new Date(task.created_at);
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    return assignedDate >= weekAgo;
-  }).length;
-
   return (
-    <div className="flex-1 space-y-6 p-6 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 min-h-screen">
+    <div className="p-6 space-y-6 bg-background min-h-screen">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <SidebarTrigger className="text-white hover:text-gaming-cyan" />
+          <SidebarTrigger className="text-gray-700 hover:text-gaming-cyan" />
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-white">Mes Tâches</h2>
-            <p className="text-gray-400 mt-1">Gérez vos tâches assignées et suivez votre progression</p>
+            <h1 className="text-3xl font-bold text-gray-900">Mes Tâches</h1>
+            <p className="text-gray-600">Gérez vos assignations et suivez votre progression</p>
           </div>
         </div>
       </div>
 
-      {/* Statistiques principales */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-6">
-        <Card className="bg-gray-800/50 border-gray-700">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-300">Total Tâches</CardTitle>
-            <CheckSquare className="h-4 w-4 text-gaming-cyan" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-white">{totalTasks}</div>
-            <p className="text-xs text-gray-400">Assignées à vous</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gray-800/50 border-gray-700">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-300">En attente</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-white">{pendingTasks}</div>
-            <p className="text-xs text-gray-400">À démarrer</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gray-800/50 border-gray-700">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-300">En cours</CardTitle>
-            <PlayCircle className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-white">{inProgressTasks}</div>
-            <p className="text-xs text-gray-400">En progression</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gray-800/50 border-gray-700">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-300">Terminées</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-white">{completedTasks}</div>
-            <p className="text-xs text-gray-400">Complétées</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gray-800/50 border-gray-700">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-300">En retard</CardTitle>
-            <AlertCircle className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-white">{overdueTasks}</div>
-            <p className="text-xs text-gray-400">Échéance dépassée</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gray-800/50 border-gray-700">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-300">Nouvelles (7j)</CardTitle>
-            <TrendingUp className="h-4 w-4 text-gaming-purple" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-white">{recentTasks}</div>
-            <p className="text-xs text-gray-400">Cette semaine</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Progression et répartition */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Taux de progression */}
-        <Card className="bg-gray-800/50 border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Target className="h-5 w-5 text-gaming-cyan" />
-              Progression Globale
-            </CardTitle>
-            <CardDescription className="text-gray-400">
-              Pourcentage de tâches terminées
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-300">Taux de completion</span>
-              <span className="text-2xl font-bold text-white">{completionRate}%</span>
-            </div>
-            <Progress value={completionRate} className="h-3" />
-            <div className="grid grid-cols-3 gap-4 text-sm">
-              <div className="text-center">
-                <div className="text-green-400 font-semibold">{completedTasks}</div>
-                <div className="text-gray-400">Terminées</div>
+      {/* Statistiques */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card className="bg-card border-gray-200">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gaming-cyan/20 rounded-lg">
+                <Target className="w-6 h-6 text-gaming-cyan" />
               </div>
-              <div className="text-center">
-                <div className="text-blue-400 font-semibold">{inProgressTasks}</div>
-                <div className="text-gray-400">En cours</div>
-              </div>
-              <div className="text-center">
-                <div className="text-yellow-400 font-semibold">{pendingTasks}</div>
-                <div className="text-gray-400">En attente</div>
+              <div>
+                <p className="text-sm text-gray-600">Total Tâches</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Répartition par type de produit */}
-        <Card className="bg-gray-800/50 border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Package className="h-5 w-5 text-gaming-purple" />
-              Répartition par Produit
-            </CardTitle>
-            <CardDescription className="text-gray-400">
-              Types de produits dans vos tâches
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {Object.entries(tasksByProductType).map(([type, count]) => (
-                <div key={type} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{getProductTypeIcon(type)}</span>
-                    <span className="text-gray-300 text-sm">{getProductTypeText(type)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-white font-semibold">{count}</span>
-                    <div className="w-16 bg-gray-700 rounded-full h-2">
-                      <div 
-                        className="bg-gaming-cyan h-2 rounded-full" 
-                        style={{ width: `${(count / totalTasks) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+        <Card className="bg-card border-gray-200">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-blue-500/20 rounded-lg">
+                <PlayCircle className="w-6 h-6 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">En Cours</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.en_cours}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card border-gray-200">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-green-500/20 rounded-lg">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Terminées</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.terminee + stats.validee}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card border-gray-200">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-red-500/20 rounded-lg">
+                <AlertCircle className="w-6 h-6 text-red-500" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">En Retard</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.overdue}</p>
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Liste des tâches */}
-      <Card className="bg-gray-800/50 border-gray-700">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <FileText className="h-5 w-5 text-gaming-green" />
-            Mes Tâches Actives
-          </CardTitle>
-          <CardDescription className="text-gray-400">
-            Gérez vos tâches assignées - Cliquez sur les boutons pour changer le statut
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {userAssignments.length === 0 ? (
-            <div className="text-center py-8">
-              <CheckSquare className="h-16 w-16 text-gray-500 mx-auto mb-4" />
-              <p className="text-gray-400 text-lg">Aucune tâche assignée</p>
-              <p className="text-gray-500 text-sm">Vous n'avez actuellement aucune tâche assignée</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {userAssignments.map((task) => (
-                <div key={task.id} className={`p-4 rounded-lg border transition-all duration-200 hover:shadow-lg ${
-                  isOverdue(task) ? 'bg-red-900/20 border-red-500/50' : 'bg-gray-700/50 border-gray-600'
-                }`}>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="text-lg">{getProductTypeIcon(task.product_type)}</span>
-                        <h3 className="text-white font-semibold text-lg">{task.task_title}</h3>
-                        {isOverdue(task) && (
-                          <Badge className="bg-red-500/20 text-red-400 border-red-500/50">
-                            En retard
-                          </Badge>
-                        )}
-                      </div>
-                      
-                      <div className="space-y-2 text-sm">
-                        <div className="flex items-center gap-4">
-                          <span className="text-gray-400">Produit:</span>
-                          <span className="text-white">{task.product_name}</span>
-                        </div>
-                        {task.task_description && (
-                          <div className="flex items-start gap-4">
-                            <span className="text-gray-400">Description:</span>
-                            <span className="text-gray-300 flex-1">{task.task_description}</span>
-                          </div>
-                        )}
-                        <div className="flex items-center gap-4">
-                          <span className="text-gray-400">Assigné le:</span>
-                          <span className="text-gray-300">{formatDate(task.assigned_date)}</span>
-                        </div>
-                        {task.due_date && (
-                          <div className="flex items-center gap-4">
-                            <span className="text-gray-400">Échéance:</span>
-                            <span className={`${isOverdue(task) ? 'text-red-400' : 'text-gray-300'}`}>
-                              {formatDate(task.due_date)}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-3 ml-4">
-                      <Badge className={`${getPriorityColor(task.priority)}`}>
-                        {getPriorityText(task.priority)}
-                      </Badge>
-                      
-                      <Badge className={`${getStatusColor(task.status)}`}>
-                        {getStatusIcon(task.status)}
-                        <span className="ml-1">{getStatusText(task.status)}</span>
-                      </Badge>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-600">
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => viewTaskDetails(task)}
-                        className="border-gray-600 text-gray-300 hover:text-white"
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        Voir détails
-                      </Button>
-                      
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => viewProductDetails(task)}
-                        className="border-gaming-cyan text-gaming-cyan hover:bg-gaming-cyan hover:text-gray-900"
-                      >
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Voir le produit
-                      </Button>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      {task.status === 'en_attente' && (
-                        <Button
-                          onClick={() => startTask(task.id)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
-                          size="sm"
-                        >
-                          <PlayCircle className="h-4 w-4 mr-2" />
-                          Commencer
-                        </Button>
-                      )}
-                      
-                      {task.status === 'en_cours' && (
-                        <Button
-                          onClick={() => completeTask(task.id)}
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                          size="sm"
-                        >
-                          <CheckCircle className="h-4 w-4 mr-2" />
-                          Terminer
-                        </Button>
-                      )}
-                      
-                      {['terminee', 'validee'].includes(task.status) && (
-                        <div className="flex items-center text-green-400 text-sm">
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          Tâche complétée
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+      {/* Barre de progression */}
+      <Card className="bg-card border-gray-200">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Progression globale</h3>
+            <span className="text-sm text-gray-600">{Math.round(progressPercentage)}%</span>
+          </div>
+          <Progress value={progressPercentage} className="h-3" />
+          <div className="flex justify-between text-xs text-gray-500 mt-2">
+            <span>{stats.terminee + stats.validee} terminées</span>
+            <span>{stats.total - (stats.terminee + stats.validee)} restantes</span>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Répartition par priorité */}
-      <Card className="bg-gray-800/50 border-gray-700">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-red-400" />
-            Répartition par Priorité
-          </CardTitle>
-          <CardDescription className="text-gray-400">
-            Niveau de priorité de vos tâches
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {Object.entries(tasksByPriority).map(([priority, count]) => (
-              <div key={priority} className="text-center">
-                <div className={`inline-flex px-3 py-1 rounded-full text-sm font-medium border ${getPriorityColor(priority)}`}>
-                  {getPriorityText(priority)}
-                </div>
-                <div className="text-2xl font-bold text-white mt-2">{count}</div>
-                <div className="text-gray-400 text-sm">
-                  {totalTasks > 0 ? Math.round((count / totalTasks) * 100) : 0}%
-                </div>
+      {/* Filtres et recherche */}
+      <Card className="bg-card border-gray-200">
+        <CardContent className="p-6">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Rechercher par titre ou produit..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
-            ))}
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full lg:w-48">
+                <SelectValue placeholder="Statut" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les statuts</SelectItem>
+                <SelectItem value="en_attente">En attente</SelectItem>
+                <SelectItem value="en_cours">En cours</SelectItem>
+                <SelectItem value="terminee">Terminée</SelectItem>
+                <SelectItem value="validee">Validée</SelectItem>
+                <SelectItem value="annulee">Annulée</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+              <SelectTrigger className="w-full lg:w-48">
+                <SelectValue placeholder="Priorité" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les priorités</SelectItem>
+                <SelectItem value="urgente">Urgente</SelectItem>
+                <SelectItem value="haute">Haute</SelectItem>
+                <SelectItem value="moyenne">Moyenne</SelectItem>
+                <SelectItem value="basse">Basse</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="flex gap-2">
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-full lg:w-48">
+                  <SelectValue placeholder="Trier par" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="due_date">Date d'échéance</SelectItem>
+                  <SelectItem value="priority">Priorité</SelectItem>
+                  <SelectItem value="created_at">Date de création</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+              >
+                {sortOrder === "asc" ? <SortAsc className="w-4 h-4" /> : <SortDesc className="w-4 h-4" />}
+              </Button>
+            </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Onglets des tâches */}
+      <Card className="bg-card border-gray-200">
+        <CardContent className="p-6">
+          <Tabs defaultValue="en_attente" className="w-full">
+            <TabsList className="grid w-full grid-cols-5 mb-6 bg-gray-100">
+              <TabsTrigger value="en_attente" className="flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                <span>En attente</span>
+                <Badge variant="outline" className="ml-1">{stats.en_attente}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="en_cours" className="flex items-center gap-2">
+                <PlayCircle className="w-4 h-4" />
+                <span>En cours</span>
+                <Badge variant="outline" className="ml-1">{stats.en_cours}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="terminee" className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4" />
+                <span>Terminées</span>
+                <Badge variant="outline" className="ml-1">{stats.terminee}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="validee" className="flex items-center gap-2">
+                <CheckSquare className="w-4 h-4" />
+                <span>Validées</span>
+                <Badge variant="outline" className="ml-1">{stats.validee}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="annulee" className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4" />
+                <span>Annulées</span>
+                <Badge variant="outline" className="ml-1">{stats.annulee}</Badge>
+              </TabsTrigger>
+            </TabsList>
+
+            {Object.entries(tasksByStatus).map(([status, tasks]) => (
+              <TabsContent key={status} value={status} className="mt-0">
+                {tasks.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune tâche</h3>
+                    <p className="text-gray-600">Aucune tâche trouvée dans cette catégorie.</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4">
+                    {tasks.map((task) => (
+                      <Card key={task.id} className="bg-white border-gray-200 hover:shadow-md transition-shadow">
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-3">
+                                <div className="flex items-center gap-2">
+                                  {getProductTypeIcon(task.product_type)}
+                                  <Badge variant="outline" className="text-xs">
+                                    {getProductTypeText(task.product_type)}
+                                  </Badge>
+                                </div>
+                                <div className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority)}`}></div>
+                                <Badge className={`text-xs ${getStatusColor(task.status)}`}>
+                                  {getStatusIcon(task.status)}
+                                  <span className="ml-1">{getStatusText(task.status)}</span>
+                                </Badge>
+                                {isOverdue(task) && (
+                                  <Badge variant="destructive" className="text-xs">
+                                    En retard
+                                  </Badge>
+                                )}
+                              </div>
+                              
+                              <h3 className="text-lg font-semibold text-gray-900 mb-2">{task.task_title}</h3>
+                              <p className="text-gray-600 mb-3">{task.product_name}</p>
+                              
+                              {/* Afficher l'état du produit s'il est disponible */}
+                              {task.product_etat && (
+                                <div className="flex items-center gap-2 mb-3">
+                                  <Badge variant="outline" className="text-xs">
+                                    État: {task.product_etat}
+                                  </Badge>
+                                </div>
+                              )}
+                              
+                              {task.task_description && (
+                                <p className="text-sm text-gray-500 mb-3">{task.task_description}</p>
+                              )}
+                              
+                              <div className="flex items-center gap-4 text-sm text-gray-500">
+                                <div className="flex items-center gap-1">
+                                  <Calendar className="w-4 h-4" />
+                                  <span>Assignée le {formatDate(task.assigned_date)}</span>
+                                </div>
+                                {task.due_date && (
+                                  <div className="flex items-center gap-1">
+                                    <Clock className="w-4 h-4" />
+                                    <span>Échéance: {formatDate(task.due_date)}</span>
+                                  </div>
+                                )}
+                                {task.started_date && (
+                                  <div className="flex items-center gap-1">
+                                    <PlayCircle className="w-4 h-4" />
+                                    <span>Démarrée le {formatDate(task.started_date)}</span>
+                                  </div>
+                                )}
+                                {task.completed_date && (
+                                  <div className="flex items-center gap-1">
+                                    <CheckCircle className="w-4 h-4" />
+                                    <span>Terminée le {formatDate(task.completed_date)}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            
+                            <div className="flex flex-col gap-2 ml-4">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => viewTaskDetails(task)}
+                                className="flex items-center gap-2"
+                              >
+                                <Eye className="w-4 h-4" />
+                                Détails
+                              </Button>
+                              
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => viewProductDetails(task)}
+                                className="flex items-center gap-2"
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                                Produit
+                              </Button>
+                              
+                              {task.status === 'en_attente' && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => startTask(task.id)}
+                                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                                >
+                                  <PlayCircle className="w-4 h-4" />
+                                  Démarrer
+                                </Button>
+                              )}
+                              
+                              {task.status === 'en_cours' && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => completeTask(task.id)}
+                                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                                >
+                                  <CheckCircle className="w-4 h-4" />
+                                  Terminer
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            ))}
+          </Tabs>
         </CardContent>
       </Card>
 
       {/* Modal de détails de tâche */}
       <Dialog open={showTaskDetails} onOpenChange={setShowTaskDetails}>
-        <DialogContent className="bg-gray-800 border-gray-700 max-w-2xl">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="text-white flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Détails de la tâche
-            </DialogTitle>
-            <DialogDescription className="text-gray-400">
-              Informations complètes sur cette tâche
+            <DialogTitle>Détails de la tâche</DialogTitle>
+            <DialogDescription>
+              Informations complètes sur cette assignation
             </DialogDescription>
           </DialogHeader>
           
           {selectedTask && (
-            <div className="space-y-4">
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-2">{selectedTask.task_title}</h3>
+                <p className="text-gray-600">{selectedTask.product_name}</p>
+              </div>
+              
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-400">Titre de la tâche</label>
-                  <p className="text-white mt-1">{selectedTask.task_title}</p>
+                  <label className="text-sm font-medium text-gray-700">Statut</label>
+                  <Badge className={`mt-1 ${getStatusColor(selectedTask.status)}`}>
+                    {getStatusText(selectedTask.status)}
+                  </Badge>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-400">Produit concerné</label>
-                  <p className="text-white mt-1 flex items-center gap-2">
-                    <span>{getProductTypeIcon(selectedTask.product_type)}</span>
-                    {selectedTask.product_name}
-                  </p>
+                  <label className="text-sm font-medium text-gray-700">Priorité</label>
+                  <Badge className="mt-1" variant="outline">
+                    {getPriorityText(selectedTask.priority)}
+                  </Badge>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Type de produit</label>
+                  <p className="text-sm text-gray-600 mt-1">{getProductTypeText(selectedTask.product_type)}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Code produit</label>
+                  <p className="text-sm text-gray-600 mt-1">{selectedTask.product_code || 'N/A'}</p>
                 </div>
               </div>
-
-              {selectedTask.task_description && (
+              
+              {/* Afficher l'état du produit s'il est disponible */}
+              {selectedTask.product_etat && (
                 <div>
-                  <label className="text-sm font-medium text-gray-400">Description</label>
-                  <p className="text-gray-300 mt-1">{selectedTask.task_description}</p>
+                  <label className="text-sm font-medium text-gray-700">État du produit</label>
+                  <p className="text-sm text-gray-600 mt-1">{selectedTask.product_etat}</p>
                 </div>
               )}
-
+              
+              {selectedTask.task_description && (
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Description</label>
+                  <p className="text-sm text-gray-600 mt-1">{selectedTask.task_description}</p>
+                </div>
+              )}
+              
+              {selectedTask.task_notes && (
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Notes</label>
+                  <p className="text-sm text-gray-600 mt-1">{selectedTask.task_notes}</p>
+                </div>
+              )}
+              
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-400">Statut</label>
-                  <div className="mt-1">
-                    <Badge className={`${getStatusColor(selectedTask.status)}`}>
-                      {getStatusIcon(selectedTask.status)}
-                      <span className="ml-1">{getStatusText(selectedTask.status)}</span>
-                    </Badge>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-400">Priorité</label>
-                  <div className="mt-1">
-                    <Badge className={`${getPriorityColor(selectedTask.priority)}`}>
-                      {getPriorityText(selectedTask.priority)}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-400">Assigné le</label>
-                  <p className="text-white mt-1">{formatDate(selectedTask.assigned_date)}</p>
+                  <label className="text-sm font-medium text-gray-700">Date d'assignation</label>
+                  <p className="text-sm text-gray-600 mt-1">{formatDate(selectedTask.assigned_date)}</p>
                 </div>
                 {selectedTask.due_date && (
                   <div>
-                    <label className="text-sm font-medium text-gray-400">Échéance</label>
-                    <p className={`mt-1 ${isOverdue(selectedTask) ? 'text-red-400' : 'text-white'}`}>
-                      {formatDate(selectedTask.due_date)}
-                    </p>
+                    <label className="text-sm font-medium text-gray-700">Date d'échéance</label>
+                    <p className="text-sm text-gray-600 mt-1">{formatDate(selectedTask.due_date)}</p>
+                  </div>
+                )}
+                {selectedTask.started_date && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Date de début</label>
+                    <p className="text-sm text-gray-600 mt-1">{formatDate(selectedTask.started_date)}</p>
+                  </div>
+                )}
+                {selectedTask.completed_date && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Date de fin</label>
+                    <p className="text-sm text-gray-600 mt-1">{formatDate(selectedTask.completed_date)}</p>
                   </div>
                 )}
               </div>
-
-              {selectedTask.started_date && (
-                <div>
-                  <label className="text-sm font-medium text-gray-400">Démarrée le</label>
-                  <p className="text-white mt-1">{formatDate(selectedTask.started_date)}</p>
-                </div>
-              )}
-
-              {selectedTask.completed_date && (
-                <div>
-                  <label className="text-sm font-medium text-gray-400">Terminée le</label>
-                  <p className="text-white mt-1">{formatDate(selectedTask.completed_date)}</p>
-                </div>
-              )}
-
-              {selectedTask.task_notes && (
-                <div>
-                  <label className="text-sm font-medium text-gray-400">Notes</label>
-                  <p className="text-gray-300 mt-1">{selectedTask.task_notes}</p>
-                </div>
-              )}
-
-              <div className="flex justify-end pt-4 border-t border-gray-600">
+              
+              <div className="flex gap-2 pt-4">
                 <Button
-                  onClick={() => {
-                    viewProductDetails(selectedTask);
-                    setShowTaskDetails(false);
-                  }}
-                  className="bg-gaming-cyan text-gray-900 hover:bg-gaming-cyan/90"
+                  variant="outline"
+                  onClick={() => viewProductDetails(selectedTask)}
+                  className="flex items-center gap-2"
                 >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Voir les détails du produit
+                  <ExternalLink className="w-4 h-4" />
+                  Voir le produit
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowTaskDetails(false)}
+                >
+                  Fermer
                 </Button>
               </div>
             </div>

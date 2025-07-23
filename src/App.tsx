@@ -28,6 +28,7 @@ import Team from "./pages/Team";
 import Tasks from "./pages/Tasks";
 import MyProducts from "./pages/MyProducts";
 import MyTasks from "./pages/MyTasks";
+import EquipePage from "./pages/Equipe";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -117,6 +118,9 @@ const AppContent = () => {
                   <Route path="/member-dashboard" element={<MemberDashboard />} />
                   <Route path="/my-products" element={<MyProducts />} />
                   <Route path="/my-tasks" element={<MyTasks />} />
+                  {user.role === "monteur" && (
+                    <Route path="/equipe" element={<EquipePage />} />
+                  )}
                   {/* Routes des détails de produits accessibles aux membres assignés */}
                   <Route path="/pc-portable/:id" element={<PCPortableDetails />} />
                   <Route path="/composants-pc/:id" element={<ComposantsPCDetails />} />

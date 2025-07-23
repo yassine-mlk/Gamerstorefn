@@ -149,6 +149,22 @@ const resolutionsEcran = [
   "4K (3840x2160)", "Retina", "Touch Screen"
 ];
 
+// Taux de rafraîchissement
+const tauxRafraichissement = [
+  "60Hz", "75Hz", "90Hz", "120Hz", "144Hz", "165Hz", "240Hz", "300Hz", "360Hz"
+];
+
+// VRAM des cartes graphiques
+const vramOptions = [
+  "2GB", "3GB", "4GB", "6GB", "8GB", "10GB", "12GB", "16GB", "20GB", "24GB"
+];
+
+// Vitesses RAM
+const vitessesRAM = [
+  "2133MHz", "2400MHz", "2666MHz", "2933MHz", "3000MHz", "3200MHz", 
+  "3600MHz", "4000MHz", "4400MHz", "4800MHz", "5200MHz", "5600MHz", "6000MHz"
+];
+
 // Types de RAM
 const typesRAM = [
   // DDR3
@@ -189,9 +205,14 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
   const [customSpecs, setCustomSpecs] = useState({
     processeur: { isCustom: false, value: "" },
     ram: { isCustom: false, value: "" },
+    vitesse_ram: { isCustom: false, value: "" },
     stockage: { isCustom: false, value: "" },
     carte_graphique: { isCustom: false, value: "" },
-    ecran: { isCustom: false, value: "" }
+    ecran: { isCustom: false, value: "" },
+    taille_ecran: { isCustom: false, value: "" },
+    resolution_ecran: { isCustom: false, value: "" },
+    taux_rafraichissement: { isCustom: false, value: "" },
+    vram_carte_graphique: { isCustom: false, value: "" }
   });
 
   // États pour la saisie multiple de codes-barres
@@ -277,9 +298,14 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
       ...newProduct,
       processeur: customSpecs.processeur.isCustom ? customSpecs.processeur.value : newProduct.processeur,
       ram: customSpecs.ram.isCustom ? customSpecs.ram.value : newProduct.ram,
+      vitesse_ram: customSpecs.vitesse_ram.isCustom ? customSpecs.vitesse_ram.value : newProduct.vitesse_ram,
       stockage: customSpecs.stockage.isCustom ? customSpecs.stockage.value : newProduct.stockage,
       carte_graphique: customSpecs.carte_graphique.isCustom ? customSpecs.carte_graphique.value : newProduct.carte_graphique,
+      vram_carte_graphique: customSpecs.vram_carte_graphique.isCustom ? customSpecs.vram_carte_graphique.value : newProduct.vram_carte_graphique,
       ecran: customSpecs.ecran.isCustom ? customSpecs.ecran.value : newProduct.ecran,
+      taille_ecran: customSpecs.taille_ecran.isCustom ? customSpecs.taille_ecran.value : newProduct.taille_ecran,
+      resolution_ecran: customSpecs.resolution_ecran.isCustom ? customSpecs.resolution_ecran.value : newProduct.resolution_ecran,
+      taux_rafraichissement: customSpecs.taux_rafraichissement.isCustom ? customSpecs.taux_rafraichissement.value : newProduct.taux_rafraichissement,
       statut: statut as "Disponible" | "Stock faible" | "Rupture" | "Réservé" | "Archivé",
     };
 
@@ -369,9 +395,14 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
       ...newProduct,
       processeur: customSpecs.processeur.isCustom ? customSpecs.processeur.value : newProduct.processeur,
       ram: customSpecs.ram.isCustom ? customSpecs.ram.value : newProduct.ram,
+      vitesse_ram: customSpecs.vitesse_ram.isCustom ? customSpecs.vitesse_ram.value : newProduct.vitesse_ram,
       stockage: customSpecs.stockage.isCustom ? customSpecs.stockage.value : newProduct.stockage,
       carte_graphique: customSpecs.carte_graphique.isCustom ? customSpecs.carte_graphique.value : newProduct.carte_graphique,
+      vram_carte_graphique: customSpecs.vram_carte_graphique.isCustom ? customSpecs.vram_carte_graphique.value : newProduct.vram_carte_graphique,
       ecran: customSpecs.ecran.isCustom ? customSpecs.ecran.value : newProduct.ecran,
+      taille_ecran: customSpecs.taille_ecran.isCustom ? customSpecs.taille_ecran.value : newProduct.taille_ecran,
+      resolution_ecran: customSpecs.resolution_ecran.isCustom ? customSpecs.resolution_ecran.value : newProduct.resolution_ecran,
+      taux_rafraichissement: customSpecs.taux_rafraichissement.isCustom ? customSpecs.taux_rafraichissement.value : newProduct.taux_rafraichissement,
       statut: statut as "Disponible" | "Stock faible" | "Rupture" | "Réservé" | "Archivé",
     };
 
@@ -398,9 +429,14 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
       modele: "",
       processeur: "",
       ram: "",
+      vitesse_ram: "",
       stockage: "",
       carte_graphique: "",
+      vram_carte_graphique: "",
       ecran: "",
+      taille_ecran: "",
+      resolution_ecran: "",
+      taux_rafraichissement: "",
       etat: "Neuf",
       prix_achat: 0,
       prix_vente: 0,
@@ -408,14 +444,20 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
       stock_minimum: 1,
       image_url: "",
       fournisseur_id: "",
-      garantie: ""
+      garantie: "",
+      depot: "magasin principal"
     });
     setCustomSpecs({
       processeur: { isCustom: false, value: "" },
       ram: { isCustom: false, value: "" },
+      vitesse_ram: { isCustom: false, value: "" },
       stockage: { isCustom: false, value: "" },
       carte_graphique: { isCustom: false, value: "" },
-      ecran: { isCustom: false, value: "" }
+      ecran: { isCustom: false, value: "" },
+      taille_ecran: { isCustom: false, value: "" },
+      resolution_ecran: { isCustom: false, value: "" },
+      taux_rafraichissement: { isCustom: false, value: "" },
+      vram_carte_graphique: { isCustom: false, value: "" }
     });
     setIsMultipleBarcodeMode(false);
     setMultipleBarcodes([""]);
@@ -433,13 +475,22 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
     const stockageIsCustom = !typesStockage.includes(product.stockage);
     const carteGraphiqueIsCustom = product.carte_graphique && !cartesGraphiques.includes(product.carte_graphique);
     const ecranIsCustom = product.ecran && ![...taillesEcran, ...resolutionsEcran].includes(product.ecran);
+    const tailleEcranIsCustom = product.taille_ecran && !taillesEcran.includes(product.taille_ecran);
+    const resolutionEcranIsCustom = product.resolution_ecran && !resolutionsEcran.includes(product.resolution_ecran);
+    const tauxRafraichissementIsCustom = product.taux_rafraichissement && !tauxRafraichissement.includes(product.taux_rafraichissement);
+    const vramIsCustom = product.vram_carte_graphique && !vramOptions.includes(product.vram_carte_graphique);
 
     setCustomSpecs({
       processeur: { isCustom: processeurIsCustom, value: processeurIsCustom ? product.processeur : "" },
       ram: { isCustom: ramIsCustom, value: ramIsCustom ? product.ram : "" },
+      vitesse_ram: { isCustom: false, value: product.vitesse_ram || "" },
       stockage: { isCustom: stockageIsCustom, value: stockageIsCustom ? product.stockage : "" },
       carte_graphique: { isCustom: carteGraphiqueIsCustom, value: carteGraphiqueIsCustom ? product.carte_graphique || "" : "" },
-      ecran: { isCustom: ecranIsCustom, value: ecranIsCustom ? product.ecran || "" : "" }
+      ecran: { isCustom: ecranIsCustom, value: ecranIsCustom ? product.ecran || "" : "" },
+      taille_ecran: { isCustom: tailleEcranIsCustom, value: tailleEcranIsCustom ? product.taille_ecran || "" : "" },
+      resolution_ecran: { isCustom: resolutionEcranIsCustom, value: resolutionEcranIsCustom ? product.resolution_ecran || "" : "" },
+      taux_rafraichissement: { isCustom: tauxRafraichissementIsCustom, value: tauxRafraichissementIsCustom ? product.taux_rafraichissement || "" : "" },
+      vram_carte_graphique: { isCustom: vramIsCustom, value: vramIsCustom ? product.vram_carte_graphique || "" : "" }
     });
 
     setNewProduct({
@@ -449,9 +500,14 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
       modele: product.modele || "",
       processeur: processeurIsCustom ? "CUSTOM" : product.processeur,
       ram: ramIsCustom ? "CUSTOM" : product.ram,
+      vitesse_ram: product.vitesse_ram || "",
       stockage: stockageIsCustom ? "CUSTOM" : product.stockage,
       carte_graphique: carteGraphiqueIsCustom ? "CUSTOM" : (product.carte_graphique || ""),
+      vram_carte_graphique: vramIsCustom ? "CUSTOM" : (product.vram_carte_graphique || ""),
       ecran: ecranIsCustom ? "CUSTOM" : (product.ecran || ""),
+      taille_ecran: tailleEcranIsCustom ? "CUSTOM" : (product.taille_ecran || ""),
+      resolution_ecran: resolutionEcranIsCustom ? "CUSTOM" : (product.resolution_ecran || ""),
+      taux_rafraichissement: tauxRafraichissementIsCustom ? "CUSTOM" : (product.taux_rafraichissement || ""),
       etat: product.etat,
       prix_achat: product.prix_achat,
       prix_vente: product.prix_vente,
@@ -459,7 +515,8 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
       stock_minimum: product.stock_minimum,
       image_url: product.image_url || "",
       fournisseur_id: product.fournisseur_id || "",
-      garantie: product.garantie || ""
+      garantie: product.garantie || "",
+      depot: product.depot
     });
     setImagePreview(product.image_url || "");
     setIsAddDialogOpen(true);
@@ -916,35 +973,6 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="ecran">Écran</Label>
-                  <Select value={newProduct.ecran} onValueChange={(value) => handleSpecChange('ecran', value)}>
-                    <SelectTrigger className="bg-white border-gray-200">
-                      <SelectValue placeholder="Sélectionner la taille d'écran" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200 max-h-[200px]">
-                      {taillesEcran.map((taille) => (
-                        <SelectItem key={taille} value={taille}>{taille}</SelectItem>
-                      ))}
-                      <div className="border-t border-gray-200 my-1"></div>
-                      {resolutionsEcran.map((resolution) => (
-                        <SelectItem key={resolution} value={resolution}>{resolution}</SelectItem>
-                      ))}
-                      <div className="border-t border-gray-200 my-1"></div>
-                      <SelectItem value="CUSTOM" className="text-gaming-cyan font-medium">
-                        ✏️ Autre - Saisie manuelle
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {customSpecs.ecran.isCustom && (
-                    <Input
-                      className="mt-2 bg-white border-gray-200"
-                      placeholder="Saisissez l'écran personnalisé"
-                      value={customSpecs.ecran.value}
-                      onChange={(e) => handleCustomValueChange('ecran', e.target.value)}
-                    />
-                  )}
-                </div>
-                <div>
                   <Label htmlFor="etat">État *</Label>
                   <Select value={newProduct.etat} onValueChange={(value: 'Neuf' | 'Comme neuf' | 'Occasion') => setNewProduct({ ...newProduct, etat: value })}>
                     <SelectTrigger className="bg-white border-gray-200">
@@ -957,13 +985,109 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                     </SelectContent>
                   </Select>
                 </div>
+                <div>
+                  <Label htmlFor="garantie">Garantie</Label>
+                  <Select value={newProduct.garantie} onValueChange={(value) => setNewProduct({ ...newProduct, garantie: value })}>
+                    <SelectTrigger className="bg-white border-gray-200">
+                      <SelectValue placeholder="Sélectionner la garantie" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-gray-200">
+                      {garanties.map((garantie) => (
+                        <SelectItem key={garantie} value={garantie}>{garantie}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Caractéristiques de l'écran */}
+              <div className="border-t border-gray-200 pt-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Caractéristiques de l'écran</h3>
+                
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="taille_ecran">Taille d'écran</Label>
+                    <Select value={newProduct.taille_ecran} onValueChange={(value) => handleSpecChange('taille_ecran', value)}>
+                      <SelectTrigger className="bg-white border-gray-200">
+                        <SelectValue placeholder="Sélectionner la taille" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-200 max-h-[200px]">
+                        {taillesEcran.map((taille) => (
+                          <SelectItem key={taille} value={taille}>{taille}</SelectItem>
+                        ))}
+                        <div className="border-t border-gray-200 my-1"></div>
+                        <SelectItem value="CUSTOM" className="text-gaming-cyan font-medium">
+                          ✏️ Autre - Saisie manuelle
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {customSpecs.taille_ecran.isCustom && (
+                      <Input
+                        className="mt-2 bg-white border-gray-200"
+                        placeholder="Saisissez la taille personnalisée"
+                        value={customSpecs.taille_ecran.value}
+                        onChange={(e) => handleCustomValueChange('taille_ecran', e.target.value)}
+                      />
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="resolution_ecran">Résolution</Label>
+                    <Select value={newProduct.resolution_ecran} onValueChange={(value) => handleSpecChange('resolution_ecran', value)}>
+                      <SelectTrigger className="bg-white border-gray-200">
+                        <SelectValue placeholder="Sélectionner la résolution" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-200 max-h-[200px]">
+                        {resolutionsEcran.map((resolution) => (
+                          <SelectItem key={resolution} value={resolution}>{resolution}</SelectItem>
+                        ))}
+                        <div className="border-t border-gray-200 my-1"></div>
+                        <SelectItem value="CUSTOM" className="text-gaming-cyan font-medium">
+                          ✏️ Autre - Saisie manuelle
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {customSpecs.resolution_ecran.isCustom && (
+                      <Input
+                        className="mt-2 bg-white border-gray-200"
+                        placeholder="Saisissez la résolution personnalisée"
+                        value={customSpecs.resolution_ecran.value}
+                        onChange={(e) => handleCustomValueChange('resolution_ecran', e.target.value)}
+                      />
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="taux_rafraichissement">Taux de rafraîchissement</Label>
+                    <Select value={newProduct.taux_rafraichissement} onValueChange={(value) => handleSpecChange('taux_rafraichissement', value)}>
+                      <SelectTrigger className="bg-white border-gray-200">
+                        <SelectValue placeholder="Sélectionner le taux" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-200 max-h-[200px]">
+                        {tauxRafraichissement.map((taux) => (
+                          <SelectItem key={taux} value={taux}>{taux}</SelectItem>
+                        ))}
+                        <div className="border-t border-gray-200 my-1"></div>
+                        <SelectItem value="CUSTOM" className="text-gaming-cyan font-medium">
+                          ✏️ Autre - Saisie manuelle
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {customSpecs.taux_rafraichissement.isCustom && (
+                      <Input
+                        className="mt-2 bg-white border-gray-200"
+                        placeholder="Saisissez le taux personnalisé"
+                        value={customSpecs.taux_rafraichissement.value}
+                        onChange={(e) => handleCustomValueChange('taux_rafraichissement', e.target.value)}
+                      />
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Spécifications techniques */}
               <div className="border-t border-gray-200 pt-4">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Spécifications techniques</h3>
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div>
                     <Label htmlFor="processeur">Processeur *</Label>
                     <Select value={newProduct.processeur} onValueChange={(value) => handleSpecChange('processeur', value)}>
@@ -1014,9 +1138,34 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                       />
                     )}
                   </div>
+                  <div>
+                    <Label htmlFor="vitesse_ram">Vitesse RAM</Label>
+                    <Select value={newProduct.vitesse_ram} onValueChange={(value) => handleSpecChange('vitesse_ram', value)}>
+                      <SelectTrigger className="bg-white border-gray-200">
+                        <SelectValue placeholder="Sélectionner la vitesse" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-200 max-h-[200px]">
+                        {vitessesRAM.map((vitesse) => (
+                          <SelectItem key={vitesse} value={vitesse}>{vitesse}</SelectItem>
+                        ))}
+                        <div className="border-t border-gray-200 my-1"></div>
+                        <SelectItem value="CUSTOM" className="text-gaming-cyan font-medium">
+                          ✏️ Autre - Saisie manuelle
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {customSpecs.vitesse_ram.isCustom && (
+                      <Input
+                        className="mt-2 bg-white border-gray-200"
+                        placeholder="Saisissez la vitesse personnalisée"
+                        value={customSpecs.vitesse_ram.value}
+                        onChange={(e) => handleCustomValueChange('vitesse_ram', e.target.value)}
+                      />
+                    )}
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mt-4">
+                <div className="grid grid-cols-3 gap-4 mt-4">
                   <div>
                     <Label htmlFor="stockage">Stockage *</Label>
                     <Select value={newProduct.stockage} onValueChange={(value) => handleSpecChange('stockage', value)}>
@@ -1064,6 +1213,31 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                         placeholder="Saisissez la carte graphique personnalisée"
                         value={customSpecs.carte_graphique.value}
                         onChange={(e) => handleCustomValueChange('carte_graphique', e.target.value)}
+                      />
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="vram_carte_graphique">VRAM</Label>
+                    <Select value={newProduct.vram_carte_graphique} onValueChange={(value) => handleSpecChange('vram_carte_graphique', value)}>
+                      <SelectTrigger className="bg-white border-gray-200">
+                        <SelectValue placeholder="Sélectionner la VRAM" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-200 max-h-[200px]">
+                        {vramOptions.map((vram) => (
+                          <SelectItem key={vram} value={vram}>{vram}</SelectItem>
+                        ))}
+                        <div className="border-t border-gray-200 my-1"></div>
+                        <SelectItem value="CUSTOM" className="text-gaming-cyan font-medium">
+                          ✏️ Autre - Saisie manuelle
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {customSpecs.vram_carte_graphique.isCustom && (
+                      <Input
+                        className="mt-2 bg-white border-gray-200"
+                        placeholder="Saisissez la VRAM personnalisée"
+                        value={customSpecs.vram_carte_graphique.value}
+                        onChange={(e) => handleCustomValueChange('vram_carte_graphique', e.target.value)}
                       />
                     )}
                   </div>
@@ -1461,6 +1635,8 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                                 productId={group.id!}
                                 productType="pc_portable"
                                 productName={`${group.nom_produit} - ${group.marque} ${group.modele} (Groupe de ${group.exemplairesCount} exemplaires)`}
+                                productCode={group.code_barre}
+                                productEtat={group.etat}
                                 trigger={
                                   <Button
                                     variant="outline"
@@ -1500,6 +1676,8 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                                   productId={group.id!}
                                   productType="pc_portable"
                                   productName={`${group.nom_produit} - ${group.marque} ${group.modele}`}
+                                  productCode={group.code_barre}
+                                  productEtat={group.etat}
                                   trigger={
                                     <Button
                                       variant="outline"
@@ -1568,6 +1746,8 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                                   productId={exemplaire.id!}
                                   productType="pc_portable"
                                   productName={`${exemplaire.nom_produit} - ${exemplaire.marque} ${exemplaire.modele} (${exemplaire.code_barre})`}
+                                  productCode={exemplaire.code_barre}
+                                  productEtat={exemplaire.etat}
                                   trigger={
                                     <Button
                                       variant="outline"

@@ -1021,6 +1021,7 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
                       productType="pc_gamer"
                       productName={config.nom_config}
                       productCode={config.code_barre}
+                      productEtat="Neuf"
                       trigger={
                         <Button
                           variant="outline"

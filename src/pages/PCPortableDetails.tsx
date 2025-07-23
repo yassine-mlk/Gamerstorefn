@@ -62,19 +62,13 @@ export default function PCPortableDetails() {
       const isAdminOrManager = profile.role === 'admin' || profile.role === 'manager';
       const hasAssignment = !!assignment;
       
-      // Admin/Manager voient tout
+      // Tous les membres peuvent voir les détails des produits
+      // Admin/Manager voient tout (y compris le prix d'achat)
       // Membre avec assignation voit les détails SANS le prix d'achat
-      // Membre sans assignation ne devrait pas être ici (mais on garde les permissions limitées)
+      // Membre sans assignation voit les détails SANS le prix d'achat (consultation normale)
       setCanViewFullDetails(isAdminOrManager || hasAssignment);
       
-      // Si l'utilisateur n'a ni les permissions admin ni d'assignation, on affiche un avertissement
-      if (!isAdminOrManager && !hasAssignment) {
-        toast({
-          title: "Accès limité",
-          description: "Vous n'avez pas d'assignation pour ce produit",
-          variant: "destructive",
-        });
-      }
+      // Pas d'avertissement - tous les membres peuvent consulter les fiches produits
     } else if (profile) {
       // Si pas d'assignations chargées ou pas de produit, vérifier quand même le rôle
       setCanViewFullDetails(profile.role === 'admin' || profile.role === 'manager');
@@ -325,6 +319,12 @@ export default function PCPortableDetails() {
                 <span className="text-gray-600">Mémoire RAM:</span>
                 <span className="text-gray-900 font-medium">{product.ram || 'N/A'}</span>
               </div>
+              {product.vitesse_ram && (
+                <div className="flex justify-between py-2 border-b border-gray-200">
+                  <span className="text-gray-600">Vitesse RAM:</span>
+                  <span className="text-gray-900 font-medium">{product.vitesse_ram}</span>
+                </div>
+              )}
               <div className="flex justify-between py-2 border-b border-gray-200">
                 <span className="text-gray-600">Stockage:</span>
                 <span className="text-gray-900 font-medium">{product.stockage || 'N/A'}</span>
@@ -333,6 +333,12 @@ export default function PCPortableDetails() {
                 <span className="text-gray-600">Carte graphique:</span>
                 <span className="text-gray-900 font-medium">{product.carte_graphique || 'N/A'}</span>
               </div>
+              {product.vram_carte_graphique && (
+                <div className="flex justify-between py-2 border-b border-gray-200">
+                  <span className="text-gray-600">VRAM:</span>
+                  <span className="text-gray-900 font-medium">{product.vram_carte_graphique}</span>
+                </div>
+              )}
               <div className="flex justify-between py-2 border-b border-gray-200">
                 <span className="text-gray-600">Écran:</span>
                 <span className="text-gray-900 font-medium">{product.ecran || 'N/A'}</span>
@@ -344,6 +350,40 @@ export default function PCPortableDetails() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Screen Characteristics */}
+        {(product.taille_ecran || product.resolution_ecran || product.taux_rafraichissement) && (
+          <Card className="bg-white border-gray-200">
+            <CardHeader>
+              <CardTitle className="text-gray-900 flex items-center gap-2">
+                <Monitor className="w-5 h-5 text-gaming-purple" />
+                Caractéristiques de l'écran
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-3">
+                {product.taille_ecran && (
+                  <div className="flex justify-between py-2 border-b border-gray-200">
+                    <span className="text-gray-600">Taille:</span>
+                    <span className="text-gray-900 font-medium">{product.taille_ecran}</span>
+                  </div>
+                )}
+                {product.resolution_ecran && (
+                  <div className="flex justify-between py-2 border-b border-gray-200">
+                    <span className="text-gray-600">Résolution:</span>
+                    <span className="text-gray-900 font-medium">{product.resolution_ecran}</span>
+                  </div>
+                )}
+                {product.taux_rafraichissement && (
+                  <div className="flex justify-between py-2">
+                    <span className="text-gray-600">Taux de rafraîchissement:</span>
+                    <span className="text-gray-900 font-medium">{product.taux_rafraichissement}</span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Business Info */}
         <Card className="bg-white border-gray-200">

@@ -12,8 +12,20 @@ import {
   Armchair, 
   Mouse,
   TrendingUp,
-  AlertTriangle
+  AlertTriangle,
+  Search,
+  Filter,
+  SortAsc,
+  SortDesc,
+  Eye,
+  BarChart3,
+  DollarSign,
+  Clock,
+  CheckCircle
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 // Import des composants de produits (nous garderons seulement le contenu des pages, pas les headers)
 import PCPortable from "./PCPortableNew";
@@ -33,6 +45,10 @@ import { usePeripheriques } from "@/hooks/usePeripheriques";
 
 const StockPage = () => {
   const [activeTab, setActiveTab] = useState("pc-portables");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [stockFilter, setStockFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("name");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   // Hooks pour les statistiques
   const { pcPortables } = usePcPortables();
@@ -78,48 +94,100 @@ const StockPage = () => {
     ...peripheriques.map(p => p.prix_vente * p.stock_actuel)
   ].reduce((sum, value) => sum + value, 0);
 
+  // Calcul des statistiques par catégorie
+  const categoryStats = {
+    pcPortables: {
+      total: pcPortables.length,
+      inStock: pcPortables.filter(p => p.stock_actuel > 0).length,
+      lowStock: pcPortables.filter(p => p.stock_actuel <= (p.stock_minimum || 5) && p.stock_actuel > 0).length,
+      outOfStock: pcPortables.filter(p => p.stock_actuel === 0).length,
+      value: pcPortables.reduce((sum, p) => sum + (p.prix_vente * p.stock_actuel), 0)
+    },
+    composantsPC: {
+      total: composantsPC.length,
+      inStock: composantsPC.filter(p => p.stock_actuel > 0).length,
+      lowStock: composantsPC.filter(p => p.stock_actuel <= (p.stock_minimum || 5) && p.stock_actuel > 0).length,
+      outOfStock: composantsPC.filter(p => p.stock_actuel === 0).length,
+      value: composantsPC.reduce((sum, p) => sum + (p.prix_vente * p.stock_actuel), 0)
+    },
+    pcGamer: {
+      total: pcGamerConfigs.length,
+      inStock: pcGamerConfigs.filter(p => (p.stock_possible || 0) > 0).length,
+      lowStock: pcGamerConfigs.filter(p => (p.stock_possible || 0) <= 2 && (p.stock_possible || 0) > 0).length,
+      outOfStock: pcGamerConfigs.filter(p => (p.stock_possible || 0) === 0).length,
+      value: pcGamerConfigs.reduce((sum, p) => sum + (p.prix_vente * (p.stock_possible || 0)), 0)
+    },
+    moniteurs: {
+      total: moniteurs.length,
+      inStock: moniteurs.filter(p => p.stock_actuel > 0).length,
+      lowStock: moniteurs.filter(p => p.stock_actuel <= (p.stock_minimum || 5) && p.stock_actuel > 0).length,
+      outOfStock: moniteurs.filter(p => p.stock_actuel === 0).length,
+      value: moniteurs.reduce((sum, p) => sum + (p.prix_vente * p.stock_actuel), 0)
+    },
+    chaisesGaming: {
+      total: chaisesGaming.length,
+      inStock: chaisesGaming.filter(p => p.stock_actuel > 0).length,
+      lowStock: chaisesGaming.filter(p => p.stock_actuel <= (p.stock_minimum || 5) && p.stock_actuel > 0).length,
+      outOfStock: chaisesGaming.filter(p => p.stock_actuel === 0).length,
+      value: chaisesGaming.reduce((sum, p) => sum + (p.prix_vente * p.stock_actuel), 0)
+    },
+    peripheriques: {
+      total: peripheriques.length,
+      inStock: peripheriques.filter(p => p.stock_actuel > 0).length,
+      lowStock: peripheriques.filter(p => p.stock_actuel <= (p.stock_minimum || 5) && p.stock_actuel > 0).length,
+      outOfStock: peripheriques.filter(p => p.stock_actuel === 0).length,
+      value: peripheriques.reduce((sum, p) => sum + (p.prix_vente * p.stock_actuel), 0)
+    }
+  };
+
   const tabsData = [
     {
       id: "pc-portables",
       label: "PC Portables",
       icon: Laptop,
       count: pcPortables.length,
-      component: <PCPortable embedded={true} />
+      component: <PCPortable embedded={true} />,
+      stats: categoryStats.pcPortables
     },
     {
       id: "composants-pc",
       label: "Composants PC",
       icon: Cpu,
       count: composantsPC.length,
-      component: <ComposantsPC embedded={true} />
+      component: <ComposantsPC embedded={true} />,
+      stats: categoryStats.composantsPC
     },
     {
       id: "pc-gamer",
       label: "PC Gamer",
       icon: Settings,
       count: pcGamerConfigs.length,
-      component: <PCGamer embedded={true} />
+      component: <PCGamer embedded={true} />,
+      stats: categoryStats.pcGamer
     },
     {
       id: "moniteurs",
       label: "Moniteurs",
       icon: Monitor,
       count: moniteurs.length,
-      component: <MoniteursNew embedded={true} />
+      component: <MoniteursNew embedded={true} />,
+      stats: categoryStats.moniteurs
     },
     {
       id: "chaises-gaming",
       label: "Chaises Gaming",
       icon: Armchair,
       count: chaisesGaming.length,
-      component: <ChaisesGaming embedded={true} />
+      component: <ChaisesGaming embedded={true} />,
+      stats: categoryStats.chaisesGaming
     },
     {
       id: "peripheriques",
       label: "Périphériques",
       icon: Mouse,
       count: peripheriques.length,
-      component: <Peripheriques embedded={true} />
+      component: <Peripheriques embedded={true} />,
+      stats: categoryStats.peripheriques
     }
   ];
 
@@ -155,8 +223,8 @@ const StockPage = () => {
         <Card className="bg-card border-gray-200">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-gaming-green/20 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-gaming-green" />
+              <div className="p-3 bg-green-500/20 rounded-lg">
+                <DollarSign className="w-6 h-6 text-green-500" />
               </div>
               <div>
                 <p className="text-sm text-gray-600">Valeur Stock</p>
@@ -195,6 +263,107 @@ const StockPage = () => {
         </Card>
       </div>
 
+      {/* Statistiques par catégorie */}
+      <Card className="bg-card border-gray-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="w-5 h-5" />
+            Statistiques par Catégorie
+          </CardTitle>
+          <CardDescription>
+            Vue d'ensemble du stock par type de produit
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {tabsData.map((tab) => {
+              const IconComponent = tab.icon;
+              const stats = tab.stats;
+              return (
+                <div key={tab.id} className="p-4 border border-gray-200 rounded-lg bg-white">
+                  <div className="flex items-center gap-3 mb-3">
+                    <IconComponent className="w-5 h-5 text-gaming-cyan" />
+                    <h3 className="font-semibold text-gray-900">{tab.label}</h3>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Total:</span>
+                      <span className="font-medium">{stats.total}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">En stock:</span>
+                      <span className="font-medium text-green-600">{stats.inStock}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Stock faible:</span>
+                      <span className="font-medium text-yellow-600">{stats.lowStock}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Rupture:</span>
+                      <span className="font-medium text-red-600">{stats.outOfStock}</span>
+                    </div>
+                    <div className="flex justify-between text-sm pt-2 border-t border-gray-100">
+                      <span className="text-gray-600">Valeur:</span>
+                      <span className="font-medium text-gaming-cyan">{stats.value.toLocaleString()} MAD</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Filtres et recherche */}
+      <Card className="bg-card border-gray-200">
+        <CardContent className="p-6">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Rechercher des produits..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <Select value={stockFilter} onValueChange={setStockFilter}>
+              <SelectTrigger className="w-full lg:w-48">
+                <SelectValue placeholder="État du stock" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les produits</SelectItem>
+                <SelectItem value="in_stock">En stock</SelectItem>
+                <SelectItem value="low_stock">Stock faible</SelectItem>
+                <SelectItem value="out_of_stock">Rupture</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="flex gap-2">
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-full lg:w-48">
+                  <SelectValue placeholder="Trier par" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name">Nom</SelectItem>
+                  <SelectItem value="stock">Stock</SelectItem>
+                  <SelectItem value="price">Prix</SelectItem>
+                  <SelectItem value="value">Valeur</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+              >
+                {sortOrder === "asc" ? <SortAsc className="w-4 h-4" /> : <SortDesc className="w-4 h-4" />}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Onglets des produits */}
       <Card className="bg-card border-gray-200">
         <CardContent className="p-6">
@@ -202,17 +371,30 @@ const StockPage = () => {
             <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 mb-6 bg-gray-100">
               {tabsData.map((tab) => {
                 const IconComponent = tab.icon;
+                const stats = tab.stats;
                 return (
                   <TabsTrigger 
                     key={tab.id} 
                     value={tab.id}
-                    className="flex items-center gap-2 data-[state=active]:bg-gaming-cyan data-[state=active]:text-white"
+                    className="flex flex-col items-center gap-1 data-[state=active]:bg-gaming-cyan data-[state=active]:text-white p-3"
                   >
                     <IconComponent className="w-4 h-4" />
-                    <span className="hidden sm:inline">{tab.label}</span>
-                    <Badge variant="outline" className="ml-1 text-xs">
-                      {tab.count}
-                    </Badge>
+                    <span className="text-xs">{tab.label}</span>
+                    <div className="flex gap-1">
+                      <Badge variant="outline" className="text-xs bg-green-100 text-green-800 border-green-200">
+                        {stats.inStock}
+                      </Badge>
+                      {stats.lowStock > 0 && (
+                        <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-200">
+                          {stats.lowStock}
+                        </Badge>
+                      )}
+                      {stats.outOfStock > 0 && (
+                        <Badge variant="outline" className="text-xs bg-red-100 text-red-800 border-red-200">
+                          {stats.outOfStock}
+                        </Badge>
+                      )}
+                    </div>
                   </TabsTrigger>
                 );
               })}
@@ -226,6 +408,44 @@ const StockPage = () => {
               </TabsContent>
             ))}
           </Tabs>
+        </CardContent>
+      </Card>
+
+      {/* Actions rapides */}
+      <Card className="bg-card border-gray-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Eye className="w-5 h-5" />
+            Actions Rapides
+          </CardTitle>
+          <CardDescription>
+            Accès rapide aux fonctionnalités de gestion du stock
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Button variant="outline" className="flex items-center gap-2 p-4 h-auto">
+              <AlertTriangle className="w-5 h-5 text-yellow-500" />
+              <div className="text-left">
+                <div className="font-medium">Stock Faible</div>
+                <div className="text-sm text-gray-600">{lowStockProducts} produits</div>
+              </div>
+            </Button>
+            <Button variant="outline" className="flex items-center gap-2 p-4 h-auto">
+              <Package className="w-5 h-5 text-red-500" />
+              <div className="text-left">
+                <div className="font-medium">Ruptures</div>
+                <div className="text-sm text-gray-600">{outOfStockProducts} produits</div>
+              </div>
+            </Button>
+            <Button variant="outline" className="flex items-center gap-2 p-4 h-auto">
+              <DollarSign className="w-5 h-5 text-green-500" />
+              <div className="text-left">
+                <div className="font-medium">Valeur Totale</div>
+                <div className="text-sm text-gray-600">{totalValue.toLocaleString()} MAD</div>
+              </div>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

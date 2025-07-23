@@ -5,7 +5,7 @@ import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 interface User {
   id: string;
   email: string;
-  role: 'admin' | 'member' | 'manager' | 'vendeur' | 'livreur';
+  role: 'admin' | 'member' | 'manager' | 'vendeur' | 'livreur' | 'monteur';
   name: string;
 }
 
@@ -15,7 +15,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  signUp: (email: string, password: string, userData: { name: string; role?: 'admin' | 'member' | 'manager' | 'vendeur' | 'livreur' }) => Promise<void>;
+  signUp: (email: string, password: string, userData: { name: string; role?: 'admin' | 'member' | 'manager' | 'vendeur' | 'livreur' | 'monteur' }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -273,7 +273,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const signUp = async (email: string, password: string, userData: { name: string; role?: 'admin' | 'member' | 'manager' | 'vendeur' | 'livreur' }): Promise<void> => {
+  const signUp = async (email: string, password: string, userData: { name: string; role?: 'admin' | 'member' | 'manager' | 'vendeur' | 'livreur' | 'monteur' }): Promise<void> => {
     try {
       const { data, error } = await supabase.auth.signUp({
         email,

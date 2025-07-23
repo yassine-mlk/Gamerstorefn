@@ -25,10 +25,11 @@ interface TeamMember {
 
 interface AssignProductDialogProps {
   productId: string;
-  productType: 'pc_portable' | 'pc_gamer' | 'moniteur' | 'chaise_gaming' | 'peripherique' | 'composant_pc';
+  productType: string;
   productName: string;
   productCode?: string;
-  trigger?: React.ReactNode;
+  productEtat?: string; // État du produit (Neuf, Comme neuf, Occasion)
+  trigger: React.ReactNode;
   onAssignmentCreated?: () => void;
 }
 
@@ -37,6 +38,7 @@ export function AssignProductDialog({
   productType,
   productName,
   productCode,
+  productEtat,
   trigger,
   onAssignmentCreated
 }: AssignProductDialogProps) {
@@ -56,6 +58,10 @@ export function AssignProductDialog({
     priority: "moyenne",
     due_date: ""
   });
+
+  // Pour les assignations multiples
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  const [dueDateTime, setDueDateTime] = useState<string>("");
 
   // Charger les membres de l'équipe
   useEffect(() => {
@@ -95,38 +101,52 @@ export function AssignProductDialog({
   };
 
   const handleSubmit = async () => {
-    if (!assignment.task_title || !assignment.assigned_to_id) {
+    if (!assignment.task_title || selectedMembers.length === 0) {
       return;
     }
 
-    const newAssignment: NewProductAssignment = {
-      product_id: productId,
-      product_type: productType,
-      product_name: productName,
-      product_code: productCode,
-      assigned_to_id: assignment.assigned_to_id,
-      assigned_to_name: assignment.assigned_to_name || "",
-      task_title: assignment.task_title,
-      task_description: assignment.task_description,
-      task_notes: assignment.task_notes,
-      priority: assignment.priority as any,
-      due_date: date ? format(date, 'yyyy-MM-dd') : undefined
-    };
+    // Créer une assignation pour chaque membre sélectionné
+    const assignments = selectedMembers.map(memberId => {
+      const member = teamMembers.find(m => m.id === memberId);
+      return {
+        product_id: productId,
+        product_type: productType,
+        product_name: productName,
+        product_code: productCode,
+        product_etat: productEtat, // Inclure l'état du produit
+        assigned_to_id: memberId,
+        assigned_to_name: member?.name || member?.email || "",
+        task_title: assignment.task_title,
+        task_description: assignment.task_description,
+        task_notes: assignment.task_notes,
+        priority: assignment.priority as any,
+        due_date: dueDateTime || undefined
+      };
+    });
 
-    const result = await createAssignment(newAssignment);
-    if (result) {
-      setOpen(false);
-      setAssignment({
-        task_title: "",
-        task_description: "",
-        task_notes: "",
-        assigned_to_id: "",
-        assigned_to_name: "",
-        priority: "moyenne",
-        due_date: ""
-      });
-      setDate(undefined);
-      onAssignmentCreated?.();
+    try {
+      // Créer toutes les assignations
+      const results = await Promise.all(
+        assignments.map(assignment => createAssignment(assignment))
+      );
+
+      if (results.every(result => result)) {
+        setOpen(false);
+        setAssignment({
+          task_title: "",
+          task_description: "",
+          task_notes: "",
+          assigned_to_id: "",
+          assigned_to_name: "",
+          priority: "moyenne",
+          due_date: ""
+        });
+        setSelectedMembers([]);
+        setDueDateTime("");
+        onAssignmentCreated?.();
+      }
+    } catch (error) {
+      console.error('Erreur lors de la création des assignations:', error);
     }
   };
 
@@ -229,30 +249,41 @@ export function AssignProductDialog({
             />
           </div>
 
-          {/* Assigner à */}
+          {/* Assigner à (sélection multiple) */}
           <div>
             <Label>Assigner à *</Label>
-            <Select 
-              value={assignment.assigned_to_id} 
-              onValueChange={handleMemberSelect}
-              disabled={loadingMembers}
-            >
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder={loadingMembers ? "Chargement..." : "Sélectionner un membre"} />
-              </SelectTrigger>
-              <SelectContent>
-                {teamMembers.map(member => (
-                  <SelectItem key={member.id} value={member.id}>
-                    <div className="flex items-center gap-2">
-                      <div>
-                        <p className="font-medium">{member.name || member.email}</p>
-                        <p className="text-xs text-gray-400">{member.role}</p>
-                      </div>
+            <div className="mt-1 space-y-2">
+              {teamMembers.map(member => (
+                <div key={member.id} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id={`member-${member.id}`}
+                    checked={selectedMembers.includes(member.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedMembers(prev => [...prev, member.id]);
+                      } else {
+                        setSelectedMembers(prev => prev.filter(id => id !== member.id));
+                      }
+                    }}
+                    className="rounded border-gray-300 text-gaming-cyan focus:ring-gaming-cyan"
+                  />
+                  <label htmlFor={`member-${member.id}`} className="flex items-center gap-2 cursor-pointer">
+                    <div>
+                      <p className="font-medium">{member.name || member.email}</p>
+                      <p className="text-xs text-gray-400">{member.role}</p>
                     </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  </label>
+                </div>
+              ))}
+              {selectedMembers.length > 0 && (
+                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                  <p className="text-sm text-blue-800">
+                    {selectedMembers.length} membre(s) sélectionné(s)
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Priorité */}
@@ -294,32 +325,16 @@ export function AssignProductDialog({
             </Select>
           </div>
 
-          {/* Date limite */}
+          {/* Date et heure d'échéance */}
           <div>
-            <Label>Date limite (optionnelle)</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal mt-1",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP", { locale: fr }) : "Sélectionner une date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  initialFocus
-                  locale={fr}
-                />
-              </PopoverContent>
-            </Popover>
+            <Label>Date et heure d'échéance (optionnelle)</Label>
+            <Input
+              type="datetime-local"
+              value={dueDateTime}
+              onChange={(e) => setDueDateTime(e.target.value)}
+              className="mt-1"
+              placeholder="Sélectionner date et heure"
+            />
           </div>
 
           {/* Notes */}
@@ -340,10 +355,10 @@ export function AssignProductDialog({
             <Button 
               onClick={handleSubmit}
               className="gaming-gradient flex-1"
-              disabled={!assignment.task_title || !assignment.assigned_to_id}
+              disabled={!assignment.task_title || selectedMembers.length === 0}
             >
               <Package className="w-4 h-4 mr-2" />
-              Créer l'assignation
+              Créer les assignations ({selectedMembers.length})
             </Button>
             <Button variant="outline" onClick={() => setOpen(false)}>
               Annuler

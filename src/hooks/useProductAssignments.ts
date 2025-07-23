@@ -8,6 +8,7 @@ export interface ProductAssignment {
   product_type: 'pc_portable' | 'pc_gamer' | 'moniteur' | 'chaise_gaming' | 'peripherique' | 'composant_pc';
   product_name: string;
   product_code?: string;
+  product_etat?: string; // État du produit (Neuf, Comme neuf, Occasion)
   assigned_to_id: string;
   assigned_to_name: string;
   assigned_by_id?: string;
@@ -31,6 +32,7 @@ export interface NewProductAssignment {
   product_type: string;
   product_name: string;
   product_code?: string;
+  product_etat?: string; // État du produit (Neuf, Comme neuf, Occasion)
   assigned_to_id: string;
   assigned_to_name: string;
   task_title: string;
@@ -136,6 +138,31 @@ export function useProductAssignments() {
         title: "Assignation créée",
         description: `La tâche "${newAssignment.task_title}" a été assignée à ${newAssignment.assigned_to_name}`,
       });
+
+      // Créer une notification pour le membre assigné
+      try {
+        const { error: notificationError } = await supabase
+          .from('notifications')
+          .insert([{
+            user_id: newAssignment.assigned_to_id,
+            title: 'Nouvelle tâche assignée',
+            message: `Vous avez une nouvelle tâche : "${newAssignment.task_title}"`,
+            type: 'task_assigned',
+            data: {
+              product_id: newAssignment.product_id,
+              product_type: newAssignment.product_type,
+              product_name: newAssignment.product_name,
+              task_title: newAssignment.task_title,
+              task_description: newAssignment.task_description
+            }
+          }]);
+
+        if (notificationError) {
+          console.warn('Erreur lors de la création de la notification:', notificationError);
+        }
+      } catch (notificationErr) {
+        console.warn('Erreur lors de la création de la notification:', notificationErr);
+      }
       
       return data;
     } catch (err) {

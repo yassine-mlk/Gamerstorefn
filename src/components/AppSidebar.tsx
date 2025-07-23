@@ -129,6 +129,29 @@ const memberMenuItems = [
   },
 ];
 
+const monteurMenuItems = [
+  {
+    title: "Dashboard",
+    url: "/member-dashboard",
+    icon: BarChart3,
+  },
+  {
+    title: "Produits",
+    url: "/my-products",
+    icon: Package,
+  },
+  {
+    title: "Mes Tâches",
+    url: "/my-tasks",
+    icon: CheckSquare,
+  },
+  {
+    title: "Équipe",
+    url: "/equipe",
+    icon: Users,
+  },
+];
+
 interface AppSidebarProps {
   userRole: string;
 }
@@ -139,6 +162,7 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
   
   const menuItems = userRole === "admin" ? adminMenuItems : 
                    userRole === "vendeur" ? vendeurMenuItems : 
+                   userRole === "monteur" ? monteurMenuItems :
                    memberMenuItems;
 
   const getRoleLabel = (role: string) => {
@@ -147,6 +171,7 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
       case "vendeur": return "Vendeur";
       case "manager": return "Manager";
       case "livreur": return "Livreur";
+      case "monteur": return "Monteur";
       default: return "Membre";
     }
   };
@@ -157,6 +182,7 @@ export function AppSidebar({ userRole }: AppSidebarProps) {
       case "vendeur": return "border-gaming-cyan text-gaming-cyan";
       case "manager": return "border-gaming-green text-gaming-green";
       case "livreur": return "border-yellow-500 text-yellow-500";
+      case "monteur": return "border-orange-500 text-orange-500";
       default: return "border-gray-500 text-gray-500";
     }
   };

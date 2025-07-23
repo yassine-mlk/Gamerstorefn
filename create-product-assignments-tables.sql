@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS product_assignments (
     product_type VARCHAR(50) NOT NULL CHECK (product_type IN ('pc_portable', 'pc_gamer', 'moniteur', 'chaise_gaming', 'peripherique', 'composant_pc')),
     product_name VARCHAR(255) NOT NULL,
     product_code VARCHAR(100), -- Code-barres ou référence
+    product_etat VARCHAR(20), -- État du produit (Neuf, Comme neuf, Occasion)
     
     -- Assignation
     assigned_to_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
