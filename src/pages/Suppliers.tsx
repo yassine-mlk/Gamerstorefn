@@ -2,31 +2,37 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Truck,
-  Plus,
-  Search,
-  Edit,
-  Trash2,
-  Mail,
-  Phone,
-  MapPin,
-  Building,
-  Calendar,
-  Package,
-  Loader2
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { 
+  Plus, 
+  Search, 
+  Edit, 
+  Trash2, 
+  Phone, 
+  Mail, 
+  MapPin, 
+  Building, 
+  Package, 
+  Calendar, 
+  Truck, 
+  Loader2,
+  User,
+  CreditCard
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { useSuppliers, type Supplier, type NewSupplier } from "@/hooks/useSuppliers";
 import { formatCurrency } from "@/lib/currency";
 
 export default function Suppliers() {
   const { suppliers, loading, addSupplier, updateSupplier, deleteSupplier } = useSuppliers();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredSuppliers, setFilteredSuppliers] = useState<Supplier[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -42,7 +48,9 @@ export default function Suppliers() {
     statut: "Actif",
     conditions_paiement: "",
     delai_livraison_moyen: undefined,
-    notes: ""
+    notes: "",
+    type_fournisseur: "entreprise",
+    ice: ""
   });
 
   // Filtrer les fournisseurs localement
@@ -52,7 +60,8 @@ export default function Suppliers() {
         supplier.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
         supplier.contact_principal.toLowerCase().includes(searchTerm.toLowerCase()) ||
         supplier.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (supplier.specialite && supplier.specialite.toLowerCase().includes(searchTerm.toLowerCase()))
+        (supplier.specialite && supplier.specialite.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (supplier.ice && supplier.ice.includes(searchTerm))
       );
       setFilteredSuppliers(filtered);
     } else {
@@ -62,6 +71,21 @@ export default function Suppliers() {
 
   const handleAddSupplier = async () => {
     if (!newSupplier.nom || !newSupplier.contact_principal || !newSupplier.email) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir tous les champs obligatoires",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validation spécifique pour les entreprises
+    if (newSupplier.type_fournisseur === 'entreprise' && !newSupplier.ice) {
+      toast({
+        title: "Erreur",
+        description: "Le numéro ICE est obligatoire pour les entreprises",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -77,7 +101,9 @@ export default function Suppliers() {
         statut: "Actif",
         conditions_paiement: "",
         delai_livraison_moyen: undefined,
-        notes: ""
+        notes: "",
+        type_fournisseur: "entreprise",
+        ice: ""
       });
       setIsAddDialogOpen(false);
     }
@@ -85,6 +111,21 @@ export default function Suppliers() {
 
   const handleEditSupplier = async () => {
     if (!selectedSupplier || !newSupplier.nom || !newSupplier.contact_principal || !newSupplier.email) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir tous les champs obligatoires",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validation spécifique pour les entreprises
+    if (newSupplier.type_fournisseur === 'entreprise' && !newSupplier.ice) {
+      toast({
+        title: "Erreur",
+        description: "Le numéro ICE est obligatoire pour les entreprises",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -102,7 +143,9 @@ export default function Suppliers() {
         statut: "Actif",
         conditions_paiement: "",
         delai_livraison_moyen: undefined,
-        notes: ""
+        notes: "",
+        type_fournisseur: "entreprise",
+        ice: ""
       });
     }
   };
@@ -125,7 +168,9 @@ export default function Suppliers() {
       statut: supplier.statut,
       conditions_paiement: supplier.conditions_paiement || "",
       delai_livraison_moyen: supplier.delai_livraison_moyen,
-      notes: supplier.notes || ""
+      notes: supplier.notes || "",
+      type_fournisseur: supplier.type_fournisseur || "entreprise",
+      ice: supplier.ice || ""
     });
     setIsEditDialogOpen(true);
   };
@@ -184,11 +229,50 @@ export default function Suppliers() {
             </DialogHeader>
             
             <div className="space-y-6">
-              {/* Section 1: Informations entreprise */}
+              {/* Section 1: Type de fournisseur */}
               <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs font-bold text-white">1</div>
-                  <h3 className="text-lg font-semibold text-gray-900">Informations entreprise</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">Type de fournisseur</h3>
+                  <span className="text-xs text-red-600 font-medium">* Obligatoire</span>
+                </div>
+                <p className="text-sm text-gray-600 mb-4">Choisissez le type de fournisseur pour adapter les champs requis</p>
+                
+                <RadioGroup 
+                  value={newSupplier.type_fournisseur} 
+                  onValueChange={(value: any) => setNewSupplier({...newSupplier, type_fournisseur: value, ice: value === 'particulier' ? '' : newSupplier.ice})}
+                  className="grid grid-cols-2 gap-4"
+                >
+                  <div className="flex items-center space-x-3 p-3 border border-gray-300 rounded-lg hover:border-blue-500 transition-colors bg-white">
+                    <RadioGroupItem value="particulier" id="particulier" />
+                    <Label htmlFor="particulier" className="flex items-center gap-2 cursor-pointer">
+                      <User className="w-5 h-5 text-green-600" />
+                      <div>
+                        <div className="font-medium text-gray-900">Particulier</div>
+                        <div className="text-xs text-gray-600">Fournisseur individuel</div>
+                      </div>
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-3 p-3 border border-gray-300 rounded-lg hover:border-blue-500 transition-colors bg-white">
+                    <RadioGroupItem value="entreprise" id="entreprise" />
+                    <Label htmlFor="entreprise" className="flex items-center gap-2 cursor-pointer">
+                      <Building className="w-5 h-5 text-purple-600" />
+                      <div>
+                        <div className="font-medium text-gray-900">Entreprise</div>
+                        <div className="text-xs text-gray-600">Société ou organisation</div>
+                      </div>
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {/* Section 2: Informations principales */}
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs font-bold text-white">2</div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {newSupplier.type_fournisseur === 'particulier' ? 'Informations personnelles' : 'Informations entreprise'}
+                  </h3>
                   <span className="text-xs text-red-600 font-medium">* Obligatoire</span>
                 </div>
                 
@@ -196,13 +280,13 @@ export default function Suppliers() {
                   <div>
                     <Label htmlFor="nom" className="flex items-center gap-2 text-gray-700 mb-2">
                       <Building className="w-4 h-4" />
-                      Nom de l'entreprise *
+                      {newSupplier.type_fournisseur === 'particulier' ? 'Nom complet *' : 'Nom de l\'entreprise *'}
                     </Label>
                     <Input
                       id="nom"
                       value={newSupplier.nom}
                       onChange={(e) => setNewSupplier({...newSupplier, nom: e.target.value})}
-                      placeholder="Ex: TechDistrib Solutions, Gaming Hardware Pro..."
+                      placeholder={newSupplier.type_fournisseur === 'particulier' ? "Ex: Ahmed Benali, Fatima Zghouri..." : "Ex: TechDistrib Solutions, Gaming Hardware Pro..."}
                       className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
                     />
                   </div>
@@ -216,13 +300,32 @@ export default function Suppliers() {
                       id="contact"
                       value={newSupplier.contact_principal}
                       onChange={(e) => setNewSupplier({...newSupplier, contact_principal: e.target.value})}
-                      placeholder="Ex: Ahmed Benali, Fatima Zghouri..."
+                      placeholder={newSupplier.type_fournisseur === 'particulier' ? "Ex: Ahmed Benali" : "Ex: Ahmed Benali, Fatima Zghouri..."}
                       className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
                     />
                     <p className="text-xs text-gray-600 mt-1">
-                      Personne responsable des relations commerciales
+                      {newSupplier.type_fournisseur === 'particulier' ? 'Nom de la personne' : 'Personne responsable des relations commerciales'}
                     </p>
                   </div>
+
+                  {newSupplier.type_fournisseur === 'entreprise' && (
+                    <div>
+                      <Label htmlFor="ice" className="flex items-center gap-2 text-gray-700 mb-2">
+                        <CreditCard className="w-4 h-4" />
+                        Numéro ICE *
+                      </Label>
+                      <Input
+                        id="ice"
+                        value={newSupplier.ice}
+                        onChange={(e) => setNewSupplier({...newSupplier, ice: e.target.value})}
+                        placeholder="Ex: 001234567000045"
+                        className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
+                      />
+                      <p className="text-xs text-gray-600 mt-1">
+                        Identifiant Commerce Entreprise (obligatoire pour les entreprises)
+                      </p>
+                    </div>
+                  )}
 
                   <div>
                     <Label htmlFor="specialite" className="flex items-center gap-2 text-gray-700 mb-2">
@@ -534,6 +637,38 @@ export default function Suppliers() {
             </div>
           </CardContent>
         </Card>
+
+        <Card className="bg-white border-gray-200 shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-green-100 rounded-lg">
+                <User className="w-6 h-6 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Particuliers</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {suppliers.filter(s => s.type_fournisseur === 'particulier').length}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border-gray-200 shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-purple-100 rounded-lg">
+                <Building className="w-6 h-6 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Entreprises</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {suppliers.filter(s => s.type_fournisseur === 'entreprise').length}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Search Bar */}
@@ -542,7 +677,7 @@ export default function Suppliers() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4" />
             <Input
-              placeholder="Rechercher un fournisseur (nom, contact, spécialité)..."
+              placeholder="Rechercher un fournisseur (nom, contact, spécialité, ICE)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
@@ -596,6 +731,20 @@ export default function Suppliers() {
                           <Building className="w-4 h-4" />
                           Contact: {supplier.contact_principal}
                         </div>
+                        <div className="flex items-center gap-2">
+                          {supplier.type_fournisseur === 'particulier' ? (
+                            <User className="w-4 h-4 text-green-600" />
+                          ) : (
+                            <Building className="w-4 h-4 text-purple-600" />
+                          )}
+                          {supplier.type_fournisseur === 'particulier' ? 'Particulier' : 'Entreprise'}
+                        </div>
+                        {supplier.type_fournisseur === 'entreprise' && supplier.ice && (
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="w-4 h-4" />
+                            ICE: {supplier.ice}
+                          </div>
+                        )}
                         {supplier.specialite && (
                           <div className="flex items-center gap-2">
                             <Package className="w-4 h-4" />
@@ -675,11 +824,50 @@ export default function Suppliers() {
           </DialogHeader>
           
           <div className="space-y-6">
-            {/* Section 1: Informations entreprise */}
+            {/* Section 1: Type de fournisseur */}
             <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-6 h-6 bg-orange-600 rounded-full flex items-center justify-center text-xs font-bold text-white">1</div>
-                <h3 className="text-lg font-semibold text-gray-900">Informations entreprise</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Type de fournisseur</h3>
+                <span className="text-xs text-red-600 font-medium">* Obligatoire</span>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">Choisissez le type de fournisseur pour adapter les champs requis</p>
+              
+              <RadioGroup 
+                value={newSupplier.type_fournisseur} 
+                onValueChange={(value: any) => setNewSupplier({...newSupplier, type_fournisseur: value, ice: value === 'particulier' ? '' : newSupplier.ice})}
+                className="grid grid-cols-2 gap-4"
+              >
+                <div className="flex items-center space-x-3 p-3 border border-gray-300 rounded-lg hover:border-blue-500 transition-colors bg-white">
+                  <RadioGroupItem value="particulier" id="particulier" />
+                  <Label htmlFor="particulier" className="flex items-center gap-2 cursor-pointer">
+                    <User className="w-5 h-5 text-green-600" />
+                    <div>
+                      <div className="font-medium text-gray-900">Particulier</div>
+                      <div className="text-xs text-gray-600">Fournisseur individuel</div>
+                    </div>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-3 p-3 border border-gray-300 rounded-lg hover:border-blue-500 transition-colors bg-white">
+                  <RadioGroupItem value="entreprise" id="entreprise" />
+                  <Label htmlFor="entreprise" className="flex items-center gap-2 cursor-pointer">
+                    <Building className="w-5 h-5 text-purple-600" />
+                    <div>
+                      <div className="font-medium text-gray-900">Entreprise</div>
+                      <div className="text-xs text-gray-600">Société ou organisation</div>
+                    </div>
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            {/* Section 2: Informations principales */}
+            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-6 bg-orange-600 rounded-full flex items-center justify-center text-xs font-bold text-white">2</div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {newSupplier.type_fournisseur === 'particulier' ? 'Informations personnelles' : 'Informations entreprise'}
+                </h3>
                 <span className="text-xs text-red-600 font-medium">* Obligatoire</span>
               </div>
               
@@ -687,13 +875,13 @@ export default function Suppliers() {
                 <div>
                   <Label htmlFor="edit-nom" className="flex items-center gap-2 text-gray-700 mb-2">
                     <Building className="w-4 h-4" />
-                    Nom de l'entreprise *
+                    {newSupplier.type_fournisseur === 'particulier' ? 'Nom complet *' : 'Nom de l\'entreprise *'}
                   </Label>
                   <Input
                     id="edit-nom"
                     value={newSupplier.nom}
                     onChange={(e) => setNewSupplier({...newSupplier, nom: e.target.value})}
-                    placeholder="Ex: TechDistrib Solutions, Gaming Hardware Pro..."
+                    placeholder={newSupplier.type_fournisseur === 'particulier' ? "Ex: Ahmed Benali, Fatima Zghouri..." : "Ex: TechDistrib Solutions, Gaming Hardware Pro..."}
                     className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
@@ -707,13 +895,32 @@ export default function Suppliers() {
                     id="edit-contact"
                     value={newSupplier.contact_principal}
                     onChange={(e) => setNewSupplier({...newSupplier, contact_principal: e.target.value})}
-                    placeholder="Ex: Ahmed Benali, Fatima Zghouri..."
+                    placeholder={newSupplier.type_fournisseur === 'particulier' ? "Ex: Ahmed Benali" : "Ex: Ahmed Benali, Fatima Zghouri..."}
                     className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Personne responsable des relations commerciales
+                    {newSupplier.type_fournisseur === 'particulier' ? 'Nom de la personne' : 'Personne responsable des relations commerciales'}
                   </p>
                 </div>
+
+                {newSupplier.type_fournisseur === 'entreprise' && (
+                  <div>
+                    <Label htmlFor="edit-ice" className="flex items-center gap-2 text-gray-700 mb-2">
+                      <CreditCard className="w-4 h-4" />
+                      Numéro ICE *
+                    </Label>
+                    <Input
+                      id="edit-ice"
+                      value={newSupplier.ice}
+                      onChange={(e) => setNewSupplier({...newSupplier, ice: e.target.value})}
+                      placeholder="Ex: 001234567000045"
+                      className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                    />
+                    <p className="text-xs text-gray-600 mt-1">
+                      Identifiant Commerce Entreprise (obligatoire pour les entreprises)
+                    </p>
+                  </div>
+                )}
 
                 <div>
                   <Label htmlFor="edit-specialite" className="flex items-center gap-2 text-gray-300 mb-2">

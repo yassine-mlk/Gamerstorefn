@@ -17,6 +17,8 @@ export interface Supplier {
   conditions_paiement?: string;
   delai_livraison_moyen?: number;
   notes?: string;
+  type_fournisseur?: 'particulier' | 'entreprise';
+  ice?: string;
   created_at: string;
   updated_at: string;
 }
@@ -32,6 +34,8 @@ export interface NewSupplier {
   conditions_paiement?: string;
   delai_livraison_moyen?: number;
   notes?: string;
+  type_fournisseur?: 'particulier' | 'entreprise';
+  ice?: string;
 }
 
 export function useSuppliers() {

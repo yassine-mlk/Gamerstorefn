@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 export interface Notification {
   id: string;
@@ -28,7 +28,6 @@ export function useNotifications() {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Charger les notifications existantes
   const fetchNotifications = async () => {
@@ -53,6 +52,38 @@ export function useNotifications() {
     }
   };
 
+  // Jouer le son de notification
+  const playNotificationSound = () => {
+    try {
+      console.log('playNotificationSound: Tentative de lecture du son');
+      
+      // Créer un nouvel élément audio à chaque fois pour éviter les problèmes de réutilisation
+      const audio = new Audio('/sounds/notifs.mp3');
+      audio.volume = 0.5;
+      audio.preload = 'auto';
+      
+      // Essayer de jouer immédiatement
+      audio.play().then(() => {
+        console.log('playNotificationSound: Son joué avec succès');
+      }).catch(error => {
+        console.warn('playNotificationSound: Impossible de jouer le son immédiatement:', error);
+        
+        // Si l'audio n'est pas prêt, attendre qu'il soit prêt
+        audio.addEventListener('canplaythrough', () => {
+          console.log('playNotificationSound: Audio maintenant prêt, lecture...');
+          audio.play().then(() => {
+            console.log('playNotificationSound: Son joué après attente');
+          }).catch(waitError => {
+            console.error('playNotificationSound: Échec après attente:', waitError);
+          });
+        }, { once: true });
+      });
+      
+    } catch (error) {
+      console.warn('playNotificationSound: Erreur lors de la lecture du son:', error);
+    }
+  };
+
   // Créer une nouvelle notification
   const createNotification = async (notification: NewNotification): Promise<boolean> => {
     try {
@@ -68,6 +99,8 @@ export function useNotifications() {
       setNotifications(prev => [data, ...prev]);
       if (!data.read) {
         setUnreadCount(prev => prev + 1);
+        // Jouer le son pour les nouvelles notifications créées
+        playNotificationSound();
       }
 
       return true;
@@ -148,48 +181,14 @@ export function useNotifications() {
     }
   };
 
-  // Jouer le son de notification
-  const playNotificationSound = () => {
-    try {
-      if (audioRef.current) {
-        audioRef.current.currentTime = 0;
-        audioRef.current.play().catch(error => {
-          console.warn('Impossible de jouer le son de notification:', error);
-        });
-      }
-    } catch (error) {
-      console.warn('Erreur lors de la lecture du son:', error);
-    }
-  };
-
-  // Créer une notification pour une nouvelle tâche assignée
-  const notifyTaskAssigned = async (taskData: any) => {
-    const notification: NewNotification = {
-      user_id: taskData.assigned_to_id,
-      title: 'Nouvelle tâche assignée',
-      message: `Vous avez une nouvelle tâche : "${taskData.task_title}"`,
-      type: 'task_assigned',
-      data: taskData
-    };
-
-    const success = await createNotification(notification);
-    if (success) {
-      // Jouer le son de notification
-      playNotificationSound();
-      
-      // Afficher une toast si l'utilisateur est connecté
-      if (user && user.id === taskData.assigned_to_id) {
-        toast({
-          title: 'Nouvelle tâche assignée',
-          description: taskData.task_title,
-        });
-      }
-    }
-  };
-
-  // Écouter les nouvelles notifications en temps réel
+  // Charger les notifications au montage et écouter les changements
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      console.log('useNotifications: Pas d\'utilisateur connecté');
+      return;
+    }
+
+    console.log('useNotifications: Configuration de l\'écoute en temps réel pour user:', user.id);
 
     // Charger les notifications existantes
     fetchNotifications();
@@ -206,10 +205,21 @@ export function useNotifications() {
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
+          console.log('useNotifications: Nouvelle notification reçue:', payload);
+          console.log('useNotifications: Type d\'événement:', payload.eventType);
+          console.log('useNotifications: Données reçues:', payload.new);
+          
           const newNotification = payload.new as Notification;
+          console.log('useNotifications: Notification parsée:', newNotification);
+          console.log('useNotifications: Notification lue?', newNotification.read);
+          
           setNotifications(prev => [newNotification, ...prev]);
           if (!newNotification.read) {
+            console.log('useNotifications: Notification non lue, mise à jour du compteur');
             setUnreadCount(prev => prev + 1);
+            
+            // Jouer le son pour TOUTES les nouvelles notifications
+            console.log('useNotifications: Déclenchement du son pour notification reçue');
             playNotificationSound();
             
             // Afficher une toast pour les nouvelles notifications
@@ -217,22 +227,23 @@ export function useNotifications() {
               title: newNotification.title,
               description: newNotification.message,
             });
+          } else {
+            console.log('useNotifications: Notification déjà lue, pas de son ni de toast');
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('useNotifications: Statut de la souscription:', status);
+      });
 
     return () => {
+      console.log('useNotifications: Nettoyage du channel');
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, toast]);
 
-  // Créer l'élément audio pour les sons de notification
-  useEffect(() => {
-    audioRef.current = new Audio('/sounds/notification.mp3');
-    audioRef.current.volume = 0.5;
-    audioRef.current.preload = 'auto';
-  }, []);
+  // Note: Nous créons un nouvel élément audio à chaque appel de playNotificationSound
+  // pour éviter les problèmes de réutilisation et de synchronisation
 
   return {
     notifications,
@@ -242,7 +253,6 @@ export function useNotifications() {
     markAsRead,
     markAllAsRead,
     deleteNotification,
-    notifyTaskAssigned,
     playNotificationSound,
     refreshNotifications: fetchNotifications
   };

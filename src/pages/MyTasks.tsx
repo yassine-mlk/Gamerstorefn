@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { CheckSquare, Clock, PlayCircle, CheckCircle, AlertCircle, Calendar, Package, User, Target, TrendingUp, Eye, FileText, ExternalLink, Filter, Search, SortAsc, SortDesc } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useProductAssignments, type ProductAssignment } from "@/hooks/useProductAssignments";
+import { useNotifications } from "@/hooks/useNotifications";
 import { supabase } from "@/lib/supabase";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
@@ -26,15 +27,127 @@ const MyTasks = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   const { getStatusText, getPriorityText, getProductTypeText, updateAssignmentStatus } = useProductAssignments();
+  const { notifications, unreadCount, createNotification } = useNotifications();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Charger les assignations de l'utilisateur connecté
+  // Fonction de test simple pour les notifications
+  const testNotification = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    console.log('Test: Création d\'une notification de test');
+    
+    const success = await createNotification({
+      user_id: user.id,
+      title: "Test de notification",
+      message: "Ceci est un test de notification en temps réel",
+      type: "general"
+    });
+
+    if (success) {
+      console.log('Test: Notification créée avec succès');
+      toast({
+        title: "Test réussi",
+        description: "Notification de test créée",
+      });
+    } else {
+      console.log('Test: Échec de la création de notification');
+    }
+  };
+
+  // Fonction de test spécifique pour le son
+  const testSound = () => {
+    console.log('Test: Test du son de notification');
+    const audio = new Audio('/sounds/notifs.mp3');
+    audio.volume = 0.5;
+    audio.play().then(() => {
+      console.log('Test: Son joué avec succès');
+      toast({
+        title: "Test son",
+        description: "Son de notification testé",
+      });
+    }).catch(error => {
+      console.error('Test: Erreur lors du test du son:', error);
+      toast({
+        title: "Erreur son",
+        description: "Impossible de jouer le son",
+        variant: "destructive",
+      });
+    });
+  };
+
+  // Fonction de test pour simuler une assignation par l'admin
+  const testAdminAssignment = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    console.log('Test: Simulation d\'une assignation par l\'admin');
+    
+    try {
+      // Créer une assignation de test
+      const { data: assignment, error: assignmentError } = await supabase
+        .from('product_assignments')
+        .insert([{
+          product_id: 'test-product-' + Date.now(),
+          product_type: 'pc_portable',
+          product_name: 'PC Portable de Test',
+          assigned_to_id: user.id,
+          assigned_to_name: user.user_metadata?.name || user.email || 'Test User',
+          task_title: 'Tâche de test par admin',
+          task_description: 'Cette tâche a été créée pour tester les notifications',
+          priority: 'moyenne'
+        }])
+        .select()
+        .single();
+
+      if (assignmentError) {
+        console.error('Test: Erreur lors de la création de l\'assignation:', assignmentError);
+        return;
+      }
+
+      console.log('Test: Assignation créée:', assignment);
+
+      // Créer une notification pour cette assignation
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert([{
+          user_id: user.id,
+          title: 'Nouvelle tâche assignée (Test Admin)',
+          message: 'Vous avez une nouvelle tâche : "Tâche de test par admin"',
+          type: 'task_assigned',
+          data: {
+            product_id: assignment.product_id,
+            product_type: assignment.product_type,
+            product_name: assignment.product_name,
+            task_title: assignment.task_title
+          }
+        }]);
+
+      if (notificationError) {
+        console.error('Test: Erreur lors de la création de la notification:', notificationError);
+      } else {
+        console.log('Test: Notification créée avec succès');
+        toast({
+          title: "Test Admin",
+          description: "Assignation et notification créées",
+        });
+      }
+    } catch (error) {
+      console.error('Test: Erreur lors du test admin:', error);
+    }
+  };
+
+  // Charger les assignations de l'utilisateur connecté et écouter les changements en temps réel
   useEffect(() => {
+    let userId: string | null = null;
+
     const fetchUserAssignments = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
+        
+        userId = user.id;
 
         const { data, error } = await supabase
           .from('product_assignments')
@@ -51,8 +164,65 @@ const MyTasks = () => {
       }
     };
 
+    // Charger les données initiales
     fetchUserAssignments();
-  }, []);
+
+    // Écouter les changements en temps réel
+    const setupRealtimeListener = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const channel = supabase
+        .channel('user_assignments')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'product_assignments',
+            filter: `assigned_to_id=eq.${user.id}`
+          },
+          (payload) => {
+            console.log('Changement détecté dans les assignations:', payload);
+            
+            if (payload.eventType === 'INSERT') {
+              // Nouvelle assignation
+              const newAssignment = payload.new as ProductAssignment;
+              setUserAssignments(prev => [newAssignment, ...prev]);
+              
+              toast({
+                title: "Nouvelle tâche assignée",
+                description: `Vous avez une nouvelle tâche : ${newAssignment.task_title}`,
+              });
+            } else if (payload.eventType === 'UPDATE') {
+              // Assignation mise à jour
+              const updatedAssignment = payload.new as ProductAssignment;
+              setUserAssignments(prev => prev.map(assignment => 
+                assignment.id === updatedAssignment.id ? updatedAssignment : assignment
+              ));
+            } else if (payload.eventType === 'DELETE') {
+              // Assignation supprimée
+              const deletedAssignment = payload.old as ProductAssignment;
+              setUserAssignments(prev => prev.filter(assignment => assignment.id !== deletedAssignment.id));
+            }
+          }
+        )
+        .subscribe();
+
+      return channel;
+    };
+
+    let channel: any = null;
+    setupRealtimeListener().then(ch => {
+      channel = ch;
+    });
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [toast]); // Ajout de toast comme dépendance
 
   // Fonction pour commencer une tâche
   const startTask = async (taskId: string) => {
@@ -254,6 +424,45 @@ const MyTasks = () => {
             <p className="text-gray-600">Gérez vos assignations et suivez votre progression</p>
           </div>
         </div>
+        
+        {/* Indicateur de notifications */}
+        {unreadCount > 0 && (
+          <div className="flex items-center gap-2">
+            <Badge variant="destructive" className="animate-pulse">
+              {unreadCount} nouvelle{unreadCount > 1 ? 's' : ''} notification{unreadCount > 1 ? 's' : ''}
+            </Badge>
+          </div>
+        )}
+        
+        {/* Bouton de test pour les notifications */}
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={testNotification}
+          className="text-xs"
+        >
+          🔔 Test ({unreadCount})
+        </Button>
+        
+        {/* Bouton de test du son */}
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={testSound}
+          className="text-xs"
+        >
+          🔊 Test Son
+        </Button>
+
+        {/* Bouton de test pour l'assignation admin */}
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={testAdminAssignment}
+          className="text-xs"
+        >
+          👨‍�� Test Admin
+        </Button>
       </div>
 
       {/* Statistiques */}

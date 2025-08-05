@@ -368,7 +368,7 @@ const StockPage = () => {
       <Card className="bg-card border-gray-200">
         <CardContent className="p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 mb-6 bg-gray-100">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 mb-6 bg-gray-100 gap-1">
               {tabsData.map((tab) => {
                 const IconComponent = tab.icon;
                 const stats = tab.stats;
@@ -376,21 +376,21 @@ const StockPage = () => {
                   <TabsTrigger 
                     key={tab.id} 
                     value={tab.id}
-                    className="flex flex-col items-center gap-1 data-[state=active]:bg-gaming-cyan data-[state=active]:text-white p-3"
+                    className="flex flex-col items-center gap-2 data-[state=active]:bg-gaming-cyan data-[state=active]:text-white p-3 hover:bg-gray-200 transition-colors rounded-md"
                   >
                     <IconComponent className="w-4 h-4" />
-                    <span className="text-xs">{tab.label}</span>
-                    <div className="flex gap-1">
-                      <Badge variant="outline" className="text-xs bg-green-100 text-green-800 border-green-200">
+                    <span className="text-xs font-medium text-center leading-tight">{tab.label}</span>
+                    <div className="flex items-center gap-1 flex-wrap justify-center">
+                      <Badge variant="outline" className="text-xs bg-green-100 text-green-800 border-green-200 px-1 py-0">
                         {stats.inStock}
                       </Badge>
                       {stats.lowStock > 0 && (
-                        <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-200">
+                        <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-200 px-1 py-0">
                           {stats.lowStock}
                         </Badge>
                       )}
                       {stats.outOfStock > 0 && (
-                        <Badge variant="outline" className="text-xs bg-red-100 text-red-800 border-red-200">
+                        <Badge variant="outline" className="text-xs bg-red-100 text-red-800 border-red-200 px-1 py-0">
                           {stats.outOfStock}
                         </Badge>
                       )}
@@ -402,7 +402,7 @@ const StockPage = () => {
 
             {tabsData.map((tab) => (
               <TabsContent key={tab.id} value={tab.id} className="mt-0">
-                <div className="bg-background rounded-lg">
+                <div className="bg-white rounded-lg border border-gray-200 p-4">
                   {tab.component}
                 </div>
               </TabsContent>

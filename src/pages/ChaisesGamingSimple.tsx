@@ -333,14 +333,13 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
       )}
       
       {/* En-tête avec bouton d'ajout */}
-      <div className="flex items-center justify-between">
-        {embedded && (
+      <div className={`flex items-center ${embedded ? 'justify-end' : 'justify-between'}`}>
+        {!embedded && (
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-              <Armchair className="w-6 h-6 text-gaming-cyan" />
-              Chaises Gaming
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+              <Armchair className="w-5 h-5 text-gaming-cyan" />
+              Gestion des Chaises Gaming
             </h2>
-            <p className="text-gray-600">Gestion du stock des chaises gaming</p>
           </div>
         )}
         

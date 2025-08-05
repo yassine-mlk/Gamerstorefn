@@ -348,22 +348,27 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
       )}
       
       {/* En-tête avec bouton d'ajout */}
-      <div className="flex items-center justify-between">
-        {embedded && (
+      <div className={`flex items-center ${embedded ? 'justify-end' : 'justify-between'}`}>
+        {!embedded && (
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-              <Monitor className="w-6 h-6 text-gaming-cyan" />
-              Moniteurs
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+              <Monitor className="w-5 h-5 text-gaming-cyan" />
+              Gestion des Moniteurs
             </h2>
-            <p className="text-gray-600">Gérer l'inventaire des moniteurs</p>
           </div>
         )}
         
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+          setIsAddDialogOpen(open);
+          if (!open) {
+            setEditingMoniteur(null);
+            resetForm();
+          }
+        }}>
           <DialogTrigger asChild>
-            <Button className="gaming-gradient">
+            <Button className="gaming-gradient hover:scale-105 transition-transform">
               <Plus className="w-4 h-4 mr-2" />
-              Ajouter un moniteur
+              Nouveau Moniteur
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white border-gray-200">
