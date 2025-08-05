@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { ClipboardList, Plus, Edit, Trash2, CheckCircle, Clock, AlertCircle, Package, UserPlus, User, Building2 } from "lucide-react";
+import { ClipboardList, Plus, Edit, Trash2, CheckCircle, Clock, AlertCircle, Package, UserPlus, User, Building } from "lucide-react";
 import {
   Table,
   TableBody,

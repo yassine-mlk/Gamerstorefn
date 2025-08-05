@@ -175,31 +175,31 @@ export default function Sales() {
 
   const getStatusColor = (statut: string) => {
     switch (statut) {
-      case 'payee': return 'bg-green-600';
-      case 'en_cours': return 'bg-yellow-600';
-      case 'partiellement_payee': return 'bg-orange-600';
-      case 'annulee': return 'bg-red-600';
-      case 'remboursee': return 'bg-purple-600';
-      default: return 'bg-gray-600';
+      case 'payee': return 'bg-green-600 text-white';
+      case 'en_cours': return 'bg-yellow-600 text-white';
+      case 'partiellement_payee': return 'bg-orange-600 text-white';
+      case 'annulee': return 'bg-red-600 text-white';
+      case 'remboursee': return 'bg-purple-600 text-white';
+      default: return 'bg-gray-600 text-white';
     }
   };
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'magasin': return 'bg-gaming-green';
-      case 'en_ligne': return 'bg-gaming-purple';
-      case 'telephone': return 'bg-gaming-cyan';
-      case 'commande': return 'bg-yellow-600';
-      default: return 'bg-gray-600';
+      case 'magasin': return 'bg-green-600 text-white';
+      case 'en_ligne': return 'bg-purple-600 text-white';
+      case 'telephone': return 'bg-blue-600 text-white';
+      case 'commande': return 'bg-orange-600 text-white';
+      default: return 'bg-gray-600 text-white';
     }
   };
 
   return (
-    <div className="p-4 lg:p-6 space-y-6 bg-background min-h-screen">
+    <div className="p-4 lg:p-6 space-y-6 bg-white min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <SidebarTrigger className="text-gray-700 hover:text-gaming-cyan lg:hidden" />
+          <SidebarTrigger className="text-gray-700 hover:text-blue-600 lg:hidden" />
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Historique des ventes</h1>
             <p className="text-gray-600 text-sm lg:text-base">Consultez et analysez toutes les ventes</p>
@@ -211,12 +211,12 @@ export default function Sales() {
             variant="outline" 
             size="sm"
             disabled={loading}
-            className="border-gaming-cyan text-gaming-cyan hover:bg-gaming-cyan hover:text-black"
+            className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
           >
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             <span className="hidden sm:inline">Actualiser</span>
           </Button>
-          <Button onClick={exportData} className="gaming-gradient">
+          <Button onClick={exportData} className="bg-blue-600 hover:bg-blue-700 text-white">
             <Download className="w-4 h-4 mr-2" />
             <span className="hidden sm:inline">Exporter</span>
           </Button>
@@ -225,13 +225,13 @@ export default function Sales() {
 
       {/* Statistiques rapides */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-gray-900/50 border-gray-700">
+        <Card className="bg-white border-gray-200 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-gaming-cyan" />
+              <BarChart3 className="w-5 h-5 text-blue-600" />
               <div>
-                <p className="text-sm text-gray-400">Total ventes</p>
-                <p className="text-lg font-bold text-white">
+                <p className="text-sm text-gray-600">Total ventes</p>
+                <p className="text-lg font-bold text-gray-900">
                   {loadingStats ? '...' : `${(stats?.total_ventes || 0).toLocaleString()} MAD`}
                 </p>
               </div>
@@ -239,13 +239,13 @@ export default function Sales() {
           </CardContent>
         </Card>
         
-        <Card className="bg-gray-900/50 border-gray-700">
+        <Card className="bg-white border-gray-200 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
-              <Receipt className="w-5 h-5 text-gaming-purple" />
+              <Receipt className="w-5 h-5 text-purple-600" />
               <div>
-                <p className="text-sm text-gray-400">Nb. ventes</p>
-                <p className="text-lg font-bold text-white">
+                <p className="text-sm text-gray-600">Nb. ventes</p>
+                <p className="text-lg font-bold text-gray-900">
                   {loadingStats ? '...' : (stats?.nombre_ventes || 0)}
                 </p>
               </div>
@@ -253,13 +253,13 @@ export default function Sales() {
           </CardContent>
         </Card>
         
-        <Card className="bg-gray-900/50 border-gray-700">
+        <Card className="bg-white border-gray-200 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-gaming-green" />
+              <TrendingUp className="w-5 h-5 text-green-600" />
               <div>
-                <p className="text-sm text-gray-400">Vente moyenne</p>
-                <p className="text-lg font-bold text-white">
+                <p className="text-sm text-gray-600">Vente moyenne</p>
+                <p className="text-lg font-bold text-gray-900">
                   {loadingStats ? '...' : `${(stats?.vente_moyenne || 0).toFixed(0)} MAD`}
                 </p>
               </div>
@@ -267,13 +267,13 @@ export default function Sales() {
           </CardContent>
         </Card>
         
-        <Card className="bg-gray-900/50 border-gray-700">
+        <Card className="bg-white border-gray-200 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-yellow-500" />
+              <Users className="w-5 h-5 text-orange-600" />
               <div>
-                <p className="text-sm text-gray-400">Clients</p>
-                <p className="text-lg font-bold text-white">
+                <p className="text-sm text-gray-600">Clients</p>
+                <p className="text-lg font-bold text-gray-900">
                   {loadingStats ? '...' : (stats?.nombre_clients || 0)}
                 </p>
               </div>
@@ -283,9 +283,9 @@ export default function Sales() {
       </div>
 
       {/* Filtres et recherche */}
-      <Card className="bg-gray-900/50 border-gray-700">
+      <Card className="bg-white border-gray-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
+          <CardTitle className="text-gray-900 flex items-center gap-2">
             <Filter className="w-5 h-5" />
             Filtres et recherche
           </CardTitle>
@@ -299,16 +299,16 @@ export default function Sales() {
                 placeholder="Rechercher une vente ou client..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-gray-800 border-gray-600 text-white"
+                className="pl-10 bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
 
             {/* Filtre statut */}
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="bg-gray-800 border-gray-600">
+              <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                 <SelectValue placeholder="Statut" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-600">
+              <SelectContent className="bg-white border-gray-300">
                 <SelectItem value="tous">Tous les statuts</SelectItem>
                 <SelectItem value="payee">Payée</SelectItem>
                 <SelectItem value="en_cours">En cours</SelectItem>
@@ -320,10 +320,10 @@ export default function Sales() {
 
             {/* Filtre paiement */}
             <Select value={paymentFilter} onValueChange={setPaymentFilter}>
-              <SelectTrigger className="bg-gray-800 border-gray-600">
+              <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                 <SelectValue placeholder="Paiement" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-600">
+              <SelectContent className="bg-white border-gray-300">
                 <SelectItem value="tous">Tous les paiements</SelectItem>
                 <SelectItem value="carte">Carte</SelectItem>
                 <SelectItem value="especes">Espèces</SelectItem>
@@ -335,10 +335,10 @@ export default function Sales() {
 
             {/* Filtre type */}
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="bg-gray-800 border-gray-600">
+              <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                 <SelectValue placeholder="Type" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-600">
+              <SelectContent className="bg-white border-gray-300">
                 <SelectItem value="tous">Tous les types</SelectItem>
                 <SelectItem value="magasin">Magasin</SelectItem>
                 <SelectItem value="en_ligne">En ligne</SelectItem>
@@ -351,10 +351,10 @@ export default function Sales() {
           {/* Filtre de date */}
           <div className="mt-4">
             <Select value={dateFilter} onValueChange={setDateFilter}>
-              <SelectTrigger className="bg-gray-800 border-gray-600 w-full md:w-64">
+              <SelectTrigger className="bg-white border-gray-300 text-gray-900 w-full md:w-64">
                 <SelectValue placeholder="Période" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-600">
+              <SelectContent className="bg-white border-gray-300">
                 <SelectItem value="tous">Toutes les périodes</SelectItem>
                 <SelectItem value="aujourd_hui">Aujourd'hui</SelectItem>
                 <SelectItem value="cette_semaine">Cette semaine</SelectItem>
@@ -367,28 +367,28 @@ export default function Sales() {
       </Card>
 
       {/* Liste des ventes */}
-      <Card className="bg-gray-900/50 border-gray-700">
+      <Card className="bg-white border-gray-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-white">Ventes ({ventes.length})</CardTitle>
-          <CardDescription className="text-gray-400">
+          <CardTitle className="text-gray-900">Ventes ({ventes.length})</CardTitle>
+          <CardDescription className="text-gray-600">
             Liste de toutes les ventes avec filtres appliqués
           </CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <RefreshCw className="w-8 h-8 animate-spin text-gaming-cyan" />
-              <span className="ml-2 text-gray-400">Chargement des ventes...</span>
+              <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
+              <span className="ml-2 text-gray-600">Chargement des ventes...</span>
             </div>
           ) : (
             <div className="space-y-3 max-h-96 lg:max-h-[600px] overflow-y-auto">
               {ventes.map((vente) => (
-                <Card key={vente.id} className="bg-gray-800 border-gray-700 hover:bg-gray-750 transition-colors">
+                <Card key={vente.id} className="bg-white border-gray-200 hover:bg-gray-50 transition-colors shadow-sm">
                   <CardContent className="p-4">
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
-                          <p className="text-white font-medium">Vente {vente.numero_vente}</p>
+                          <p className="text-gray-900 font-medium">Vente {vente.numero_vente}</p>
                           <div className="flex items-center gap-2">
                             <Badge className={getTypeColor(vente.type_vente)}>
                               {vente.type_vente === 'magasin' ? 'Magasin' : 
@@ -405,15 +405,15 @@ export default function Sales() {
                         </div>
                         
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-sm">
-                          <p className="text-gray-400 flex items-center gap-1">
+                          <p className="text-gray-600 flex items-center gap-1">
                             <User className="w-3 h-3" />
                             {vente.client_nom}
                           </p>
-                          <p className="text-gray-400 flex items-center gap-1">
+                          <p className="text-gray-600 flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             {new Date(vente.date_vente || '').toLocaleDateString('fr-FR')}
                           </p>
-                          <div className="flex items-center gap-1 text-gray-400">
+                          <div className="flex items-center gap-1 text-gray-600">
                             {getPaymentIcon(vente.mode_paiement)}
                             <span className="capitalize">{vente.mode_paiement}</span>
                           </div>
@@ -422,8 +422,8 @@ export default function Sales() {
 
                       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                         <div className="text-right">
-                          <p className="text-gaming-cyan font-bold text-xl">{vente.total_ttc.toLocaleString()} MAD</p>
-                          <p className="text-xs text-gray-400">{vente.articles?.length || 0} article(s)</p>
+                          <p className="text-blue-600 font-bold text-xl">{vente.total_ttc.toLocaleString()} MAD</p>
+                          <p className="text-xs text-gray-600">{vente.articles?.length || 0} article(s)</p>
                         </div>
 
                         {/* Première ligne de boutons */}
@@ -433,7 +433,7 @@ export default function Sales() {
                               variant="ghost"
                               size="sm"
                               onClick={() => viewDetails(vente)}
-                              className="text-blue-400 hover:bg-blue-400/20"
+                              className="text-blue-600 hover:bg-blue-50"
                               title="Voir les détails"
                             >
                               <Eye className="w-4 h-4" />
@@ -442,7 +442,7 @@ export default function Sales() {
                               variant="ghost"
                               size="sm"
                               onClick={() => generateReceipt(vente)}
-                              className="text-gaming-cyan hover:bg-gaming-cyan/20"
+                              className="text-blue-600 hover:bg-blue-50"
                               title="Ticket de caisse"
                             >
                               <Receipt className="w-4 h-4" />
@@ -451,7 +451,7 @@ export default function Sales() {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDeleteVente(vente.id!, vente.numero_vente!)}
-                              className="text-red-400 hover:bg-red-400/20"
+                              className="text-red-600 hover:bg-red-50"
                               title="Supprimer"
                             >
                               <Trash2 className="w-4 h-4" />

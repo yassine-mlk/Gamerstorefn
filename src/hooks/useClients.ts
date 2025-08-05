@@ -42,16 +42,38 @@ export function useClients() {
   const fetchClients = async () => {
     try {
       setLoading(true);
+      setError(null);
+      
+      // Vérifier l'authentification d'abord
+      const { data: { session }, error: authError } = await supabase.auth.getSession();
+      
+      if (authError) {
+        console.error('Erreur d\'authentification:', authError);
+        throw new Error('Problème d\'authentification. Veuillez vous reconnecter.');
+      }
+      
+      if (!session) {
+        throw new Error('Session expirée. Veuillez vous reconnecter.');
+      }
+      
       const { data, error } = await supabase
         .from('clients')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erreur Supabase:', error);
+        if (error.code === '42501') {
+          throw new Error('Problème de permissions. Vérifiez les politiques RLS.');
+        }
+        throw error;
+      }
+      
       setClients(data || []);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur lors du chargement des clients';
       setError(message);
+      console.error('Erreur fetchClients:', err);
       toast({
         title: "Erreur",
         description: message,
@@ -65,24 +87,45 @@ export function useClients() {
   // Ajouter un nouveau client
   const addClient = async (newClient: NewClient): Promise<Client | null> => {
     try {
+      // Validation et nettoyage des données
+      const clientData = {
+        ...newClient,
+        nom: newClient.nom.trim(),
+        prenom: newClient.prenom.trim(),
+        email: newClient.email?.trim() || null, // NULL si vide
+        telephone: newClient.telephone?.trim() || null,
+        adresse: newClient.adresse?.trim() || null,
+        notes: newClient.notes?.trim() || null,
+        ice: newClient.ice?.trim() || null
+      };
+
       const { data, error } = await supabase
         .from('clients')
-        .insert([newClient])
+        .insert([clientData])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erreur Supabase:', error);
+        if (error.code === '23505') {
+          throw new Error('Un client avec cet email existe déjà. Veuillez utiliser un email différent ou laissez le champ vide.');
+        } else if (error.code === '23502') {
+          throw new Error('Erreur de contrainte NOT NULL. Veuillez contacter l\'administrateur pour corriger la base de données.');
+        }
+        throw error;
+      }
 
       setClients(prev => [data, ...prev]);
       toast({
         title: "Client ajouté",
-        description: `${newClient.prenom} ${newClient.nom} a été ajouté avec succès`,
+        description: `${clientData.prenom} ${clientData.nom} a été ajouté avec succès`,
       });
       
       return data;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur lors de l\'ajout du client';
       setError(message);
+      console.error('Erreur addClient:', err);
       toast({
         title: "Erreur",
         description: message,

@@ -132,10 +132,10 @@ export default function Suppliers() {
 
   const getStatutColor = (statut: string) => {
     switch (statut) {
-      case 'Privilégié': return 'bg-gaming-purple';
-      case 'Actif': return 'bg-gaming-green';
-      case 'Inactif': return 'bg-gray-600';
-      default: return 'bg-gray-600';
+      case 'Privilégié': return 'bg-purple-600 text-white';
+      case 'Actif': return 'bg-green-600 text-white';
+      case 'Inactif': return 'bg-gray-600 text-white';
+      default: return 'bg-gray-600 text-white';
     }
   };
 
@@ -145,29 +145,29 @@ export default function Suppliers() {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-6 bg-background min-h-screen">
+      <div className="p-6 space-y-6 bg-white min-h-screen">
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-gaming-cyan" />
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6 bg-background min-h-screen">
+    <div className="p-6 space-y-6 bg-white min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <SidebarTrigger className="text-white hover:text-gaming-cyan" />
+          <SidebarTrigger className="text-gray-700 hover:text-blue-600" />
           <div>
-            <h1 className="text-3xl font-bold text-white">Gestion des fournisseurs</h1>
-            <p className="text-gray-400">Gérez vos partenaires et leurs commandes</p>
+            <h1 className="text-3xl font-bold text-gray-900">Gestion des fournisseurs</h1>
+            <p className="text-gray-600">Gérez vos partenaires et leurs commandes</p>
           </div>
         </div>
         
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="gaming-gradient hover:scale-105 transition-transform">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white hover:scale-105 transition-transform">
               <Plus className="w-4 h-4 mr-2" />
               Nouveau fournisseur
             </Button>
@@ -175,26 +175,26 @@ export default function Suppliers() {
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-xl">
-                <Plus className="w-5 h-5 text-gaming-cyan" />
+                <Plus className="w-5 h-5 text-blue-600" />
                 Ajouter un nouveau fournisseur
               </DialogTitle>
-              <DialogDescription className="text-gray-400">
+              <DialogDescription className="text-gray-600">
                 Créez un nouveau profil fournisseur pour gérer vos partenaires commerciaux
               </DialogDescription>
             </DialogHeader>
             
             <div className="space-y-6">
               {/* Section 1: Informations entreprise */}
-              <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-6 h-6 bg-gaming-cyan rounded-full flex items-center justify-center text-xs font-bold text-black">1</div>
-                  <h3 className="text-lg font-semibold text-white">Informations entreprise</h3>
-                  <span className="text-xs text-red-400 font-medium">* Obligatoire</span>
+                  <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs font-bold text-white">1</div>
+                  <h3 className="text-lg font-semibold text-gray-900">Informations entreprise</h3>
+                  <span className="text-xs text-red-600 font-medium">* Obligatoire</span>
                 </div>
                 
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="nom" className="flex items-center gap-2 text-gray-300 mb-2">
+                    <Label htmlFor="nom" className="flex items-center gap-2 text-gray-700 mb-2">
                       <Building className="w-4 h-4" />
                       Nom de l'entreprise *
                     </Label>
@@ -203,12 +203,12 @@ export default function Suppliers() {
                       value={newSupplier.nom}
                       onChange={(e) => setNewSupplier({...newSupplier, nom: e.target.value})}
                       placeholder="Ex: TechDistrib Solutions, Gaming Hardware Pro..."
-                      className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                      className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="contact" className="flex items-center gap-2 text-gray-300 mb-2">
+                    <Label htmlFor="contact" className="flex items-center gap-2 text-gray-700 mb-2">
                       <Phone className="w-4 h-4" />
                       Contact principal *
                     </Label>
@@ -217,20 +217,20 @@ export default function Suppliers() {
                       value={newSupplier.contact_principal}
                       onChange={(e) => setNewSupplier({...newSupplier, contact_principal: e.target.value})}
                       placeholder="Ex: Ahmed Benali, Fatima Zghouri..."
-                      className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                      className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-600 mt-1">
                       Personne responsable des relations commerciales
                     </p>
                   </div>
 
                   <div>
-                    <Label htmlFor="specialite" className="flex items-center gap-2 text-gray-300 mb-2">
+                    <Label htmlFor="specialite" className="flex items-center gap-2 text-gray-700 mb-2">
                       <Package className="w-4 h-4" />
                       Spécialité principale
                     </Label>
                     <Select value={newSupplier.specialite} onValueChange={(value) => setNewSupplier({...newSupplier, specialite: value})}>
-                      <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                      <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                         <SelectValue placeholder="Sélectionnez une spécialité" />
                       </SelectTrigger>
                       <SelectContent>
@@ -277,15 +277,15 @@ export default function Suppliers() {
               </div>
 
               {/* Section 2: Contact et localisation */}
-              <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-6 h-6 bg-gaming-cyan rounded-full flex items-center justify-center text-xs font-bold text-black">2</div>
-                  <h3 className="text-lg font-semibold text-white">Contact et localisation</h3>
+                  <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs font-bold text-white">2</div>
+                  <h3 className="text-lg font-semibold text-gray-900">Contact et localisation</h3>
                 </div>
                 
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="email" className="flex items-center gap-2 text-gray-300 mb-2">
+                    <Label htmlFor="email" className="flex items-center gap-2 text-gray-700 mb-2">
                       <Mail className="w-4 h-4" />
                       Adresse email *
                     </Label>
@@ -295,7 +295,7 @@ export default function Suppliers() {
                       value={newSupplier.email}
                       onChange={(e) => setNewSupplier({...newSupplier, email: e.target.value})}
                       placeholder="Ex: contact@fournisseur.com"
-                      className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                      className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
                     />
                   </div>
 
@@ -411,14 +411,14 @@ export default function Suppliers() {
               </div>
 
               {/* Section 4: Notes et remarques */}
-              <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-6 h-6 bg-gaming-cyan rounded-full flex items-center justify-center text-xs font-bold text-black">4</div>
-                  <h3 className="text-lg font-semibold text-white">Notes et remarques</h3>
+                  <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs font-bold text-white">4</div>
+                  <h3 className="text-lg font-semibold text-gray-900">Notes et remarques</h3>
                 </div>
                 
                 <div>
-                  <Label htmlFor="notes" className="flex items-center gap-2 text-gray-300 mb-2">
+                  <Label htmlFor="notes" className="flex items-center gap-2 text-gray-700 mb-2">
                     <Edit className="w-4 h-4" />
                     Notes additionnelles
                   </Label>
@@ -428,15 +428,15 @@ export default function Suppliers() {
                     onChange={(e) => setNewSupplier({...newSupplier, notes: e.target.value})}
                     placeholder="Qualité des produits, ponctualité, conditions spéciales, historique de collaboration..."
                     rows={4}
-                    className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                    className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
               </div>
 
               {/* Résumé et validation */}
-              <div className="p-4 bg-gaming-blue/10 border border-gaming-blue/30 rounded-lg">
-                <h4 className="text-white font-medium mb-2">Récapitulatif</h4>
-                <div className="text-sm text-gray-300 space-y-1">
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="text-gray-900 font-medium mb-2">Récapitulatif</h4>
+                <div className="text-sm text-gray-700 space-y-1">
                   <p><strong>Entreprise:</strong> {newSupplier.nom || 'Non renseigné'}</p>
                   <p><strong>Contact:</strong> {newSupplier.contact_principal || 'Non renseigné'}</p>
                   <p><strong>Email:</strong> {newSupplier.email || 'Non renseigné'}</p>
@@ -452,7 +452,7 @@ export default function Suppliers() {
               <div className="flex gap-3 pt-4">
                 <Button 
                   onClick={handleAddSupplier}
-                  className="gaming-gradient flex-1 h-12 text-base font-medium"
+                  className="bg-blue-600 hover:bg-blue-700 text-white flex-1 h-12 text-base font-medium"
                   disabled={!newSupplier.nom || !newSupplier.contact_principal || !newSupplier.email}
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -461,7 +461,7 @@ export default function Suppliers() {
                 <Button 
                   variant="outline" 
                   onClick={() => setIsAddDialogOpen(false)}
-                  className="px-6 h-12 border-gray-600 hover:bg-gray-800"
+                  className="px-6 h-12 border-gray-300 text-gray-700 hover:bg-gray-50"
                 >
                   Annuler
                 </Button>
@@ -473,29 +473,29 @@ export default function Suppliers() {
 
       {/* Search and Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="bg-card border-gray-800">
+        <Card className="bg-white border-gray-200 shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-gaming-blue/20 rounded-lg">
-                <Truck className="w-6 h-6 text-gaming-blue" />
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <Truck className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-400">Total Fournisseurs</p>
-                <p className="text-2xl font-bold text-white">{suppliers.length}</p>
+                <p className="text-sm text-gray-600">Total Fournisseurs</p>
+                <p className="text-2xl font-bold text-gray-900">{suppliers.length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-gray-800">
+        <Card className="bg-white border-gray-200 shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-gaming-green/20 rounded-lg">
-                <Truck className="w-6 h-6 text-gaming-green" />
+              <div className="p-3 bg-green-100 rounded-lg">
+                <Truck className="w-6 h-6 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-400">Actifs</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-sm text-gray-600">Actifs</p>
+                <p className="text-2xl font-bold text-gray-900">
                   {suppliers.filter(s => s.statut === 'Actif').length}
                 </p>
               </div>
@@ -503,15 +503,15 @@ export default function Suppliers() {
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-gray-800">
+        <Card className="bg-white border-gray-200 shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-gaming-purple/20 rounded-lg">
-                <Truck className="w-6 h-6 text-gaming-purple" />
+              <div className="p-3 bg-purple-100 rounded-lg">
+                <Truck className="w-6 h-6 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-400">Privilégiés</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-sm text-gray-600">Privilégiés</p>
+                <p className="text-2xl font-bold text-gray-900">
                   {suppliers.filter(s => s.statut === 'Privilégié').length}
                 </p>
               </div>
@@ -519,15 +519,15 @@ export default function Suppliers() {
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-gray-800">
+        <Card className="bg-white border-gray-200 shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-gaming-cyan/20 rounded-lg">
-                <Package className="w-6 h-6 text-gaming-cyan" />
+              <div className="p-3 bg-cyan-100 rounded-lg">
+                <Package className="w-6 h-6 text-cyan-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-400">Total Commandes</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-sm text-gray-600">Total Commandes</p>
+                <p className="text-2xl font-bold text-gray-900">
                   {formatCurrency(suppliers.reduce((sum, s) => sum + s.total_commandes, 0))}
                 </p>
               </div>
@@ -537,47 +537,47 @@ export default function Suppliers() {
       </div>
 
       {/* Search Bar */}
-      <Card className="bg-card border-gray-800">
+      <Card className="bg-white border-gray-200 shadow-sm">
         <CardContent className="p-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4" />
             <Input
               placeholder="Rechercher un fournisseur (nom, contact, spécialité)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
         </CardContent>
       </Card>
 
       {/* Suppliers List */}
-      <Card className="bg-card border-gray-800">
+      <Card className="bg-white border-gray-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-white">Liste des fournisseurs</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-gray-900">Liste des fournisseurs</CardTitle>
+          <CardDescription className="text-gray-600">
             {filteredSuppliers.length} fournisseur{filteredSuppliers.length > 1 ? 's' : ''} trouvé{filteredSuppliers.length > 1 ? 's' : ''}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {filteredSuppliers.map((supplier) => (
-              <div key={supplier.id} className="p-4 border border-gray-800 rounded-lg hover:border-gray-700 transition-colors">
+              <div key={supplier.id} className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-colors bg-white">
                 <div className="flex items-center justify-between">
                   <div className="flex items-start gap-4 flex-1">
-                    <div className="p-3 bg-gaming-blue/20 rounded-lg">
-                      <Building className="w-6 h-6 text-gaming-blue" />
+                    <div className="p-3 bg-blue-100 rounded-lg">
+                      <Building className="w-6 h-6 text-blue-600" />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-lg font-semibold text-white">
+                        <h3 className="text-lg font-semibold text-gray-900">
                           {supplier.nom}
                         </h3>
                         <Badge className={`${getStatutColor(supplier.statut)} text-white`}>
                           {supplier.statut}
                         </Badge>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-400">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
                         <div className="flex items-center gap-2">
                           <Mail className="w-4 h-4" />
                           {supplier.email}
@@ -616,16 +616,16 @@ export default function Suppliers() {
                         )}
                       </div>
                       <div className="flex items-center gap-4 mt-3 text-sm">
-                        <span className="text-gaming-green">
+                        <span className="text-green-600">
                           Total commandes: {formatCurrency(supplier.total_commandes)}
                         </span>
                         {supplier.derniere_commande && (
-                          <span className="text-gray-400">
+                          <span className="text-gray-600">
                             Dernière commande: {formatDate(supplier.derniere_commande)}
                           </span>
                         )}
                         {supplier.conditions_paiement && (
-                          <span className="text-gray-400">
+                          <span className="text-gray-600">
                             Paiement: {supplier.conditions_paiement}
                           </span>
                         )}
@@ -653,7 +653,7 @@ export default function Suppliers() {
               </div>
             ))}
             {filteredSuppliers.length === 0 && (
-              <div className="text-center py-8 text-gray-400">
+              <div className="text-center py-8 text-gray-600">
                 Aucun fournisseur trouvé
               </div>
             )}
@@ -666,26 +666,26 @@ export default function Suppliers() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
-              <Edit className="w-5 h-5 text-gaming-yellow" />
+              <Edit className="w-5 h-5 text-orange-600" />
               Modifier le fournisseur
             </DialogTitle>
-            <DialogDescription className="text-gray-400">
+            <DialogDescription className="text-gray-600">
               Modifiez les informations du fournisseur sélectionné
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-6">
             {/* Section 1: Informations entreprise */}
-            <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 bg-gaming-yellow rounded-full flex items-center justify-center text-xs font-bold text-black">1</div>
-                <h3 className="text-lg font-semibold text-white">Informations entreprise</h3>
-                <span className="text-xs text-red-400 font-medium">* Obligatoire</span>
+                <div className="w-6 h-6 bg-orange-600 rounded-full flex items-center justify-center text-xs font-bold text-white">1</div>
+                <h3 className="text-lg font-semibold text-gray-900">Informations entreprise</h3>
+                <span className="text-xs text-red-600 font-medium">* Obligatoire</span>
               </div>
               
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="edit-nom" className="flex items-center gap-2 text-gray-300 mb-2">
+                  <Label htmlFor="edit-nom" className="flex items-center gap-2 text-gray-700 mb-2">
                     <Building className="w-4 h-4" />
                     Nom de l'entreprise *
                   </Label>
@@ -694,7 +694,7 @@ export default function Suppliers() {
                     value={newSupplier.nom}
                     onChange={(e) => setNewSupplier({...newSupplier, nom: e.target.value})}
                     placeholder="Ex: TechDistrib Solutions, Gaming Hardware Pro..."
-                    className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                    className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
 

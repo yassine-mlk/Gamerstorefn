@@ -22,7 +22,7 @@ import {
   Calendar,
   ShoppingBag,
   Loader2,
-  Building2,
+  Building,
   User,
   Receipt,
   Eye,
@@ -75,7 +75,13 @@ export default function Clients() {
       return;
     }
 
-    const result = await addClient(newClient);
+    // Permettre les emails vides - pas de génération automatique
+    const clientData = {
+      ...newClient,
+      email: newClient.email.trim() || null // NULL si vide
+    };
+
+    const result = await addClient(clientData);
     if (result) {
       setNewClient({
         nom: "",
@@ -144,15 +150,15 @@ export default function Clients() {
 
   const getStatutColor = (statut: string) => {
     switch (statut) {
-      case 'VIP': return 'bg-gaming-purple';
-      case 'Actif': return 'bg-gaming-green';
-      case 'Inactif': return 'bg-gray-600';
-      default: return 'bg-gray-600';
+      case 'VIP': return 'bg-purple-600 text-white';
+      case 'Actif': return 'bg-green-600 text-white';
+      case 'Inactif': return 'bg-gray-600 text-white';
+      default: return 'bg-gray-600 text-white';
     }
   };
 
   const getTypeIcon = (type: string) => {
-    return type === 'societe' ? <Building2 className="w-4 h-4" /> : <User className="w-4 h-4" />;
+    return type === 'societe' ? <Building className="w-4 h-4" /> : <User className="w-4 h-4" />;
   };
 
   const formatDate = (dateString: string) => {
@@ -161,29 +167,29 @@ export default function Clients() {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-6 bg-background min-h-screen">
+      <div className="p-6 space-y-6 bg-white min-h-screen">
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-gaming-cyan" />
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6 bg-background min-h-screen">
+    <div className="p-6 space-y-6 bg-white min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <SidebarTrigger className="text-white hover:text-gaming-cyan" />
+          <SidebarTrigger className="text-gray-700 hover:text-blue-600" />
           <div>
-            <h1 className="text-3xl font-bold text-white">Gestion des clients</h1>
-            <p className="text-gray-400">Gérez votre base clients et consultez leur historique</p>
+            <h1 className="text-3xl font-bold text-gray-900">Gestion des clients</h1>
+            <p className="text-gray-600">Gérez votre base clients et consultez leur historique</p>
           </div>
         </div>
         
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="gaming-gradient hover:scale-105 transition-transform">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white hover:scale-105 transition-transform">
               <Plus className="w-4 h-4 mr-2" />
               Nouveau client
             </Button>
@@ -191,45 +197,45 @@ export default function Clients() {
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-xl">
-                <Plus className="w-5 h-5 text-gaming-cyan" />
+                <Plus className="w-5 h-5 text-blue-600" />
                 Ajouter un nouveau client
               </DialogTitle>
-              <DialogDescription className="text-gray-400">
+              <DialogDescription className="text-gray-600">
                 Créez un nouveau profil client en remplissant les informations ci-dessous
               </DialogDescription>
             </DialogHeader>
             
             <div className="space-y-6">
               {/* Section 1: Type de client */}
-              <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-6 h-6 bg-gaming-cyan rounded-full flex items-center justify-center text-xs font-bold text-black">1</div>
-                  <h3 className="text-lg font-semibold text-white">Type de client</h3>
+                  <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs font-bold text-white">1</div>
+                  <h3 className="text-lg font-semibold text-gray-900">Type de client</h3>
                 </div>
-                <p className="text-sm text-gray-400 mb-4">Choisissez le type de client pour adapter les champs requis</p>
+                <p className="text-sm text-gray-600 mb-4">Choisissez le type de client pour adapter les champs requis</p>
                 
                 <RadioGroup 
                   value={newClient.type_client} 
                   onValueChange={(value: any) => setNewClient({...newClient, type_client: value, ice: value === 'particulier' ? '' : newClient.ice})}
                   className="grid grid-cols-2 gap-4"
                 >
-                  <div className="flex items-center space-x-3 p-3 border border-gray-600 rounded-lg hover:border-gaming-cyan transition-colors">
+                  <div className="flex items-center space-x-3 p-3 border border-gray-300 rounded-lg hover:border-blue-500 transition-colors bg-white">
                     <RadioGroupItem value="particulier" id="particulier" />
                     <Label htmlFor="particulier" className="flex items-center gap-2 cursor-pointer">
-                      <User className="w-5 h-5 text-gaming-green" />
+                      <User className="w-5 h-5 text-green-600" />
                       <div>
-                        <div className="font-medium text-white">Particulier</div>
-                        <div className="text-xs text-gray-400">Client individuel</div>
+                        <div className="font-medium text-gray-900">Particulier</div>
+                        <div className="text-xs text-gray-600">Client individuel</div>
                       </div>
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-3 p-3 border border-gray-600 rounded-lg hover:border-gaming-cyan transition-colors">
+                  <div className="flex items-center space-x-3 p-3 border border-gray-300 rounded-lg hover:border-blue-500 transition-colors bg-white">
                     <RadioGroupItem value="societe" id="societe" />
                     <Label htmlFor="societe" className="flex items-center gap-2 cursor-pointer">
-                      <Building2 className="w-5 h-5 text-gaming-purple" />
+                      <Building className="w-5 h-5 text-purple-600" />
                       <div>
-                        <div className="font-medium text-white">Société</div>
-                        <div className="text-xs text-gray-400">Entreprise ou organisation</div>
+                        <div className="font-medium text-gray-900">Société</div>
+                        <div className="text-xs text-gray-600">Entreprise ou organisation</div>
                       </div>
                     </Label>
                   </div>
@@ -249,7 +255,7 @@ export default function Clients() {
                     <Label htmlFor="nom" className="flex items-center gap-2 text-gray-300 mb-2">
                       {newClient.type_client === 'societe' ? (
                         <>
-                          <Building2 className="w-4 h-4" />
+                          <Building className="w-4 h-4" />
                           Nom de la société *
                         </>
                       ) : (
@@ -287,7 +293,7 @@ export default function Clients() {
                 {newClient.type_client === 'societe' && (
                   <div className="mt-4">
                     <Label htmlFor="ice" className="flex items-center gap-2 text-gray-300 mb-2">
-                      <Building2 className="w-4 h-4" />
+                      <Building className="w-4 h-4" />
                       Numéro ICE
                     </Label>
                     <Input
@@ -409,16 +415,16 @@ export default function Clients() {
                       onChange={(e) => setNewClient({...newClient, notes: e.target.value})}
                       placeholder="Préférences, remarques, historique..."
                       rows={3}
-                      className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-500"
+                      className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Résumé et validation */}
-              <div className="p-4 bg-gaming-blue/10 border border-gaming-blue/30 rounded-lg">
-                <h4 className="text-white font-medium mb-2">Récapitulatif</h4>
-                <div className="text-sm text-gray-300 space-y-1">
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="text-gray-900 font-medium mb-2">Récapitulatif</h4>
+                <div className="text-sm text-gray-700 space-y-1">
                   <p><strong>Type:</strong> {newClient.type_client === 'societe' ? 'Société' : 'Particulier'}</p>
                   <p><strong>Nom:</strong> {newClient.nom || 'Non renseigné'}</p>
                   <p><strong>{newClient.type_client === 'societe' ? 'Contact' : 'Prénom'}:</strong> {newClient.prenom || 'Non renseigné'}</p>
@@ -427,7 +433,7 @@ export default function Clients() {
                     <p><strong>ICE:</strong> {newClient.ice || 'Non renseigné'}</p>
                   )}
                 </div>
-                <div className="text-xs text-gray-500 mt-2">
+                <div className="text-xs text-gray-600 mt-2">
                   Seul le nom {newClient.type_client === 'societe' ? 'de la société' : 'de famille'} est obligatoire
                 </div>
               </div>
@@ -436,7 +442,7 @@ export default function Clients() {
               <div className="flex gap-3 pt-4">
                 <Button 
                   onClick={handleAddClient}
-                  className="gaming-gradient flex-1 h-12 text-base font-medium"
+                  className="bg-blue-600 hover:bg-blue-700 text-white flex-1 h-12 text-base font-medium"
                   disabled={!newClient.nom}
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -445,7 +451,7 @@ export default function Clients() {
                 <Button 
                   variant="outline" 
                   onClick={() => setIsAddDialogOpen(false)}
-                  className="px-6 h-12 border-gray-600 hover:bg-gray-800"
+                  className="px-6 h-12 border-gray-300 text-gray-700 hover:bg-gray-50"
                 >
                   Annuler
                 </Button>
@@ -457,29 +463,29 @@ export default function Clients() {
 
       {/* Search and Stats */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-        <Card className="bg-card border-gray-800">
+        <Card className="bg-white border-gray-200 shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-gaming-blue/20 rounded-lg">
-                <Users className="w-6 h-6 text-gaming-blue" />
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <Users className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-400">Total Clients</p>
-                <p className="text-2xl font-bold text-white">{clients.length}</p>
+                <p className="text-sm text-gray-600">Total Clients</p>
+                <p className="text-2xl font-bold text-gray-900">{clients.length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-gray-800">
+        <Card className="bg-white border-gray-200 shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-gaming-green/20 rounded-lg">
-                <User className="w-6 h-6 text-gaming-green" />
+              <div className="p-3 bg-green-100 rounded-lg">
+                <User className="w-6 h-6 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-400">Particuliers</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-sm text-gray-600">Particuliers</p>
+                <p className="text-2xl font-bold text-gray-900">
                   {clients.filter(c => c.type_client === 'particulier').length}
                 </p>
               </div>
@@ -487,15 +493,15 @@ export default function Clients() {
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-gray-800">
+        <Card className="bg-white border-gray-200 shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-gaming-purple/20 rounded-lg">
-                <Building2 className="w-6 h-6 text-gaming-purple" />
+              <div className="p-3 bg-purple-100 rounded-lg">
+                <Building className="w-6 h-6 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-400">Sociétés</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-sm text-gray-600">Sociétés</p>
+                <p className="text-2xl font-bold text-gray-900">
                   {clients.filter(c => c.type_client === 'societe').length}
                 </p>
               </div>
@@ -503,15 +509,15 @@ export default function Clients() {
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-gray-800">
+        <Card className="bg-white border-gray-200 shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-gaming-yellow/20 rounded-lg">
-                <Users className="w-6 h-6 text-gaming-yellow" />
+              <div className="p-3 bg-yellow-100 rounded-lg">
+                <Users className="w-6 h-6 text-yellow-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-400">Clients VIP</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-sm text-gray-600">Clients VIP</p>
+                <p className="text-2xl font-bold text-gray-900">
                   {clients.filter(c => c.statut === 'VIP').length}
                 </p>
               </div>
@@ -519,15 +525,15 @@ export default function Clients() {
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-gray-800">
+        <Card className="bg-white border-gray-200 shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-gaming-cyan/20 rounded-lg">
-                <ShoppingBag className="w-6 h-6 text-gaming-cyan" />
+              <div className="p-3 bg-cyan-100 rounded-lg">
+                <ShoppingBag className="w-6 h-6 text-cyan-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-400">Total Achats</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-sm text-gray-600">Total Achats</p>
+                <p className="text-2xl font-bold text-gray-900">
                   {formatCurrency(clients.reduce((sum, c) => sum + c.total_achats, 0))}
                 </p>
               </div>
@@ -537,50 +543,50 @@ export default function Clients() {
       </div>
 
       {/* Search Bar */}
-      <Card className="bg-card border-gray-800">
+      <Card className="bg-white border-gray-200 shadow-sm">
         <CardContent className="p-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4" />
             <Input
               placeholder="Rechercher un client (nom, prénom, email, ICE)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
         </CardContent>
       </Card>
 
       {/* Clients List */}
-      <Card className="bg-card border-gray-800">
+      <Card className="bg-white border-gray-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-white">Liste des clients</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-gray-900">Liste des clients</CardTitle>
+          <CardDescription className="text-gray-600">
             {filteredClients.length} client{filteredClients.length > 1 ? 's' : ''} trouvé{filteredClients.length > 1 ? 's' : ''}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {filteredClients.map((client) => (
-              <div key={client.id} className="p-4 border border-gray-800 rounded-lg hover:border-gray-700 transition-colors">
+              <div key={client.id} className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-colors bg-white">
                 <div className="flex items-center justify-between">
                   <div className="flex items-start gap-4 flex-1">
-                    <div className="p-3 bg-gaming-cyan/20 rounded-lg">
+                    <div className="p-3 bg-blue-100 rounded-lg">
                       {getTypeIcon(client.type_client)}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-lg font-semibold text-white">
+                        <h3 className="text-lg font-semibold text-gray-900">
                           {client.prenom} {client.nom}
                         </h3>
                         <Badge className={`${getStatutColor(client.statut)} text-white`}>
                           {client.statut}
                         </Badge>
-                        <Badge variant="outline" className="text-gray-300">
+                        <Badge variant="outline" className="text-gray-700 border-gray-300">
                           {client.type_client === 'societe' ? 'Société' : 'Particulier'}
                         </Badge>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-400">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
                         <div className="flex items-center gap-2">
                           <Mail className="w-4 h-4" />
                           {client.email}
@@ -593,7 +599,7 @@ export default function Clients() {
                         )}
                         {client.type_client === 'societe' && client.ice && (
                           <div className="flex items-center gap-2 col-span-full">
-                            <Building2 className="w-4 h-4" />
+                            <Building className="w-4 h-4" />
                             ICE: {client.ice}
                           </div>
                         )}
@@ -693,7 +699,7 @@ export default function Clients() {
                 <div className="flex items-center space-x-3 p-3 border border-gray-600 rounded-lg hover:border-gaming-yellow transition-colors">
                   <RadioGroupItem value="societe" id="edit-societe" />
                   <Label htmlFor="edit-societe" className="flex items-center gap-2 cursor-pointer">
-                    <Building2 className="w-5 h-5 text-gaming-purple" />
+                    <Building className="w-5 h-5 text-gaming-purple" />
                     <div>
                       <div className="font-medium text-white">Société</div>
                       <div className="text-xs text-gray-400">Entreprise ou organisation</div>
@@ -716,7 +722,7 @@ export default function Clients() {
                   <Label htmlFor="edit-nom" className="flex items-center gap-2 text-gray-300 mb-2">
                     {newClient.type_client === 'societe' ? (
                       <>
-                        <Building2 className="w-4 h-4" />
+                        <Building className="w-4 h-4" />
                         Nom de la société *
                       </>
                     ) : (
@@ -754,7 +760,7 @@ export default function Clients() {
               {newClient.type_client === 'societe' && (
                 <div className="mt-4">
                   <Label htmlFor="edit-ice" className="flex items-center gap-2 text-gray-300 mb-2">
-                    <Building2 className="w-4 h-4" />
+                    <Building className="w-4 h-4" />
                     Numéro ICE
                   </Label>
                   <Input

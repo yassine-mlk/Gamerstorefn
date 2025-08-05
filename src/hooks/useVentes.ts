@@ -244,6 +244,68 @@ export function useVentes() {
     }
   };
 
+  // Fonction pour mettre à jour le stock d'un produit
+  const updateProductStock = async (produit_id: string, produit_type: string, quantite_vendue: number): Promise<boolean> => {
+    try {
+      let tableName: string;
+      
+      switch (produit_type) {
+        case 'pc_portable':
+          tableName = 'pc_portables';
+          break;
+        case 'moniteur':
+          tableName = 'moniteurs';
+          break;
+        case 'peripherique':
+          tableName = 'peripheriques';
+          break;
+        case 'chaise_gaming':
+          tableName = 'chaises_gaming';
+          break;
+        case 'pc_gamer':
+          tableName = 'pc_gamer_configs';
+          break;
+        case 'composant_pc':
+          tableName = 'composants_pc';
+          break;
+        default:
+          throw new Error(`Type de produit non supporté: ${produit_type}`);
+      }
+
+      // Récupérer le stock actuel du produit
+      const { data: produit, error: fetchError } = await supabase
+        .from(tableName)
+        .select('stock_actuel')
+        .eq('id', produit_id)
+        .single();
+
+      if (fetchError) throw fetchError;
+      if (!produit) throw new Error(`Produit non trouvé: ${produit_id}`);
+
+      const nouveauStock = produit.stock_actuel - quantite_vendue;
+      
+      if (nouveauStock < 0) {
+        throw new Error(`Stock insuffisant pour le produit ${produit_id}. Stock actuel: ${produit.stock_actuel}, Quantité demandée: ${quantite_vendue}`);
+      }
+
+      // Mettre à jour le stock
+      const { error: updateError } = await supabase
+        .from(tableName)
+        .update({ 
+          stock_actuel: nouveauStock,
+          derniere_modification: new Date().toISOString()
+        })
+        .eq('id', produit_id);
+
+      if (updateError) throw updateError;
+
+      return true;
+    } catch (err) {
+      console.error(`Erreur lors de la mise à jour du stock pour ${produit_type} ${produit_id}:`, err);
+      throw err;
+    }
+  };
+
   // Créer une nouvelle vente
   const createVente = async (
     venteData: Omit<Vente, 'id' | 'numero_vente' | 'created_at' | 'updated_at'>, 
@@ -302,6 +364,21 @@ export function useVentes() {
           .insert(articlesWithVenteId);
 
         if (articlesError) throw articlesError;
+
+        // Mettre à jour le stock pour chaque article vendu
+        for (const article of articles) {
+          try {
+            await updateProductStock(article.produit_id, article.produit_type, article.quantite);
+          } catch (stockError) {
+            // Si la mise à jour du stock échoue, annuler la vente
+            console.error('Erreur lors de la mise à jour du stock, annulation de la vente:', stockError);
+            
+            // Supprimer la vente créée
+            await supabase.from('ventes').delete().eq('id', vente.id);
+            
+            throw new Error(`Impossible de mettre à jour le stock: ${stockError instanceof Error ? stockError.message : 'Erreur inconnue'}`);
+          }
+        }
       }
 
       // Créer les paiements
@@ -466,6 +543,41 @@ export function useVentes() {
 
       const { data: { user } } = await supabase.auth.getUser();
 
+      // Récupérer la vente actuelle pour vérifier le changement de statut
+      const { data: venteActuelle, error: fetchError } = await supabase
+        .from('ventes')
+        .select('statut')
+        .eq('id', id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Si le statut change vers "annulee" ou "remboursee", rembourser le stock
+      if (updates.statut && 
+          venteActuelle.statut !== 'annulee' && venteActuelle.statut !== 'remboursee' &&
+          (updates.statut === 'annulee' || updates.statut === 'remboursee')) {
+        
+        // Récupérer les articles de la vente
+        const { data: articles, error: articlesError } = await supabase
+          .from('ventes_articles')
+          .select('*')
+          .eq('vente_id', id);
+
+        if (articlesError) throw articlesError;
+
+        // Rembourser le stock pour chaque article
+        if (articles && articles.length > 0) {
+          for (const article of articles) {
+            try {
+              await refundProductStock(article.produit_id, article.produit_type, article.quantite);
+            } catch (stockError) {
+              console.error('Erreur lors du remboursement du stock:', stockError);
+              // Continuer malgré l'erreur de remboursement du stock
+            }
+          }
+        }
+      }
+
       const { error } = await supabase
         .from('ventes')
         .update({
@@ -498,11 +610,90 @@ export function useVentes() {
     }
   };
 
+  // Fonction pour rembourser le stock d'un produit (annulation/remboursement)
+  const refundProductStock = async (produit_id: string, produit_type: string, quantite_remboursee: number): Promise<boolean> => {
+    try {
+      let tableName: string;
+      
+      switch (produit_type) {
+        case 'pc_portable':
+          tableName = 'pc_portables';
+          break;
+        case 'moniteur':
+          tableName = 'moniteurs';
+          break;
+        case 'peripherique':
+          tableName = 'peripheriques';
+          break;
+        case 'chaise_gaming':
+          tableName = 'chaises_gaming';
+          break;
+        case 'pc_gamer':
+          tableName = 'pc_gamer_configs';
+          break;
+        case 'composant_pc':
+          tableName = 'composants_pc';
+          break;
+        default:
+          throw new Error(`Type de produit non supporté: ${produit_type}`);
+      }
+
+      // Récupérer le stock actuel du produit
+      const { data: produit, error: fetchError } = await supabase
+        .from(tableName)
+        .select('stock_actuel')
+        .eq('id', produit_id)
+        .single();
+
+      if (fetchError) throw fetchError;
+      if (!produit) throw new Error(`Produit non trouvé: ${produit_id}`);
+
+      const nouveauStock = produit.stock_actuel + quantite_remboursee;
+
+      // Mettre à jour le stock
+      const { error: updateError } = await supabase
+        .from(tableName)
+        .update({ 
+          stock_actuel: nouveauStock,
+          derniere_modification: new Date().toISOString()
+        })
+        .eq('id', produit_id);
+
+      if (updateError) throw updateError;
+
+      return true;
+    } catch (err) {
+      console.error(`Erreur lors du remboursement du stock pour ${produit_type} ${produit_id}:`, err);
+      throw err;
+    }
+  };
+
   // Supprimer une vente
   const deleteVente = async (id: string): Promise<boolean> => {
     try {
       setLoading(true);
 
+      // Récupérer les articles de la vente avant de la supprimer
+      const { data: articles, error: articlesError } = await supabase
+        .from('ventes_articles')
+        .select('*')
+        .eq('vente_id', id);
+
+      if (articlesError) throw articlesError;
+
+      // Rembourser le stock pour chaque article
+      if (articles && articles.length > 0) {
+        for (const article of articles) {
+          try {
+            await refundProductStock(article.produit_id, article.produit_type, article.quantite);
+          } catch (stockError) {
+            console.error('Erreur lors du remboursement du stock:', stockError);
+            // Continuer malgré l'erreur de remboursement du stock
+          }
+        }
+      }
+
+      // Supprimer la vente
       const { error } = await supabase
         .from('ventes')
         .delete()

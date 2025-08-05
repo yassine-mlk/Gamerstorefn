@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Banknote, TrendingUp, TrendingDown, Plus, Minus, Calendar, Building2, CreditCard, Wallet, Building, RefreshCw, RotateCcw } from "lucide-react";
+import { Banknote, TrendingUp, TrendingDown, Plus, Minus, Calendar, Building, CreditCard, Wallet, RefreshCw, RotateCcw } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -146,7 +146,7 @@ const CashRegister = () => {
         <Card className="tech-gradient border-gray-700">
           <CardHeader className="pb-2">
             <CardTitle className="text-blue-400 text-sm flex items-center gap-2">
-              <Building2 className="w-4 h-4" />
+              <Building className="w-4 h-4" />
               Comptes Bancaires
             </CardTitle>
           </CardHeader>
@@ -410,7 +410,7 @@ const CashRegister = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-gaming-cyan/20 rounded-lg flex items-center justify-center">
-                        <Building2 className="w-5 h-5 text-gaming-cyan" />
+                        <Building className="w-5 h-5 text-gaming-cyan" />
                       </div>
                       <div>
                         <h4 className="font-semibold text-white">{compte.nom_compte}</h4>
@@ -443,7 +443,7 @@ const CashRegister = () => {
           {comptes.filter(c => c.statut === 'Actif').length === 0 && (
             <Card className="tech-gradient border-gray-700">
               <CardContent className="p-8 text-center">
-                <Building2 className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                <Building className="w-12 h-12 text-gray-500 mx-auto mb-4" />
                 <h3 className="text-white font-semibold mb-2">Aucun compte bancaire configuré</h3>
                 <p className="text-gray-400 mb-4">Ajoutez vos comptes bancaires dans les paramètres pour suivre vos soldes</p>
                 <Button className="gaming-gradient" onClick={() => window.location.href = '/settings'}>
@@ -592,7 +592,7 @@ const CashRegister = () => {
         <DialogContent className="tech-gradient border-gray-700 max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-white flex items-center gap-2">
-              <Building2 className="w-5 h-5 text-gaming-cyan" />
+              <Building className="w-5 h-5 text-gaming-cyan" />
               Historique des Mouvements - {selectedAccountInfo?.nom_compte}
             </DialogTitle>
             <DialogDescription className="text-gray-400">
@@ -643,7 +643,7 @@ const CashRegister = () => {
               <CardContent>
                 {selectedAccountMovements.length === 0 ? (
                   <div className="text-center py-8">
-                    <Building2 className="w-12 h-12 mx-auto text-gray-600 mb-4" />
+                    <Building className="w-12 h-12 mx-auto text-gray-600 mb-4" />
                     <p className="text-gray-400">Aucun mouvement trouvé</p>
                   </div>
                 ) : (

@@ -39,7 +39,7 @@ import { useMembers, Member } from "@/hooks/useMembers";
 import { useMemberSessions, MemberLastSession } from "@/hooks/useMemberSessions";
 import { CreateMemberDialog } from "@/components/CreateMemberDialog";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/lib/supabase";
+import { supabase, supabaseAdmin } from "@/lib/supabase";
 
 const Team = () => {
   const { members, isLoading: membersLoading } = useMembers();
@@ -105,7 +105,16 @@ const Team = () => {
 
       // Si l'utilisateur veut changer le mot de passe
       if (editFormData.changePassword && editFormData.password) {
-        const { error: passwordError } = await supabase.auth.admin.updateUserById(
+        if (!supabaseAdmin) {
+          toast({
+            title: "Erreur de configuration",
+            description: "Clé SERVICE_ROLE non configurée. Impossible de changer le mot de passe.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const { error: passwordError } = await supabaseAdmin.auth.admin.updateUserById(
           editingMember.id,
           { 
             password: editFormData.password,

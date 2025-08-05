@@ -33,7 +33,12 @@ import {
   Check,
   Printer,
   RefreshCw,
-  RotateCcw
+  RotateCcw,
+  User,
+  UserPlus,
+  Mail,
+  Phone,
+  MapPin
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { safeProductId } from "@/utils/uuid";
@@ -72,14 +77,14 @@ const productTypes = [
 
 export default function PointOfSale() {
   // Hooks de données
-  const { pcPortables, loading: loadingPC } = usePcPortables();
-  const { moniteurs, loading: loadingMoniteurs } = useMoniteurs();
-  const { peripheriques, loading: loadingPeripheriques } = usePeripheriques();
-  const { chaisesGaming, loading: loadingChaises } = useChaisesGamingSupabase();
-  const { pcGamerConfigs, loading: loadingPCGamer } = usePCGamer();
-  const { composantsPC, loading: loadingComposants } = useComposantsPC();
+  const { pcPortables, loading: loadingPC, refreshPcPortables } = usePcPortables();
+  const { moniteurs, loading: loadingMoniteurs, refreshMoniteurs } = useMoniteurs();
+  const { peripheriques, loading: loadingPeripheriques, fetchPeripheriques } = usePeripheriques();
+  const { chaisesGaming, loading: loadingChaises, refreshChaisesGaming } = useChaisesGamingSupabase();
+  const { pcGamerConfigs, loading: loadingPCGamer, refreshPCGamerConfigs } = usePCGamer();
+  const { composantsPC, loading: loadingComposants, refreshComposantsPC } = useComposantsPC();
   const { createVente, loading: loadingVente } = useVentes();
-  const { clients, loading: loadingClients } = useClients();
+  const { clients, loading: loadingClients, addClient, refreshClients } = useClients();
   const { comptes: bankAccounts, loading: loadingBankAccounts } = useBankAccounts();
 
   // États
@@ -110,6 +115,21 @@ export default function PointOfSale() {
   const [venteFinalise, setVenteFinalise] = useState<any>(null);
   const [showRepriseSystem, setShowRepriseSystem] = useState(false);
   const [operationType, setOperationType] = useState<'vente' | 'reprise' | 'retour' | null>(null);
+  
+  // États pour l'ajout de client
+  const [showAddClientDialog, setShowAddClientDialog] = useState(false);
+  const [newClientData, setNewClientData] = useState({
+    nom: '',
+    prenom: '',
+    email: '',
+    telephone: '',
+    adresse: '',
+    statut: 'Actif',
+    notes: '',
+    type_client: 'particulier' as 'particulier' | 'societe',
+    ice: ''
+  });
+  const [loadingAddClient, setLoadingAddClient] = useState(false);
   
   const { toast } = useToast();
 
@@ -443,6 +463,87 @@ export default function PointOfSale() {
     return true;
   };
 
+  // Fonctions pour l'ajout de client
+  const handleAddClient = async () => {
+    // Validation des champs obligatoires (seul le nom est obligatoire comme dans la page Clients)
+    if (!newClientData.nom.trim()) {
+      toast({
+        title: "Champ obligatoire manquant",
+        description: "Veuillez remplir au minimum le nom",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validation de l'email si fourni
+    if (newClientData.email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(newClientData.email)) {
+        toast({
+          title: "Email invalide",
+          description: "Veuillez saisir une adresse email valide",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    setLoadingAddClient(true);
+    try {
+      // Utiliser la vraie fonction addClient du hook useClients
+      const createdClient = await addClient({
+        nom: newClientData.nom,
+        prenom: newClientData.prenom,
+        email: newClientData.email,
+        telephone: newClientData.telephone,
+        adresse: newClientData.adresse,
+        statut: newClientData.statut as 'Actif' | 'Inactif' | 'VIP',
+        notes: newClientData.notes,
+        type_client: newClientData.type_client,
+        ice: newClientData.ice
+      });
+
+      if (createdClient) {
+        // Sélectionner automatiquement le nouveau client
+        setSelectedClient(createdClient.id);
+        
+        // Fermer le dialog
+        setShowAddClientDialog(false);
+        
+        // Réinitialiser les données
+        resetNewClientForm();
+
+        toast({
+          title: "Client ajouté avec succès",
+          description: `${createdClient.prenom} ${createdClient.nom} a été ajouté et sélectionné`,
+        });
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout du client:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'ajouter le client. Veuillez réessayer.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingAddClient(false);
+    }
+  };
+
+  const resetNewClientForm = () => {
+    setNewClientData({
+      nom: '',
+      prenom: '',
+      email: '',
+      telephone: '',
+      adresse: '',
+      statut: 'Actif',
+      notes: '',
+      type_client: 'particulier',
+      ice: ''
+    });
+  };
+
   const handleSale = async () => {
     if (cart.length === 0) {
       toast({
@@ -583,6 +684,21 @@ export default function PointOfSale() {
         setShowConfirmation(false);
         setShowTicket(true);
 
+        // Recharger les données de stock après la vente
+        try {
+          await Promise.all([
+            refreshPcPortables(),
+            refreshMoniteurs(),
+            fetchPeripheriques(),
+            refreshChaisesGaming(),
+            refreshPCGamerConfigs(),
+            refreshComposantsPC()
+          ]);
+        } catch (refreshError) {
+          console.warn('Erreur lors du rechargement des données de stock:', refreshError);
+          // Ne pas faire échouer la vente pour ça
+        }
+
         toast({
           title: "Vente enregistrée",
           description: `Vente de ${totalAvecReduction.toLocaleString()} MAD enregistrée avec succès`,
@@ -603,14 +719,14 @@ export default function PointOfSale() {
   };
 
   return (
-    <div className="p-4 lg:p-6 space-y-6 bg-background min-h-screen">
+    <div className="p-4 lg:p-6 space-y-6 bg-white min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <SidebarTrigger className="text-white hover:text-gaming-cyan lg:hidden" />
+          <SidebarTrigger className="text-gray-700 hover:text-blue-600 lg:hidden" />
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-white">Point de vente</h1>
-            <p className="text-gray-400 text-sm lg:text-base">
+            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Point de vente</h1>
+            <p className="text-gray-600 text-sm lg:text-base">
               {operationType === null ? "Choisissez le type d'opération" : 
                operationType === 'vente' ? "Scanner les produits et finaliser la vente" :
                operationType === 'reprise' ? "Système de reprise et échange" :
@@ -634,7 +750,7 @@ export default function PointOfSale() {
               setReductionMontant(0);
               setShowRepriseSystem(false);
             }}
-            className="border-gray-600 text-gray-300 hover:text-white"
+            className="border-gray-300 text-gray-700 hover:text-gray-900 hover:bg-gray-50"
           >
             ← Retour au menu
           </Button>
@@ -644,10 +760,10 @@ export default function PointOfSale() {
       {/* Interface de sélection du type d'opération */}
       {operationType === null && (
         <div className="flex items-center justify-center min-h-[60vh]">
-          <Card className="max-w-4xl w-full bg-gray-900/50 border-gray-700">
+          <Card className="max-w-4xl w-full bg-white border-gray-200 shadow-sm">
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl text-white mb-2">Type d'opération</CardTitle>
-              <CardDescription className="text-gray-400">
+              <CardTitle className="text-2xl text-gray-900 mb-2">Type d'opération</CardTitle>
+              <CardDescription className="text-gray-600">
                 Choisissez le type d'opération à effectuer
               </CardDescription>
             </CardHeader>
@@ -656,28 +772,28 @@ export default function PointOfSale() {
                 
                 {/* Vente normale */}
                 <Card 
-                  className="cursor-pointer tech-gradient border-gray-700 hover:border-gaming-cyan/50 transition-all duration-300 hover:scale-105"
+                  className="cursor-pointer bg-white border-gray-200 hover:border-blue-500 transition-all duration-300 hover:scale-105 shadow-sm"
                   onClick={() => setOperationType('vente')}
                 >
                   <CardContent className="p-6 text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-green-500/20 rounded-full flex items-center justify-center">
-                      <ShoppingCart className="w-8 h-8 text-green-400" />
+                    <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+                      <ShoppingCart className="w-8 h-8 text-green-600" />
                     </div>
-                    <h3 className="text-xl font-semibold text-white mb-2">Vente</h3>
-                    <p className="text-gray-400 text-sm mb-4">
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Vente</h3>
+                    <p className="text-gray-600 text-sm mb-4">
                       Vente normale de produits aux clients
                     </p>
                     <div className="space-y-2 text-xs text-gray-500">
                       <div className="flex items-center justify-center gap-1">
-                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                         <span>Scanner les produits</span>
                       </div>
                       <div className="flex items-center justify-center gap-1">
-                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                         <span>Choisir le mode de paiement</span>
                       </div>
                       <div className="flex items-center justify-center gap-1">
-                        <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                         <span>Générer le ticket</span>
                       </div>
                     </div>
@@ -686,31 +802,31 @@ export default function PointOfSale() {
 
                 {/* Reprise/Échange */}
                 <Card 
-                  className="cursor-pointer tech-gradient border-gray-700 hover:border-gaming-purple/50 transition-all duration-300 hover:scale-105"
+                  className="cursor-pointer bg-white border-gray-200 hover:border-purple-500 transition-all duration-300 hover:scale-105 shadow-sm"
                   onClick={() => {
                     setOperationType('reprise');
                     setShowRepriseSystem(true);
                   }}
                 >
                   <CardContent className="p-6 text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-purple-500/20 rounded-full flex items-center justify-center">
-                      <RefreshCw className="w-8 h-8 text-purple-400" />
+                    <div className="w-16 h-16 mx-auto mb-4 bg-purple-100 rounded-full flex items-center justify-center">
+                      <RefreshCw className="w-8 h-8 text-purple-600" />
                     </div>
-                    <h3 className="text-xl font-semibold text-white mb-2">Reprise</h3>
-                    <p className="text-gray-400 text-sm mb-4">
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Reprise</h3>
+                    <p className="text-gray-600 text-sm mb-4">
                       Échange d'un produit contre un autre (produits existants ou nouveaux)
                     </p>
                     <div className="space-y-2 text-xs text-gray-500">
                       <div className="flex items-center justify-center gap-1">
-                        <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                         <span>Produits existants ou nouveaux</span>
                       </div>
                       <div className="flex items-center justify-center gap-1">
-                        <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                         <span>Échange avec calcul différence</span>
                       </div>
                       <div className="flex items-center justify-center gap-1">
-                        <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                         <span>Gestion des paiements</span>
                       </div>
                     </div>
@@ -719,31 +835,31 @@ export default function PointOfSale() {
 
                 {/* Retour */}
                 <Card 
-                  className="cursor-pointer tech-gradient border-gray-700 hover:border-red-500/50 transition-all duration-300 hover:scale-105"
+                  className="cursor-pointer bg-white border-gray-200 hover:border-red-500 transition-all duration-300 hover:scale-105 shadow-sm"
                   onClick={() => {
                     setOperationType('retour');
                     setShowRepriseSystem(true);
                   }}
                 >
                   <CardContent className="p-6 text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-red-500/20 rounded-full flex items-center justify-center">
-                      <RotateCcw className="w-8 h-8 text-red-400" />
+                    <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                      <RotateCcw className="w-8 h-8 text-red-600" />
                     </div>
-                    <h3 className="text-xl font-semibold text-white mb-2">Retour</h3>
-                    <p className="text-gray-400 text-sm mb-4">
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Retour</h3>
+                    <p className="text-gray-600 text-sm mb-4">
                       Retour simple de produits clients (produits existants uniquement)
                     </p>
                     <div className="space-y-2 text-xs text-gray-500">
                       <div className="flex items-center justify-center gap-1">
-                        <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                         <span>Produits existants seulement</span>
                       </div>
                       <div className="flex items-center justify-center gap-1">
-                        <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                         <span>Création demande retour</span>
                       </div>
                       <div className="flex items-center justify-center gap-1">
-                        <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                         <span>Traitement depuis gestion</span>
                       </div>
                     </div>
@@ -760,18 +876,18 @@ export default function PointOfSale() {
       {operationType === 'vente' && (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {/* Scanner et panier */}
-          <Card className="bg-gray-900/50 border-gray-700">
+          <Card className="bg-white border-gray-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
+              <CardTitle className="text-gray-900 flex items-center gap-2">
                 <ShoppingCart className="w-5 h-5" />
                 Caisse
                 {selectedProductType && (
-                  <Badge variant="outline" className="border-gaming-cyan text-gaming-cyan ml-2">
+                  <Badge variant="outline" className="border-blue-500 text-blue-600 ml-2">
                     {productTypes.find(t => t.value === selectedProductType)?.label}
                   </Badge>
                 )}
               </CardTitle>
-              <CardDescription className="text-gray-400">
+              <CardDescription className="text-gray-600">
                 {selectedProductType 
                   ? `Scanner les produits ${productTypes.find(t => t.value === selectedProductType)?.label.toLowerCase()} et gérer le panier`
                   : "Sélectionnez le type de produit pour commencer"
@@ -791,17 +907,17 @@ export default function PointOfSale() {
 
               {/* Sélection du type de produit */}
               <div className="space-y-2">
-                <Label className="text-gray-300">Type de produit *</Label>
+                <Label className="text-gray-700">Type de produit *</Label>
                 <Select value={selectedProductType} onValueChange={(value: ProductType) => {
                   setSelectedProductType(value);
                   setSearchQuery("");
                   setSelectedCategory("all");
                   setBarcodeInput("");
                 }} disabled={isLoading}>
-                  <SelectTrigger className="bg-gray-800 border-gray-600">
+                  <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                     <SelectValue placeholder="Sélectionnez d'abord le type de produit" />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-600">
+                  <SelectContent className="bg-white border-gray-300">
                     {productTypes.map((type) => {
                       const IconComponent = type.icon;
                       return (
@@ -820,7 +936,7 @@ export default function PointOfSale() {
               {/* Scanner de code-barres - affiché seulement si un type est sélectionné */}
               {selectedProductType && (
                 <div className="space-y-2">
-                  <Label className="text-gray-300">Code-barres produit</Label>
+                  <Label className="text-gray-700">Code-barres produit</Label>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
                       <Scan className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
@@ -833,12 +949,12 @@ export default function PointOfSale() {
                             addToCartByBarcode(barcodeInput);
                           }
                         }}
-                        className="pl-10 bg-gray-800 border-gray-600 text-white"
+                        className="pl-10 bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
                       />
                     </div>
                     <Button
                       onClick={() => addToCartByBarcode(barcodeInput)}
-                      className="gaming-gradient"
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
                       disabled={!barcodeInput.trim()}
                     >
                       <Plus className="w-4 h-4" />
@@ -850,46 +966,46 @@ export default function PointOfSale() {
               {/* Séparateur avec option de recherche - affiché seulement si un type est sélectionné */}
               {selectedProductType && (
                 <div className="flex items-center gap-4">
-                  <div className="flex-1 border-t border-gray-600"></div>
+                  <div className="flex-1 border-t border-gray-300"></div>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setShowProductSearch(!showProductSearch)}
-                    className="border-gaming-cyan text-gaming-cyan hover:bg-gaming-cyan hover:text-black"
+                    className="border-blue-600 text-blue-600 hover:bg-blue-50"
                   >
                     {showProductSearch ? <Scan className="w-4 h-4 mr-2" /> : <Search className="w-4 h-4 mr-2" />}
                     {showProductSearch ? "Scanner" : "Rechercher"}
                   </Button>
-                  <div className="flex-1 border-t border-gray-600"></div>
+                  <div className="flex-1 border-t border-gray-300"></div>
                 </div>
               )}
 
               {/* Recherche de produits - affiché seulement si un type est sélectionné et la recherche activée */}
               {selectedProductType && showProductSearch && (
-                <div className="space-y-4 bg-gray-800/50 rounded-lg p-4 border border-gray-600">
+                <div className="space-y-4 bg-gray-50 rounded-lg p-4 border border-gray-200">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                     {/* Recherche par nom */}
                     <div className="space-y-2">
-                      <Label className="text-gray-300 text-sm">Rechercher un produit</Label>
+                      <Label className="text-gray-700 text-sm">Rechercher un produit</Label>
                       <div className="relative">
                         <Search className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
                         <Input
                           placeholder="Nom du produit ou marque..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="pl-10 bg-gray-700 border-gray-500 text-white text-sm"
+                          className="pl-10 bg-white border-gray-300 text-gray-900 text-sm placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
                         />
                       </div>
                     </div>
 
                     {/* Filtre par catégorie */}
                     <div className="space-y-2">
-                      <Label className="text-gray-300 text-sm">Catégorie</Label>
+                      <Label className="text-gray-700 text-sm">Catégorie</Label>
                       <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                        <SelectTrigger className="bg-gray-700 border-gray-500 text-sm">
+                        <SelectTrigger className="bg-white border-gray-300 text-sm text-gray-900">
                           <SelectValue placeholder="Toutes les catégories" />
                         </SelectTrigger>
-                        <SelectContent className="bg-gray-700 border-gray-500">
+                        <SelectContent className="bg-white border-gray-300">
                           <SelectItem value="all">Toutes les catégories</SelectItem>
                           {getAvailableCategories().map((category) => (
                             <SelectItem key={category} value={category}>
@@ -904,7 +1020,7 @@ export default function PointOfSale() {
                   {/* Résultats de recherche */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label className="text-gray-300 text-sm">
+                      <Label className="text-gray-700 text-sm">
                         Produits trouvés ({filteredProducts.length})
                       </Label>
                       {(searchQuery || (selectedCategory && selectedCategory !== "all")) && (
@@ -915,18 +1031,18 @@ export default function PointOfSale() {
                             setSearchQuery("");
                             setSelectedCategory("all");
                           }}
-                          className="text-gray-400 hover:text-white text-xs h-6"
+                          className="text-gray-600 hover:text-gray-900 text-xs h-6"
                         >
                           Effacer filtres
                         </Button>
                       )}
                     </div>
                     
-                    <div className="max-h-40 overflow-y-auto bg-gray-700 rounded border border-gray-600">
+                    <div className="max-h-40 overflow-y-auto bg-white rounded border border-gray-200">
                       {filteredProducts.length === 0 ? (
                         <div className="text-center py-4">
                           <Grid3X3 className="w-8 h-8 mx-auto text-gray-500 mb-2" />
-                          <p className="text-gray-400 text-sm">
+                          <p className="text-gray-600 text-sm">
                             {(searchQuery || (selectedCategory && selectedCategory !== "all")) ? "Aucun produit trouvé" : "Utilisez la recherche pour trouver des produits"}
                           </p>
                         </div>
@@ -935,22 +1051,22 @@ export default function PointOfSale() {
                           {filteredProducts.map((product) => (
                             <div
                               key={product.id}
-                              className="flex items-center justify-between bg-gray-600 rounded p-2 hover:bg-gray-500 transition-colors cursor-pointer"
+                              className="flex items-center justify-between bg-gray-50 rounded p-2 hover:bg-gray-100 transition-colors cursor-pointer"
                               onClick={() => addProductToCart(product)}
                             >
                               <div className="flex-1 min-w-0">
-                                <p className="text-white font-medium text-sm truncate">{product.nom}</p>
+                                <p className="text-gray-900 font-medium text-sm truncate">{product.nom}</p>
                                 <div className="flex items-center gap-2 mt-1">
-                                  <Badge variant="outline" className="text-xs border-gaming-cyan text-gaming-cyan">
+                                  <Badge variant="outline" className="text-xs border-blue-600 text-blue-600">
                                     {product.categorie}
                                   </Badge>
-                                  <span className="text-green-400 text-xs font-medium">{product.prix} MAD</span>
-                                  <span className="text-gray-400 text-xs">Stock: {product.stock}</span>
+                                  <span className="text-green-600 text-xs font-medium">{product.prix} MAD</span>
+                                  <span className="text-gray-600 text-xs">Stock: {product.stock}</span>
                                 </div>
                               </div>
                               <Button
                                 size="sm"
-                                className="gaming-gradient h-8 w-8 p-0 ml-2"
+                                className="bg-blue-600 hover:bg-blue-700 text-white h-8 w-8 p-0 ml-2"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   addProductToCart(product);
@@ -969,47 +1085,47 @@ export default function PointOfSale() {
 
               {/* Message d'aide si aucun type sélectionné */}
               {!selectedProductType && (
-                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 text-center">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
                   <div className="flex items-center justify-center mb-2">
-                    <Package className="w-8 h-8 text-blue-400" />
+                    <Package className="w-8 h-8 text-blue-600" />
                   </div>
-                  <p className="text-blue-300 font-medium mb-1">Sélectionnez un type de produit</p>
-                  <p className="text-blue-400 text-sm">Choisissez d'abord le type de produit pour commencer la vente</p>
+                  <p className="text-blue-900 font-medium mb-1">Sélectionnez un type de produit</p>
+                  <p className="text-blue-700 text-sm">Choisissez d'abord le type de produit pour commencer la vente</p>
                 </div>
               )}
 
               {/* Panier */}
               <div className="space-y-2">
-                <Label className="text-gray-300">Panier ({cart.length} articles)</Label>
-                <div className="bg-gray-800 rounded-lg p-4 max-h-64 lg:max-h-80 overflow-y-auto">
+                <Label className="text-gray-700">Panier ({cart.length} articles)</Label>
+                <div className="bg-white border border-gray-200 rounded-lg p-4 max-h-64 lg:max-h-80 overflow-y-auto">
                   {cart.length === 0 ? (
                     <div className="text-center py-8">
-                      <Package className="w-12 h-12 mx-auto text-gray-600 mb-4" />
-                      <p className="text-gray-400">Panier vide</p>
+                      <Package className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                      <p className="text-gray-600">Panier vide</p>
                     </div>
                   ) : (
                     <div className="space-y-3">
                       {cart.map((item) => (
-                        <div key={item.id} className="flex items-center justify-between bg-gray-700 rounded p-3">
+                        <div key={item.id} className="flex items-center justify-between bg-gray-50 rounded p-3">
                           <div className="flex-1 min-w-0">
-                            <p className="text-white font-medium text-sm truncate">{item.nom}</p>
-                            <p className="text-gaming-cyan text-sm">{item.prix} MAD × {item.quantite}</p>
+                            <p className="text-gray-900 font-medium text-sm truncate">{item.nom}</p>
+                            <p className="text-blue-600 text-sm">{item.prix} MAD × {item.quantite}</p>
                           </div>
                           <div className="flex items-center gap-2 ml-2">
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => updateQuantity(item.id, -1)}
-                              className="h-8 w-8 p-0 text-gray-400 hover:text-white"
+                              className="h-8 w-8 p-0 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                             >
                               <Minus className="w-3 h-3" />
                             </Button>
-                            <span className="text-white w-8 text-center text-sm">{item.quantite}</span>
+                            <span className="text-gray-900 w-8 text-center text-sm">{item.quantite}</span>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => updateQuantity(item.id, 1)}
-                              className="h-8 w-8 p-0 text-gray-400 hover:text-white"
+                              className="h-8 w-8 p-0 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                             >
                               <Plus className="w-3 h-3" />
                             </Button>
@@ -1017,7 +1133,7 @@ export default function PointOfSale() {
                               variant="ghost"
                               size="sm"
                               onClick={() => removeFromCart(item.id)}
-                              className="h-8 w-8 p-0 text-red-400 hover:bg-red-400/20"
+                              className="h-8 w-8 p-0 text-red-600 hover:bg-red-50"
                             >
                               <Trash2 className="w-3 h-3" />
                             </Button>
@@ -1031,7 +1147,7 @@ export default function PointOfSale() {
 
               {/* Réduction */}
               <div className="space-y-2">
-                <Label className="text-gray-300">Réduction (MAD)</Label>
+                <Label className="text-gray-700">Réduction (MAD)</Label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <DollarSign className="absolute left-3 top-3 w-4 h-4 text-gray-500" />
@@ -1042,64 +1158,76 @@ export default function PointOfSale() {
                       onChange={(e) => setReductionMontant(parseFloat(e.target.value) || 0)}
                       min="0"
                       max={getTotal()}
-                      className="pl-10 bg-gray-800 border-gray-600 text-white"
+                      className="pl-10 bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
                     />
                   </div>
                   <Button
                     onClick={() => setReductionMontant(0)}
                     variant="outline"
-                    className="border-gray-600 text-gray-400 hover:text-white hover:bg-gray-700"
+                    className="border-gray-300 text-gray-700 hover:text-gray-900 hover:bg-gray-50"
                     disabled={reductionMontant === 0}
                   >
                     Reset
                   </Button>
                 </div>
                 {reductionMontant > 0 && (
-                  <p className="text-sm text-gaming-cyan">
+                  <p className="text-sm text-blue-600">
                     Réduction appliquée : -{reductionMontant.toFixed(2)} MAD
                   </p>
                 )}
               </div>
 
               {/* Total */}
-              <div className="bg-gaming-purple/20 rounded-lg p-4 space-y-2">
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 space-y-2">
                 {reductionMontant > 0 && (
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-400">Sous-total:</span>
-                    <span className="text-gray-400">{getTotal().toFixed(2)} MAD</span>
+                    <span className="text-gray-600">Sous-total:</span>
+                    <span className="text-gray-600">{getTotal().toFixed(2)} MAD</span>
                   </div>
                 )}
                 {reductionMontant > 0 && (
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-red-400">Réduction:</span>
-                    <span className="text-red-400">-{reductionMontant.toFixed(2)} MAD</span>
+                    <span className="text-red-600">Réduction:</span>
+                    <span className="text-red-600">-{reductionMontant.toFixed(2)} MAD</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center">
-                  <span className="text-white font-medium">Total:</span>
-                  <span className="text-xl lg:text-2xl font-bold text-gaming-cyan">{getTotalAvecReduction().toFixed(2)} MAD</span>
+                  <span className="text-gray-900 font-medium">Total:</span>
+                  <span className="text-xl lg:text-2xl font-bold text-purple-600">{getTotalAvecReduction().toFixed(2)} MAD</span>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Informations de vente */}
-          <Card className="bg-gray-900/50 border-gray-700">
+          <Card className="bg-white border-gray-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-white">Finaliser la vente</CardTitle>
-              <CardDescription className="text-gray-400">
+              <CardTitle className="text-gray-900">Finaliser la vente</CardTitle>
+              <CardDescription className="text-gray-600">
                 Informations client et paiement
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Sélection client */}
               <div className="space-y-2">
-                <Label className="text-gray-300">Client</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-gray-700">Client</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAddClientDialog(true)}
+                    className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                  >
+                    <UserPlus className="w-4 h-4 mr-1" />
+                    Ajouter un client
+                  </Button>
+                </div>
                 <Select value={selectedClient} onValueChange={setSelectedClient}>
-                  <SelectTrigger className="bg-gray-800 border-gray-600">
+                  <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                     <SelectValue placeholder="Sélectionner un client" />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-600 max-h-60">
+                  <SelectContent className="bg-white border-gray-300 max-h-60">
                     {loadingClients ? (
                       <SelectItem value="loading" disabled>
                         Chargement des clients...
@@ -1119,11 +1247,11 @@ export default function PointOfSale() {
                 </Select>
               </div>
 
-              <Separator className="bg-gray-700" />
+              <Separator className="bg-gray-300" />
 
               {/* Mode de paiement */}
               <div className="space-y-3">
-                <Label className="text-gray-300">Mode de paiement</Label>
+                <Label className="text-gray-700">Mode de paiement</Label>
                 <div className="space-y-2">
                   {[
                     { value: "especes", label: "Espèces", icon: Banknote },
@@ -1135,15 +1263,15 @@ export default function PointOfSale() {
                       key={value}
                       className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all ${
                         paymentMethod === value
-                          ? 'border-gaming-cyan bg-gaming-cyan/10 text-gaming-cyan'
-                          : 'border-gray-600 bg-gray-800/50 text-white hover:border-gray-500 hover:bg-gray-700/50'
+                          ? 'border-blue-600 bg-blue-50 text-blue-600'
+                          : 'border-gray-300 bg-white text-gray-900 hover:border-gray-400 hover:bg-gray-50'
                       }`}
                       onClick={() => setPaymentMethod(value)}
                     >
                       <Icon className="w-4 h-4 mr-3" />
                       <span className="font-medium">{label}</span>
                       {paymentMethod === value && (
-                        <div className="ml-auto w-2 h-2 bg-gaming-cyan rounded-full"></div>
+                        <div className="ml-auto w-2 h-2 bg-blue-600 rounded-full"></div>
                       )}
                     </div>
                   ))}
@@ -1151,23 +1279,23 @@ export default function PointOfSale() {
 
                 {/* Champs spécifiques selon le mode de paiement */}
                 {paymentMethod === "cheque" && (
-                  <div className="mt-3 p-3 bg-gray-800 rounded-lg space-y-3">
+                  <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-3">
                     <div>
-                      <Label className="text-gray-300 text-sm">Numéro de chèque *</Label>
+                      <Label className="text-gray-700 text-sm">Numéro de chèque *</Label>
                       <Input
                         placeholder="Saisir le numéro de chèque"
                         value={chequeNumber}
                         onChange={(e) => setChequeNumber(e.target.value)}
-                        className="mt-1 bg-gray-700 border-gray-600"
+                        className="mt-1 bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
                       />
                     </div>
                     <div>
-                      <Label className="text-gray-300 text-sm">Date d'échéance *</Label>
+                      <Label className="text-gray-700 text-sm">Date d'échéance *</Label>
                       <Input
                         type="date"
                         value={chequeEcheance}
                         onChange={(e) => setChequeEcheance(e.target.value)}
-                        className="mt-1 bg-gray-700 border-gray-600"
+                        className="mt-1 bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
                         min={new Date().toISOString().split('T')[0]}
                       />
                     </div>
@@ -1175,13 +1303,13 @@ export default function PointOfSale() {
                 )}
 
                 {paymentMethod === "virement" && (
-                  <div className="mt-3 p-3 bg-gray-800 rounded-lg">
-                    <Label className="text-gray-300 text-sm">Compte de réception *</Label>
+                  <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                    <Label className="text-gray-700 text-sm">Compte de réception *</Label>
                     <Select value={selectedAccount} onValueChange={setSelectedAccount}>
-                      <SelectTrigger className="mt-1 bg-gray-700 border-gray-600">
+                      <SelectTrigger className="mt-1 bg-white border-gray-300 text-gray-900">
                         <SelectValue placeholder="Sélectionner le compte" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-600">
+                      <SelectContent className="bg-white border-gray-300">
                         {bankAccounts.filter(account => account.statut === 'Actif').map((account) => (
                           <SelectItem key={account.id} value={account.id}>
                             {account.nom_compte} - {account.nom_banque}
@@ -1193,14 +1321,14 @@ export default function PointOfSale() {
                 )}
 
                 {paymentMethod === "mixte" && (
-                  <div className="mt-3 p-3 bg-gray-800 rounded-lg space-y-3">
+                  <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-3">
                     <div className="flex items-center justify-between">
-                      <Label className="text-gray-300 text-sm">Répartition des paiements</Label>
+                      <Label className="text-gray-700 text-sm">Répartition des paiements</Label>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={addMixedPayment}
-                        className="text-gaming-cyan hover:bg-gaming-cyan/20"
+                        className="text-blue-600 hover:bg-blue-50"
                       >
                         <Plus className="w-4 h-4 mr-1" />
                         Ajouter
@@ -1208,15 +1336,15 @@ export default function PointOfSale() {
                     </div>
                     
                     {mixedPayments.map((payment, index) => (
-                      <div key={index} className="flex items-center gap-2 p-2 bg-gray-700 rounded">
+                      <div key={index} className="flex items-center gap-2 p-2 bg-white border border-gray-200 rounded">
                         <Select
                           value={payment.type}
                           onValueChange={(value) => updateMixedPayment(index, "type", value)}
                         >
-                          <SelectTrigger className="w-32 bg-gray-600 border-gray-500">
+                          <SelectTrigger className="w-32 bg-white border-gray-300 text-gray-900">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="bg-gray-800 border-gray-600">
+                          <SelectContent className="bg-white border-gray-300">
                             <SelectItem value="especes">Espèces</SelectItem>
                             <SelectItem value="virement">Virement</SelectItem>
                             <SelectItem value="cheque">Chèque</SelectItem>
@@ -1228,7 +1356,7 @@ export default function PointOfSale() {
                           placeholder="Montant"
                           value={payment.amount || ""}
                           onChange={(e) => updateMixedPayment(index, "amount", parseFloat(e.target.value) || 0)}
-                          className="flex-1 bg-gray-600 border-gray-500"
+                          className="flex-1 bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
                         />
                         
                         {payment.type === "virement" && (
@@ -1236,10 +1364,10 @@ export default function PointOfSale() {
                             value={payment.account || ""}
                             onValueChange={(value) => updateMixedPayment(index, "account", value)}
                           >
-                            <SelectTrigger className="w-40 bg-gray-600 border-gray-500">
+                            <SelectTrigger className="w-40 bg-white border-gray-300 text-gray-900">
                               <SelectValue placeholder="Compte" />
                             </SelectTrigger>
-                            <SelectContent className="bg-gray-800 border-gray-600">
+                            <SelectContent className="bg-white border-gray-300">
                               {bankAccounts.filter(account => account.statut === 'Actif').map((account) => (
                                 <SelectItem key={account.id} value={account.id}>
                                   {account.numero_compte || account.nom_compte}
@@ -1254,7 +1382,7 @@ export default function PointOfSale() {
                             variant="ghost"
                             size="sm"
                             onClick={() => removeMixedPayment(index)}
-                            className="text-red-400 hover:bg-red-400/20"
+                            className="text-red-600 hover:bg-red-50"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -1262,29 +1390,29 @@ export default function PointOfSale() {
                       </div>
                     ))}
                     
-                    <div className="flex justify-between items-center pt-2 border-t border-gray-600">
-                      <span className="text-gray-300 text-sm">Total saisi:</span>
+                    <div className="flex justify-between items-center pt-2 border-t border-gray-300">
+                      <span className="text-gray-700 text-sm">Total saisi:</span>
                       <span className={`font-medium ${
                         Math.abs(getTotalAvecReduction() - getMixedPaymentTotal()) < 0.01 
-                          ? 'text-green-400' 
-                          : 'text-red-400'
+                          ? 'text-green-600' 
+                          : 'text-red-600'
                       }`}>
                         {getMixedPaymentTotal().toFixed(2)} MAD
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-300 text-sm">Total vente:</span>
-                      <span className="text-gaming-cyan font-medium">{getTotalAvecReduction().toFixed(2)} MAD</span>
+                      <span className="text-gray-700 text-sm">Total vente:</span>
+                      <span className="text-blue-600 font-medium">{getTotalAvecReduction().toFixed(2)} MAD</span>
                     </div>
                   </div>
                 )}
               </div>
 
-              <Separator className="bg-gray-700" />
+              <Separator className="bg-gray-300" />
 
               {/* Type de vente */}
               <div className="space-y-3">
-                <Label className="text-gray-300">Type de vente</Label>
+                <Label className="text-gray-700">Type de vente</Label>
                 <div className="space-y-2">
                   {[
                     { value: "magasin", label: "Magasin (sur place)", icon: Building },
@@ -1294,15 +1422,15 @@ export default function PointOfSale() {
                       key={value}
                       className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all ${
                         saleType === value
-                          ? 'border-gaming-cyan bg-gaming-cyan/10 text-gaming-cyan'
-                          : 'border-gray-600 bg-gray-800/50 text-white hover:border-gray-500 hover:bg-gray-700/50'
+                          ? 'border-blue-600 bg-blue-50 text-blue-600'
+                          : 'border-gray-300 bg-white text-gray-900 hover:border-gray-400 hover:bg-gray-50'
                       }`}
                       onClick={() => setSaleType(value)}
                     >
                       <Icon className="w-4 h-4 mr-3" />
                       <span className="font-medium">{label}</span>
                       {saleType === value && (
-                        <div className="ml-auto w-2 h-2 bg-gaming-cyan rounded-full"></div>
+                        <div className="ml-auto w-2 h-2 bg-blue-600 rounded-full"></div>
                       )}
                     </div>
                   ))}
@@ -1313,7 +1441,7 @@ export default function PointOfSale() {
               <div className="space-y-3">
                 <Button
                   onClick={handleSale}
-                  className="w-full gaming-gradient hover:scale-105 transition-transform"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white hover:scale-105 transition-transform"
                   disabled={cart.length === 0 || !selectedClient || loadingVente}
                 >
                   <FileText className="w-4 h-4 mr-2" />
@@ -1327,42 +1455,42 @@ export default function PointOfSale() {
 
       {/* Modal de récapitulatif */}
       <Dialog open={showRecapitulatif} onOpenChange={setShowRecapitulatif}>
-        <DialogContent className="max-w-2xl bg-gray-900 border-gray-700">
+        <DialogContent className="max-w-2xl bg-white border-gray-200">
           <DialogHeader>
-            <DialogTitle className="text-white flex items-center gap-2">
+            <DialogTitle className="text-gray-900 flex items-center gap-2">
               <FileText className="w-5 h-5" />
               Récapitulatif de la vente
             </DialogTitle>
-            <DialogDescription className="text-gray-400">
+            <DialogDescription className="text-gray-600">
               Vérifiez les détails avant de finaliser la vente
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-6">
             {/* Informations client */}
-            <div className="bg-gray-800/50 rounded-lg p-4">
-              <h3 className="text-white font-medium mb-2">Client</h3>
-              <p className="text-gray-300">
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="text-gray-900 font-medium mb-2">Client</h3>
+              <p className="text-gray-700">
                 {clients.find(c => c.id === selectedClient)?.prenom} {clients.find(c => c.id === selectedClient)?.nom}
               </p>
-              <p className="text-gray-400 text-sm">
+              <p className="text-gray-600 text-sm">
                 {clients.find(c => c.id === selectedClient)?.email}
               </p>
             </div>
 
             {/* Articles */}
-            <div className="bg-gray-800/50 rounded-lg p-4">
-              <h3 className="text-white font-medium mb-3">Articles ({cart.length})</h3>
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="text-gray-900 font-medium mb-3">Articles ({cart.length})</h3>
               <div className="space-y-2 max-h-48 overflow-y-auto">
                 {cart.map((item) => (
-                  <div key={item.id} className="flex justify-between items-center bg-gray-700 rounded p-2">
+                  <div key={item.id} className="flex justify-between items-center bg-white border border-gray-200 rounded p-2">
                     <div className="flex-1">
-                      <p className="text-white text-sm font-medium">{item.nom}</p>
-                      <p className="text-gray-400 text-xs">{item.categorie}</p>
+                      <p className="text-gray-900 text-sm font-medium">{item.nom}</p>
+                      <p className="text-gray-600 text-xs">{item.categorie}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-gaming-cyan text-sm">{item.prix} MAD × {item.quantite}</p>
-                      <p className="text-white text-sm font-medium">{(item.prix * item.quantite).toFixed(2)} MAD</p>
+                      <p className="text-blue-600 text-sm">{item.prix} MAD × {item.quantite}</p>
+                      <p className="text-gray-900 text-sm font-medium">{(item.prix * item.quantite).toFixed(2)} MAD</p>
                     </div>
                   </div>
                 ))}
@@ -1370,32 +1498,32 @@ export default function PointOfSale() {
             </div>
 
             {/* Totaux */}
-            <div className="bg-gray-800/50 rounded-lg p-4">
-              <h3 className="text-white font-medium mb-3">Totaux</h3>
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="text-gray-900 font-medium mb-3">Totaux</h3>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Sous-total:</span>
-                  <span className="text-white">{getTotal().toFixed(2)} MAD</span>
+                  <span className="text-gray-600">Sous-total:</span>
+                  <span className="text-gray-900">{getTotal().toFixed(2)} MAD</span>
                 </div>
                 {reductionMontant > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-red-400">Réduction:</span>
-                    <span className="text-red-400">-{reductionMontant.toFixed(2)} MAD</span>
+                    <span className="text-red-600">Réduction:</span>
+                    <span className="text-red-600">-{reductionMontant.toFixed(2)} MAD</span>
                   </div>
                 )}
-                <div className="flex justify-between text-lg font-bold border-t border-gray-600 pt-2">
-                  <span className="text-white">Total TTC:</span>
-                  <span className="text-gaming-cyan">{getTotalAvecReduction().toFixed(2)} MAD</span>
+                <div className="flex justify-between text-lg font-bold border-t border-gray-300 pt-2">
+                  <span className="text-gray-900">Total TTC:</span>
+                  <span className="text-blue-600">{getTotalAvecReduction().toFixed(2)} MAD</span>
                 </div>
               </div>
             </div>
 
             {/* Paiement */}
-            <div className="bg-gray-800/50 rounded-lg p-4">
-              <h3 className="text-white font-medium mb-2">Mode de paiement</h3>
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h3 className="text-gray-900 font-medium mb-2">Mode de paiement</h3>
               <div className="flex items-center gap-2">
                 {getPaymentIcon(paymentMethod)}
-                <span className="text-gray-300 capitalize">
+                <span className="text-gray-700 capitalize">
                   {paymentMethod === 'especes' ? 'Espèces' : 
                    paymentMethod === 'virement' ? 'Virement bancaire' :
                    paymentMethod === 'cheque' ? 'Chèque' :
@@ -1409,13 +1537,13 @@ export default function PointOfSale() {
             <Button
               variant="outline"
               onClick={() => setShowRecapitulatif(false)}
-              className="border-gray-600 text-gray-400 hover:text-white"
+              className="border-gray-300 text-gray-700 hover:text-gray-900 hover:bg-gray-50"
             >
               Modifier
             </Button>
             <Button
               onClick={confirmerVente}
-              className="gaming-gradient"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               <FileText className="w-4 h-4 mr-2" />
               Continuer
@@ -1426,44 +1554,44 @@ export default function PointOfSale() {
 
       {/* Modal de confirmation de vente */}
       <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
-        <DialogContent className="max-w-md bg-gray-900 border-gray-700">
+        <DialogContent className="max-w-md bg-white border-gray-200">
           <DialogHeader>
-            <DialogTitle className="text-white flex items-center gap-2">
-              <Check className="w-5 h-5 text-green-400" />
+            <DialogTitle className="text-gray-900 flex items-center gap-2">
+              <Check className="w-5 h-5 text-green-600" />
               Confirmer la vente
             </DialogTitle>
-            <DialogDescription className="text-gray-400">
+            <DialogDescription className="text-gray-600">
               Êtes-vous sûr de vouloir finaliser cette vente ?
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">
             {/* Résumé rapide */}
-            <div className="bg-gray-800/50 rounded-lg p-4">
+            <div className="bg-gray-50 rounded-lg p-4">
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Client:</span>
-                  <span className="text-white font-medium">
+                  <span className="text-gray-600">Client:</span>
+                  <span className="text-gray-900 font-medium">
                     {clients.find(c => c.id === selectedClient)?.prenom} {clients.find(c => c.id === selectedClient)?.nom}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Articles:</span>
-                  <span className="text-white">{cart.length} produit(s)</span>
+                  <span className="text-gray-600">Articles:</span>
+                  <span className="text-gray-900">{cart.length} produit(s)</span>
                 </div>
                 {reductionMontant > 0 && (
                   <div className="flex justify-between items-center">
-                    <span className="text-red-400">Réduction:</span>
-                    <span className="text-red-400">-{reductionMontant.toFixed(2)} MAD</span>
+                    <span className="text-red-600">Réduction:</span>
+                    <span className="text-red-600">-{reductionMontant.toFixed(2)} MAD</span>
                   </div>
                 )}
-                <div className="flex justify-between items-center text-lg font-bold border-t border-gray-600 pt-2">
-                  <span className="text-white">Total à payer:</span>
-                  <span className="text-gaming-cyan">{getTotalAvecReduction().toFixed(2)} MAD</span>
+                <div className="flex justify-between items-center text-lg font-bold border-t border-gray-300 pt-2">
+                  <span className="text-gray-900">Total à payer:</span>
+                  <span className="text-blue-600">{getTotalAvecReduction().toFixed(2)} MAD</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Paiement:</span>
-                  <span className="text-white capitalize">
+                  <span className="text-gray-600">Paiement:</span>
+                  <span className="text-gray-900 capitalize">
                     {paymentMethod === 'especes' ? 'Espèces' : 
                      paymentMethod === 'virement' ? 'Virement' :
                      paymentMethod === 'cheque' ? 'Chèque' :
@@ -1473,8 +1601,8 @@ export default function PointOfSale() {
               </div>
             </div>
             
-            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
-              <p className="text-yellow-300 text-sm text-center">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <p className="text-yellow-800 text-sm text-center">
                 ⚠️ Cette action est irréversible. La vente sera enregistrée définitivement.
               </p>
             </div>
@@ -1487,13 +1615,13 @@ export default function PointOfSale() {
                 setShowConfirmation(false);
                 setShowRecapitulatif(true);
               }}
-              className="border-gray-600 text-gray-400 hover:text-white"
+              className="border-gray-300 text-gray-700 hover:text-gray-900 hover:bg-gray-50"
             >
               Retour
             </Button>
             <Button
               onClick={finaliserVente}
-              className="gaming-gradient"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
               disabled={loadingVente}
             >
               {loadingVente ? (
@@ -1514,13 +1642,13 @@ export default function PointOfSale() {
 
       {/* Modal de ticket de caisse */}
       <Dialog open={showTicket} onOpenChange={setShowTicket}>
-        <DialogContent className="max-w-lg bg-gray-900 border-gray-700">
+        <DialogContent className="max-w-lg bg-white border-gray-200">
           <DialogHeader>
-            <DialogTitle className="text-white flex items-center gap-2">
+            <DialogTitle className="text-gray-900 flex items-center gap-2">
               <Receipt className="w-5 h-5" />
               Ticket de caisse
             </DialogTitle>
-            <DialogDescription className="text-gray-400">
+            <DialogDescription className="text-gray-600">
               Vente finalisée avec succès
             </DialogDescription>
           </DialogHeader>
@@ -1615,7 +1743,7 @@ export default function PointOfSale() {
                   { type: "virement", amount: 0, account: "" }
                 ]);
               }}
-              className="border-gray-600 text-gray-400 hover:text-white"
+              className="border-gray-300 text-gray-700 hover:text-gray-900 hover:bg-gray-50"
             >
               Fermer
             </Button>
@@ -1629,12 +1757,289 @@ export default function PointOfSale() {
                   });
                 }
               }}
-              className="gaming-gradient"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               <Printer className="w-4 h-4 mr-2" />
               Imprimer
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal d'ajout de client */}
+      <Dialog open={showAddClientDialog} onOpenChange={setShowAddClientDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] bg-white border-gray-200 overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-gray-900 flex items-center gap-2">
+              <UserPlus className="w-5 h-5" />
+              Ajouter un nouveau client
+            </DialogTitle>
+            <DialogDescription className="text-gray-600">
+              Créez un nouveau client pour cette vente
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* Section 1: Type de client */}
+            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs font-bold text-white">1</div>
+                <h3 className="text-lg font-semibold text-gray-900">Type de client</h3>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">Choisissez le type de client pour adapter les champs requis</p>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div
+                  className={`flex items-center space-x-3 p-3 border rounded-lg transition-colors cursor-pointer ${
+                    newClientData.type_client === 'particulier'
+                      ? 'border-blue-600 bg-blue-50'
+                      : 'border-gray-300 bg-white hover:border-blue-500'
+                  }`}
+                  onClick={() => setNewClientData({...newClientData, type_client: 'particulier', ice: ''})}
+                >
+                  <User className="w-5 h-5 text-green-600" />
+                  <div>
+                    <div className="font-medium text-gray-900">Particulier</div>
+                    <div className="text-xs text-gray-600">Client individuel</div>
+                  </div>
+                </div>
+                <div
+                  className={`flex items-center space-x-3 p-3 border rounded-lg transition-colors cursor-pointer ${
+                    newClientData.type_client === 'societe'
+                      ? 'border-blue-600 bg-blue-50'
+                      : 'border-gray-300 bg-white hover:border-blue-500'
+                  }`}
+                  onClick={() => setNewClientData({...newClientData, type_client: 'societe'})}
+                >
+                  <Building className="w-5 h-5 text-purple-600" />
+                  <div>
+                    <div className="font-medium text-gray-900">Société</div>
+                    <div className="text-xs text-gray-600">Entreprise ou organisation</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 2: Informations principales */}
+            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs font-bold text-white">2</div>
+                <h3 className="text-lg font-semibold text-gray-900">Informations principales</h3>
+                <span className="text-xs text-red-600 font-medium">* Obligatoire</span>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="flex items-center gap-2 text-gray-700 mb-2">
+                    {newClientData.type_client === 'societe' ? (
+                      <>
+                        <Building className="w-4 h-4" />
+                        Nom de la société *
+                      </>
+                    ) : (
+                      <>
+                        <User className="w-4 h-4" />
+                        Nom de famille *
+                      </>
+                    )}
+                  </Label>
+                  <Input
+                    value={newClientData.nom}
+                    onChange={(e) => setNewClientData({...newClientData, nom: e.target.value})}
+                    placeholder={newClientData.type_client === 'societe' ? "Ex: TechCorp Solutions" : "Ex: Dupont"}
+                    className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <Label className="flex items-center gap-2 text-gray-700 mb-2">
+                    <User className="w-4 h-4" />
+                    {newClientData.type_client === 'societe' ? 'Nom du contact principal' : 'Prénom'}
+                  </Label>
+                  <Input
+                    value={newClientData.prenom}
+                    onChange={(e) => setNewClientData({...newClientData, prenom: e.target.value})}
+                    placeholder={newClientData.type_client === 'societe' ? "Ex: Mohammed Alami" : "Ex: Jean"}
+                    className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* Champ ICE pour les sociétés */}
+              {newClientData.type_client === 'societe' && (
+                <div className="mt-4">
+                  <Label className="flex items-center gap-2 text-gray-700 mb-2">
+                    <Building className="w-4 h-4" />
+                    Numéro ICE
+                  </Label>
+                  <Input
+                    value={newClientData.ice}
+                    onChange={(e) => setNewClientData({...newClientData, ice: e.target.value})}
+                    placeholder="Ex: 001234567000025"
+                    className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Identifiant Commun de l'Entreprise (15 chiffres) - Optionnel
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Section 3: Contact et localisation */}
+            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs font-bold text-white">3</div>
+                <h3 className="text-lg font-semibold text-gray-900">Contact et localisation</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label className="flex items-center gap-2 text-gray-700 mb-2">
+                    <Mail className="w-4 h-4" />
+                    Adresse email
+                  </Label>
+                  <Input
+                    type="email"
+                    value={newClientData.email}
+                    onChange={(e) => setNewClientData({...newClientData, email: e.target.value})}
+                    placeholder="Ex: client@exemple.com"
+                    className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <Label className="flex items-center gap-2 text-gray-700 mb-2">
+                    <Phone className="w-4 h-4" />
+                    Numéro de téléphone
+                  </Label>
+                  <Input
+                    value={newClientData.telephone}
+                    onChange={(e) => setNewClientData({...newClientData, telephone: e.target.value})}
+                    placeholder="Ex: 06 12 34 56 78 ou +212 6 12 34 56 78"
+                    className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <Label className="flex items-center gap-2 text-gray-700 mb-2">
+                    <MapPin className="w-4 h-4" />
+                    Adresse complète
+                  </Label>
+                  <textarea
+                    value={newClientData.adresse}
+                    onChange={(e) => setNewClientData({...newClientData, adresse: e.target.value})}
+                    placeholder="Ex: 123 Avenue Mohammed V, Appartement 4, Casablanca 20000"
+                    rows={3}
+                    className="w-full p-3 bg-white border border-gray-300 rounded-md text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500 resize-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section 4: Paramètres du compte */}
+            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs font-bold text-white">4</div>
+                <h3 className="text-lg font-semibold text-gray-900">Paramètres du compte</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="flex items-center gap-2 text-gray-700 mb-2">
+                    <Badge className="w-4 h-4" />
+                    Statut du client
+                  </Label>
+                  <Select value={newClientData.statut} onValueChange={(value: any) => setNewClientData({...newClientData, statut: value})}>
+                    <SelectTrigger className="bg-white border-gray-300 text-gray-900">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Actif">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          Actif - Client régulier
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="VIP">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                          VIP - Client privilégié
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="Inactif">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                          Inactif - Compte suspendu
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label className="flex items-center gap-2 text-gray-700 mb-2">
+                    <Receipt className="w-4 h-4" />
+                    Notes additionnelles
+                  </Label>
+                  <textarea
+                    value={newClientData.notes}
+                    onChange={(e) => setNewClientData({...newClientData, notes: e.target.value})}
+                    placeholder="Préférences, remarques, historique..."
+                    rows={3}
+                    className="w-full p-3 bg-white border border-gray-300 rounded-md text-gray-900 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500 resize-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Résumé et validation */}
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h4 className="text-gray-900 font-medium mb-2">Récapitulatif</h4>
+              <div className="text-sm text-gray-700 space-y-1">
+                <p><strong>Type:</strong> {newClientData.type_client === 'societe' ? 'Société' : 'Particulier'}</p>
+                <p><strong>Nom:</strong> {newClientData.nom || 'Non renseigné'}</p>
+                <p><strong>{newClientData.type_client === 'societe' ? 'Contact' : 'Prénom'}:</strong> {newClientData.prenom || 'Non renseigné'}</p>
+                <p><strong>Email:</strong> {newClientData.email || 'Non renseigné'}</p>
+                {newClientData.type_client === 'societe' && (
+                  <p><strong>ICE:</strong> {newClientData.ice || 'Non renseigné'}</p>
+                )}
+              </div>
+              <div className="text-xs text-gray-600 mt-2">
+                Seul le nom {newClientData.type_client === 'societe' ? 'de la société' : 'de famille'} est obligatoire
+              </div>
+            </div>
+
+            {/* Boutons d'action */}
+            <div className="flex gap-3 pt-4">
+              <Button 
+                onClick={handleAddClient}
+                className="bg-blue-600 hover:bg-blue-700 text-white flex-1 h-12 text-base font-medium"
+                disabled={!newClientData.nom || loadingAddClient}
+              >
+                {loadingAddClient ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Création...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Créer le client
+                  </>
+                )}
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowAddClientDialog(false);
+                  resetNewClientForm();
+                }}
+                className="px-6 h-12 border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                Annuler
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 

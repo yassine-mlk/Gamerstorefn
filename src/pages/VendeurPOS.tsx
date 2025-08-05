@@ -69,12 +69,12 @@ const productTypes = [
 
 export default function VendeurPOS() {
   // Hooks de données
-  const { pcPortables, loading: loadingPC } = usePcPortables();
-  const { moniteurs, loading: loadingMoniteurs } = useMoniteurs();
-  const { peripheriques, loading: loadingPeripheriques } = usePeripheriques();
-  const { chaisesGaming, loading: loadingChaises } = useChaisesGamingSupabase();
-  const { pcGamerConfigs, loading: loadingPCGamer } = usePCGamer();
-  const { composantsPC, loading: loadingComposants } = useComposantsPC();
+  const { pcPortables, loading: loadingPC, refreshPcPortables } = usePcPortables();
+  const { moniteurs, loading: loadingMoniteurs, refreshMoniteurs } = useMoniteurs();
+  const { peripheriques, loading: loadingPeripheriques, fetchPeripheriques } = usePeripheriques();
+  const { chaisesGaming, loading: loadingChaises, refreshChaisesGaming } = useChaisesGamingSupabase();
+  const { pcGamerConfigs, loading: loadingPCGamer, refreshPCGamerConfigs } = usePCGamer();
+  const { composantsPC, loading: loadingComposants, refreshComposantsPC } = useComposantsPC();
   const { createVente, loading: loadingVente } = useVentes();
   const { clients, loading: loadingClients } = useClients();
   const { comptes: bankAccounts, loading: loadingBankAccounts } = useBankAccounts();
@@ -374,6 +374,21 @@ export default function VendeurPOS() {
         setSelectedAccount("");
         setCurrentView('categories');
         
+        // Recharger les données de stock après la vente
+        try {
+          await Promise.all([
+            refreshPcPortables(),
+            refreshMoniteurs(),
+            fetchPeripheriques(),
+            refreshChaisesGaming(),
+            refreshPCGamerConfigs(),
+            refreshComposantsPC()
+          ]);
+        } catch (refreshError) {
+          console.warn('Erreur lors du rechargement des données de stock:', refreshError);
+          // Ne pas faire échouer la vente pour ça
+        }
+        
         toast({
           title: "Vente finalisée",
           description: `Vente ${venteId} créée avec succès`,
@@ -391,35 +406,35 @@ export default function VendeurPOS() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center tech-gradient">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gaming-purple mx-auto mb-4"></div>
-          <p className="text-white text-xl">Chargement des produits...</p>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-800 text-xl">Chargement des produits...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen tech-gradient p-4">
+    <div className="min-h-screen bg-white p-4">
       <div className="max-w-7xl mx-auto">
         {/* En-tête */}
         <div className="flex flex-col sm:flex-row items-center justify-between mb-6">
           <div className="flex items-center gap-4 mb-4 sm:mb-0">
-            <div className="w-12 h-12 gaming-gradient rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
               <CreditCard className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-white">Point de Vente</h1>
-              <p className="text-gray-400">Interface vendeur simplifiée</p>
+              <h1 className="text-3xl font-bold text-gray-900">Point de Vente</h1>
+              <p className="text-gray-600">Interface vendeur simplifiée</p>
             </div>
           </div>
           
           <div className="flex items-center gap-2">
-            <Badge className="bg-gaming-green text-white text-lg px-4 py-2">
+            <Badge className="bg-green-600 text-white text-lg px-4 py-2">
               Total: {getTotalAvecReduction().toFixed(2)}€
             </Badge>
-            <Badge className="bg-gaming-purple text-white px-3 py-2">
+            <Badge className="bg-blue-600 text-white px-3 py-2">
               {cart.length} article(s)
             </Badge>
           </div>
@@ -429,7 +444,7 @@ export default function VendeurPOS() {
         <div className="flex gap-2 mb-6">
           <Button
             variant={currentView === 'categories' ? 'default' : 'outline'}
-            className={`flex-1 h-16 text-lg ${currentView === 'categories' ? 'bg-gaming-purple' : ''}`}
+            className={`flex-1 h-16 text-lg ${currentView === 'categories' ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
             onClick={() => setCurrentView('categories')}
           >
             <Grid3X3 className="w-6 h-6 mr-2" />
@@ -437,7 +452,7 @@ export default function VendeurPOS() {
           </Button>
           <Button
             variant={currentView === 'products' ? 'default' : 'outline'}
-            className={`flex-1 h-16 text-lg ${currentView === 'products' ? 'bg-gaming-purple' : ''}`}
+            className={`flex-1 h-16 text-lg ${currentView === 'products' ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
             onClick={() => setCurrentView('products')}
             disabled={!selectedProductType}
           >
@@ -446,7 +461,7 @@ export default function VendeurPOS() {
           </Button>
           <Button
             variant={currentView === 'cart' ? 'default' : 'outline'}
-            className={`flex-1 h-16 text-lg ${currentView === 'cart' ? 'bg-gaming-purple' : ''}`}
+            className={`flex-1 h-16 text-lg ${currentView === 'cart' ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
             onClick={() => setCurrentView('cart')}
           >
             <ShoppingCart className="w-6 h-6 mr-2" />
@@ -455,7 +470,7 @@ export default function VendeurPOS() {
         </div>
 
         {/* Scanner de code-barres */}
-        <Card className="bg-gray-800 border-gray-700 mb-6">
+        <Card className="bg-white border-gray-200 shadow-sm mb-6">
           <CardContent className="p-4">
             <div className="flex gap-4">
               <div className="flex-1">
@@ -469,7 +484,7 @@ export default function VendeurPOS() {
                       setBarcodeInput("");
                     }
                   }}
-                  className="h-14 text-lg bg-gray-700 border-gray-600 text-white"
+                  className="h-14 text-lg bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
               <Button
@@ -479,7 +494,7 @@ export default function VendeurPOS() {
                     setBarcodeInput("");
                   }
                 }}
-                className="h-14 px-6 bg-gaming-cyan hover:bg-gaming-cyan/80"
+                className="h-14 px-6 bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <Scan className="w-6 h-6" />
               </Button>
@@ -499,7 +514,7 @@ export default function VendeurPOS() {
                   return (
                     <Card
                       key={type.value}
-                      className="bg-gray-800 border-gray-700 hover:border-gaming-purple cursor-pointer transition-all duration-300 transform hover:scale-105"
+                      className="bg-white border-gray-200 hover:border-blue-500 cursor-pointer transition-all duration-300 transform hover:scale-105 shadow-sm"
                       onClick={() => {
                         setSelectedProductType(type.value as ProductType);
                         setCurrentView('products');
@@ -509,8 +524,8 @@ export default function VendeurPOS() {
                         <div className={`w-16 h-16 ${type.color} rounded-xl flex items-center justify-center mx-auto mb-4`}>
                           <Icon className="w-8 h-8 text-white" />
                         </div>
-                        <h3 className="text-white font-bold text-lg mb-2">{type.label}</h3>
-                        <p className="text-gray-400 text-sm">
+                        <h3 className="text-gray-900 font-bold text-lg mb-2">{type.label}</h3>
+                        <p className="text-gray-600 text-sm">
                           {getAllProducts().length > 0 ? `${getAllProducts().length} produits` : 'Aucun produit'}
                         </p>
                       </CardContent>
@@ -528,11 +543,11 @@ export default function VendeurPOS() {
                     <Button
                       variant="outline"
                       onClick={() => setCurrentView('categories')}
-                      className="border-gray-600"
+                      className="border-gray-300 text-gray-700 hover:bg-gray-50"
                     >
                       ← Retour
                     </Button>
-                    <h2 className="text-xl text-white font-bold">
+                    <h2 className="text-xl text-gray-900 font-bold">
                       {productTypes.find(t => t.value === selectedProductType)?.label}
                     </h2>
                   </div>
@@ -540,7 +555,7 @@ export default function VendeurPOS() {
                     placeholder="Rechercher un produit..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="max-w-sm bg-gray-700 border-gray-600 text-white"
+                    className="max-w-sm bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
 
@@ -548,22 +563,22 @@ export default function VendeurPOS() {
                   {filteredProducts.map((product) => (
                     <Card
                       key={product.id}
-                      className="bg-gray-800 border-gray-700 hover:border-gaming-purple cursor-pointer transition-all duration-300"
+                      className="bg-white border-gray-200 hover:border-blue-500 cursor-pointer transition-all duration-300 shadow-sm"
                       onClick={() => addProductToCart(product)}
                     >
                       <CardContent className="p-4">
                         <div className="flex justify-between items-start mb-2">
-                          <h3 className="text-white font-medium text-sm line-clamp-2">{product.nom}</h3>
-                          <Badge className="bg-gaming-green text-xs">
+                          <h3 className="text-gray-900 font-medium text-sm line-clamp-2">{product.nom}</h3>
+                          <Badge className="bg-green-600 text-white text-xs">
                             Stock: {product.stock}
                           </Badge>
                         </div>
-                        <p className="text-gray-400 text-xs mb-3">{product.marque}</p>
+                        <p className="text-gray-600 text-xs mb-3">{product.marque}</p>
                         <div className="flex justify-between items-center">
-                          <span className="text-gaming-cyan font-bold text-lg">
+                          <span className="text-blue-600 font-bold text-lg">
                             {product.prix.toFixed(2)}€
                           </span>
-                          <Button size="sm" className="bg-gaming-purple hover:bg-gaming-purple/80">
+                          <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
                             <Plus className="w-4 h-4" />
                           </Button>
                         </div>
@@ -576,9 +591,9 @@ export default function VendeurPOS() {
 
             {/* Vue Panier */}
             {currentView === 'cart' && (
-              <Card className="bg-gray-800 border-gray-700">
+              <Card className="bg-white border-gray-200 shadow-sm">
                 <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
+                  <CardTitle className="text-gray-900 flex items-center gap-2">
                     <ShoppingCart className="w-5 h-5" />
                     Panier ({cart.length} articles)
                   </CardTitle>
@@ -586,44 +601,44 @@ export default function VendeurPOS() {
                 <CardContent>
                   {cart.length === 0 ? (
                     <div className="text-center py-8">
-                      <ShoppingCart className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-                      <p className="text-gray-400">Votre panier est vide</p>
+                      <ShoppingCart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600">Votre panier est vide</p>
                     </div>
                   ) : (
                     <div className="space-y-4 max-h-[500px] overflow-y-auto">
                       {cart.map((item) => (
-                        <div key={item.id} className="flex items-center gap-4 p-4 bg-gray-700 rounded-lg">
+                        <div key={item.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
                           <div className="flex-1">
-                            <h4 className="text-white font-medium">{item.nom}</h4>
-                            <p className="text-gray-400 text-sm">{item.prix.toFixed(2)}€ x {item.quantite}</p>
+                            <h4 className="text-gray-900 font-medium">{item.nom}</h4>
+                            <p className="text-gray-600 text-sm">{item.prix.toFixed(2)}€ x {item.quantite}</p>
                           </div>
                           <div className="flex items-center gap-2">
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => updateQuantity(item.id, -1)}
-                              className="w-8 h-8 p-0"
+                              className="w-8 h-8 p-0 border-gray-300 text-gray-700 hover:bg-gray-50"
                             >
                               <Minus className="w-4 h-4" />
                             </Button>
-                            <span className="text-white font-bold w-8 text-center">{item.quantite}</span>
+                            <span className="text-gray-900 font-bold w-8 text-center">{item.quantite}</span>
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => updateQuantity(item.id, 1)}
-                              className="w-8 h-8 p-0"
+                              className="w-8 h-8 p-0 border-gray-300 text-gray-700 hover:bg-gray-50"
                             >
                               <Plus className="w-4 h-4" />
                             </Button>
                           </div>
-                          <div className="text-white font-bold">
+                          <div className="text-gray-900 font-bold">
                             {(item.prix * item.quantite).toFixed(2)}€
                           </div>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => removeFromCart(item.id)}
-                            className="text-red-400 hover:text-red-300"
+                            className="text-red-600 hover:text-red-700 border-red-200 hover:bg-red-50"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -639,30 +654,30 @@ export default function VendeurPOS() {
           {/* Panel de droite - Résumé et paiement */}
           <div className="space-y-6">
             {/* Résumé de la commande */}
-            <Card className="bg-gray-800 border-gray-700">
+            <Card className="bg-white border-gray-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-gray-900 flex items-center gap-2">
                   <Calculator className="w-5 h-5" />
                   Résumé
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <div className="flex justify-between text-gray-300">
+                  <div className="flex justify-between text-gray-700">
                     <span>Sous-total:</span>
                     <span>{getTotal().toFixed(2)}€</span>
                   </div>
                   
                   {reductionMontant > 0 && (
-                    <div className="flex justify-between text-green-400">
+                    <div className="flex justify-between text-green-600">
                       <span>Réduction:</span>
                       <span>-{reductionMontant.toFixed(2)}€</span>
                     </div>
                   )}
                   
-                  <Separator className="bg-gray-600" />
+                  <Separator className="bg-gray-300" />
                   
-                  <div className="flex justify-between text-white font-bold text-lg">
+                  <div className="flex justify-between text-gray-900 font-bold text-lg">
                     <span>Total:</span>
                     <span>{getTotalAvecReduction().toFixed(2)}€</span>
                   </div>
@@ -670,12 +685,12 @@ export default function VendeurPOS() {
 
                 {/* Réduction */}
                 <div>
-                  <Label className="text-gray-300">Réduction (€)</Label>
+                  <Label className="text-gray-700">Réduction (€)</Label>
                   <Input
                     type="number"
                     value={reductionMontant}
                     onChange={(e) => setReductionMontant(Number(e.target.value) || 0)}
-                    className="bg-gray-700 border-gray-600 text-white"
+                    className="bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
                     placeholder="0.00"
                   />
                 </div>
@@ -683,13 +698,13 @@ export default function VendeurPOS() {
             </Card>
 
             {/* Client */}
-            <Card className="bg-gray-800 border-gray-700">
+            <Card className="bg-white border-gray-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="text-white">Client</CardTitle>
+                <CardTitle className="text-gray-900">Client</CardTitle>
               </CardHeader>
               <CardContent>
                 <Select value={selectedClient} onValueChange={setSelectedClient}>
-                  <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                  <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                     <SelectValue placeholder="Sélectionner un client" />
                   </SelectTrigger>
                   <SelectContent>
@@ -705,15 +720,15 @@ export default function VendeurPOS() {
             </Card>
 
             {/* Paiement */}
-            <Card className="bg-gray-800 border-gray-700">
+            <Card className="bg-white border-gray-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="text-white">Paiement</CardTitle>
+                <CardTitle className="text-gray-900">Paiement</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label className="text-gray-300">Mode de paiement</Label>
+                  <Label className="text-gray-700">Mode de paiement</Label>
                   <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                    <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                    <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -749,21 +764,21 @@ export default function VendeurPOS() {
                 {paymentMethod === 'cheque' && (
                   <div className="space-y-2">
                     <div>
-                      <Label className="text-gray-300">Numéro de chèque</Label>
+                      <Label className="text-gray-700">Numéro de chèque</Label>
                       <Input
                         value={chequeNumber}
                         onChange={(e) => setChequeNumber(e.target.value)}
-                        className="bg-gray-700 border-gray-600 text-white"
+                        className="bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
                         placeholder="123456"
                       />
                     </div>
                     <div>
-                      <Label className="text-gray-300">Date d'échéance</Label>
+                      <Label className="text-gray-700">Date d'échéance</Label>
                       <Input
                         type="date"
                         value={chequeEcheance}
                         onChange={(e) => setChequeEcheance(e.target.value)}
-                        className="bg-gray-700 border-gray-600 text-white"
+                        className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
                       />
                     </div>
                   </div>
@@ -771,9 +786,9 @@ export default function VendeurPOS() {
 
                 {paymentMethod === 'virement' && (
                   <div>
-                    <Label className="text-gray-300">Compte bancaire</Label>
+                    <Label className="text-gray-700">Compte bancaire</Label>
                     <Select value={selectedAccount} onValueChange={setSelectedAccount}>
-                      <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                      <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                         <SelectValue placeholder="Sélectionner un compte" />
                       </SelectTrigger>
                       <SelectContent>
@@ -792,7 +807,7 @@ export default function VendeurPOS() {
                   <Button
                     onClick={finaliserVente}
                     disabled={cart.length === 0 || loadingVente}
-                    className="w-full h-14 text-lg bg-gaming-green hover:bg-gaming-green/80"
+                    className="w-full h-14 text-lg bg-green-600 hover:bg-green-700 text-white"
                   >
                     {loadingVente ? (
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
@@ -810,7 +825,7 @@ export default function VendeurPOS() {
                       setCurrentView('categories');
                     }}
                     variant="outline"
-                    className="w-full border-gray-600 text-gray-300"
+                    className="w-full border-gray-300 text-gray-700 hover:bg-gray-50"
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
                     Vider le panier
@@ -823,13 +838,13 @@ export default function VendeurPOS() {
 
         {/* Modal de ticket */}
         <Dialog open={showTicket} onOpenChange={setShowTicket}>
-          <DialogContent className="bg-gray-800 border-gray-700 max-w-md">
+          <DialogContent className="bg-white border-gray-200 max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-white flex items-center gap-2">
+              <DialogTitle className="text-gray-900 flex items-center gap-2">
                 <Receipt className="w-5 h-5" />
                 Vente finalisée
               </DialogTitle>
-              <DialogDescription className="text-gray-400">
+              <DialogDescription className="text-gray-600">
                 La vente a été enregistrée avec succès
               </DialogDescription>
             </DialogHeader>
@@ -837,25 +852,25 @@ export default function VendeurPOS() {
             {venteFinalise && (
               <div className="space-y-4">
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-gaming-green rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Check className="w-8 h-8 text-white" />
                   </div>
-                  <h3 className="text-white font-bold text-lg">Vente {venteFinalise.numero_vente}</h3>
-                  <p className="text-gray-400">Total: {venteFinalise.total_ttc.toFixed(2)}€</p>
+                  <h3 className="text-gray-900 font-bold text-lg">Vente {venteFinalise.numero_vente}</h3>
+                  <p className="text-gray-600">Total: {venteFinalise.total_ttc.toFixed(2)}€</p>
                 </div>
                 
-                <div className="bg-gray-700 p-4 rounded-lg space-y-2">
+                <div className="bg-gray-50 p-4 rounded-lg space-y-2 border border-gray-200">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Client:</span>
-                    <span className="text-white">{venteFinalise.client_nom}</span>
+                    <span className="text-gray-600">Client:</span>
+                    <span className="text-gray-900">{venteFinalise.client_nom}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Paiement:</span>
-                    <span className="text-white capitalize">{venteFinalise.mode_paiement}</span>
+                    <span className="text-gray-600">Paiement:</span>
+                    <span className="text-gray-900 capitalize">{venteFinalise.mode_paiement}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Articles:</span>
-                    <span className="text-white">{venteFinalise.articles.length}</span>
+                    <span className="text-gray-600">Articles:</span>
+                    <span className="text-gray-900">{venteFinalise.articles.length}</span>
                   </div>
                 </div>
               </div>
@@ -864,7 +879,7 @@ export default function VendeurPOS() {
             <DialogFooter className="gap-2">
               <Button
                 onClick={() => setShowTicket(false)}
-                className="bg-gaming-purple hover:bg-gaming-purple/80"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <Printer className="w-4 h-4 mr-2" />
                 Imprimer ticket
@@ -872,7 +887,7 @@ export default function VendeurPOS() {
               <Button
                 onClick={() => setShowTicket(false)}
                 variant="outline"
-                className="border-gray-600"
+                className="border-gray-300 text-gray-700 hover:bg-gray-50"
               >
                 Fermer
               </Button>
