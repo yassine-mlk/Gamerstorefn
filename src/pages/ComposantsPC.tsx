@@ -36,6 +36,7 @@ import { useComposantsPC, ComposantPC, NewComposantPC } from "@/hooks/useComposa
 import { useSuppliers } from "@/hooks/useSuppliers";
 import { useNavigate } from "react-router-dom";
 import { AssignProductDialog } from "@/components/AssignProductDialog";
+import { AddSupplierDialog } from "@/components/AddSupplierDialog";
 import { uploadImageByType, uploadImageFromBase64ByType } from "@/lib/imageUpload";
 
 // Catégories de composants PC avec leurs icônes
@@ -55,7 +56,7 @@ const etats = ["Neuf", "Comme neuf", "Occasion"];
 
 export default function ComposantsPC({ embedded = false }: { embedded?: boolean }) {
   const { composantsPC, loading, addComposantPC, updateComposantPC, deleteComposantPC } = useComposantsPC();
-  const { suppliers, loading: loadingSuppliers } = useSuppliers();
+  const { suppliers, loading: loadingSuppliers, refreshSuppliers } = useSuppliers();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategorie, setFilterCategorie] = useState<string>("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -85,6 +86,20 @@ export default function ComposantsPC({ embedded = false }: { embedded?: boolean 
   });
   
   const { toast } = useToast();
+
+  // Fonction pour gérer l'ajout d'un nouveau fournisseur
+  const handleSupplierAdded = async (supplierId: string) => {
+    // Rafraîchir la liste des fournisseurs
+    await refreshSuppliers();
+    
+    // Sélectionner automatiquement le nouveau fournisseur
+    setNewProduct(prev => ({ ...prev, fournisseur_id: supplierId }));
+    
+    toast({
+      title: "Fournisseur ajouté",
+      description: "Le nouveau fournisseur a été ajouté et sélectionné",
+    });
+  };
 
   const filteredProducts = composantsPC.filter(product => {
     const matchesSearch = product.nom_produit.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -476,15 +491,26 @@ export default function ComposantsPC({ embedded = false }: { embedded?: boolean 
                     placeholder="Scannez ou saisissez le code-barres"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="fournisseur_id">Fournisseur</Label>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="fournisseur_id">Fournisseur</Label>
+                    <AddSupplierDialog 
+                      onSupplierAdded={handleSupplierAdded}
+                      trigger={
+                        <Button variant="outline" size="sm" className="text-blue-600 border-blue-600 hover:bg-blue-50">
+                          <Plus className="w-4 h-4 mr-1" />
+                          Ajouter
+                        </Button>
+                      }
+                    />
+                  </div>
                   <Select value={newProduct.fournisseur_id || "none"} onValueChange={(value) => setNewProduct({ ...newProduct, fournisseur_id: value === "none" ? undefined : value })}>
                     <SelectTrigger className="bg-white border-gray-200">
                       <SelectValue placeholder="Sélectionner un fournisseur" />
                     </SelectTrigger>
                     <SelectContent className="bg-white border-gray-200">
                       <SelectItem value="none">Aucun fournisseur</SelectItem>
-                      {activeFournisseurs.map((fournisseur) => (
+                      {suppliers.map((fournisseur) => (
                         <SelectItem key={fournisseur.id} value={fournisseur.id}>{fournisseur.nom}</SelectItem>
                       ))}
                     </SelectContent>

@@ -62,6 +62,7 @@ interface CartItem {
   categorie: string;
   type: 'pc_portable' | 'moniteur' | 'peripherique' | 'chaise_gaming' | 'pc_gamer' | 'composant_pc';
   stock_disponible: number;
+  image_url?: string; // Nouveau: URL de l'image du produit
 }
 
 type ProductType = 'pc_portable' | 'moniteur' | 'peripherique' | 'chaise_gaming' | 'pc_gamer' | 'composant_pc' | '';
@@ -97,6 +98,7 @@ export default function PointOfSale() {
   const [paymentMethod, setPaymentMethod] = useState("especes");
   const [saleType, setSaleType] = useState("magasin");
   const [showProductSearch, setShowProductSearch] = useState(false);
+  const [taxMode, setTaxMode] = useState<"with_tax" | "without_tax">("with_tax"); // Nouveau: mode de taxe
   
   // États pour les paiements avancés
   const [chequeNumber, setChequeNumber] = useState("");
@@ -325,7 +327,8 @@ export default function PointOfSale() {
         codeBarre: product.codeBarre,
         categorie: product.categorie,
         type: product.type,
-        stock_disponible: product.stock
+        stock_disponible: product.stock,
+        image_url: product.image_url // Ajouter l'image du produit
       }]);
     }
 
@@ -371,6 +374,37 @@ export default function PointOfSale() {
   const getTotalAvecReduction = () => {
     const sousTotal = getTotal();
     return Math.max(0, sousTotal - reductionMontant);
+  };
+
+  // Nouveau: Calculer le total selon le mode de taxe
+  const getTotalWithTaxMode = () => {
+    const totalAvecReduction = getTotalAvecReduction();
+    
+    if (taxMode === "with_tax") {
+      // Si mode avec taxe, on ajoute 20% au prix HT du système
+      return totalAvecReduction * 1.2;
+    } else {
+      // Si mode sans taxe, on garde le prix HT du système
+      return totalAvecReduction;
+    }
+  };
+
+  // Nouveau: Calculer le total HT (toujours le prix du système)
+  const getTotalHT = () => {
+    return getTotalAvecReduction();
+  };
+
+  // Nouveau: Calculer la TVA selon le mode de taxe
+  const getTVA = () => {
+    const totalAvecReduction = getTotalAvecReduction();
+    
+    if (taxMode === "with_tax") {
+      // Si mode avec taxe, TVA = 20% du prix HT du système
+      return totalAvecReduction * 0.2;
+    } else {
+      // Si mode sans taxe, pas de TVA
+      return 0;
+    }
   };
 
   const getPaymentIcon = (payment: string) => {
@@ -593,11 +627,12 @@ export default function PointOfSale() {
       const clientName = `${selectedClientData.prenom} ${selectedClientData.nom}`;
       const clientEmail = selectedClientData.email;
       
-      // Calculer les totaux avec réduction
+      // Calculer les totaux avec réduction selon le mode de taxe
       const sousTotal = getTotal();
       const totalAvecReduction = getTotalAvecReduction();
-      const tva = totalAvecReduction * 0.2; // 20% de TVA
-      const totalHT = totalAvecReduction - tva;
+      const totalHT = getTotalHT();
+      const tva = getTVA();
+      const totalTTC = getTotalWithTaxMode();
 
       // Préparer les données de la vente
       const venteData = {
@@ -608,16 +643,26 @@ export default function PointOfSale() {
         tva: tva,
         remise: reductionMontant,
         total_ht: totalHT,
-        total_ttc: totalAvecReduction,
+        total_ttc: totalTTC,
         mode_paiement: paymentMethod,
         type_vente: saleType,
         statut: 'payee' as const,
         notes: `Vente effectuée depuis le point de vente`
       };
 
-      // Préparer les articles
+      // Préparer les articles selon le mode de taxe
       const articles: Omit<VenteArticle, 'id' | 'vente_id'>[] = cart.map(item => {
-        const prixHT = item.prix / 1.2; // Prix HT (en supposant 20% de TVA)
+        const prixHT = item.prix; // Le prix du système est toujours HT
+        
+        let prixTTC: number;
+        if (taxMode === "with_tax") {
+          // Si mode avec taxe, on ajoute 20% au prix HT
+          prixTTC = item.prix * 1.2;
+        } else {
+          // Si mode sans taxe, le prix TTC = prix HT (pas de TVA)
+          prixTTC = item.prix;
+        }
+        
         return {
           produit_id: safeProductId(item.id), // Convertir l'ID en format sûr pour la base de données
           produit_type: item.type,
@@ -626,11 +671,12 @@ export default function PointOfSale() {
           marque: '', // À récupérer depuis les données produit si nécessaire
           modele: '',
           prix_unitaire_ht: prixHT,
-          prix_unitaire_ttc: item.prix,
+          prix_unitaire_ttc: prixTTC,
           quantite: item.quantite,
           remise_unitaire: 0,
           total_ht: prixHT * item.quantite,
-          total_ttc: item.prix * item.quantite
+          total_ttc: prixTTC * item.quantite,
+          image_url: item.image_url // Ajouter l'image du produit
         };
       });
 
@@ -674,7 +720,7 @@ export default function PointOfSale() {
         setVenteFinalise({
           numeroVente: venteId,
           clientNom: clientName,
-          total: totalAvecReduction,
+          total: totalTTC,
           articles: cart,
           reduction: reductionMontant,
           modePaiement: paymentMethod
@@ -1249,6 +1295,41 @@ export default function PointOfSale() {
 
               <Separator className="bg-gray-300" />
 
+              {/* Mode de taxe */}
+              <div className="space-y-3">
+                <Label className="text-gray-700">Mode de facturation</Label>
+                <div className="space-y-2">
+                  {[
+                    { value: "with_tax", label: "Prix avec TVA (TTC)", icon: DollarSign },
+                    { value: "without_tax", label: "Prix hors taxe (HT)", icon: Percent }
+                  ].map(({ value, label, icon: Icon }) => (
+                    <div
+                      key={value}
+                      className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all ${
+                        taxMode === value
+                          ? 'border-green-600 bg-green-50 text-green-600'
+                          : 'border-gray-300 bg-white text-gray-900 hover:border-gray-400 hover:bg-gray-50'
+                      }`}
+                      onClick={() => setTaxMode(value as "with_tax" | "without_tax")}
+                    >
+                      <Icon className="w-4 h-4 mr-3" />
+                      <span className="font-medium">{label}</span>
+                      {taxMode === value && (
+                        <div className="ml-auto w-2 h-2 bg-green-600 rounded-full"></div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                                  <p className="text-sm text-gray-500">
+                    {taxMode === "with_tax" 
+                      ? "Les prix du système (HT) + 20% de TVA. La facture affichera 'Total TTC'."
+                      : "Les prix du système (HT) sans TVA. La facture affichera juste 'Total'."
+                    }
+                  </p>
+              </div>
+
+              <Separator className="bg-gray-300" />
+
               {/* Mode de paiement */}
               <div className="space-y-3">
                 <Label className="text-gray-700">Mode de paiement</Label>
@@ -1511,9 +1592,17 @@ export default function PointOfSale() {
                     <span className="text-red-600">-{reductionMontant.toFixed(2)} MAD</span>
                   </div>
                 )}
+                {taxMode === "with_tax" && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">TVA (20%):</span>
+                    <span className="text-gray-600">+{getTVA().toFixed(2)} MAD</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-lg font-bold border-t border-gray-300 pt-2">
-                  <span className="text-gray-900">Total TTC:</span>
-                  <span className="text-blue-600">{getTotalAvecReduction().toFixed(2)} MAD</span>
+                  <span className="text-gray-900">
+                    {taxMode === "with_tax" ? "Total TTC:" : "Total:"}
+                  </span>
+                  <span className="text-blue-600">{getTotalWithTaxMode().toFixed(2)} MAD</span>
                 </div>
               </div>
             </div>
@@ -1585,9 +1674,15 @@ export default function PointOfSale() {
                     <span className="text-red-600">-{reductionMontant.toFixed(2)} MAD</span>
                   </div>
                 )}
+                {taxMode === "with_tax" && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">TVA (20%):</span>
+                    <span className="text-gray-600">+{getTVA().toFixed(2)} MAD</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center text-lg font-bold border-t border-gray-300 pt-2">
                   <span className="text-gray-900">Total à payer:</span>
-                  <span className="text-blue-600">{getTotalAvecReduction().toFixed(2)} MAD</span>
+                  <span className="text-blue-600">{getTotalWithTaxMode().toFixed(2)} MAD</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Paiement:</span>
@@ -1693,9 +1788,15 @@ export default function PointOfSale() {
                     <span>-{reductionMontant.toFixed(2)} MAD</span>
                   </div>
                 )}
+                {taxMode === "with_tax" && (
+                  <div className="flex justify-between">
+                    <span>TVA (20%):</span>
+                    <span>+{getTVA().toFixed(2)} MAD</span>
+                  </div>
+                )}
                 <div className="flex justify-between border-t border-gray-300 pt-1 font-bold">
                   <span>TOTAL TTC:</span>
-                  <span>{getTotalAvecReduction().toFixed(2)} MAD</span>
+                  <span>{getTotalWithTaxMode().toFixed(2)} MAD</span>
                 </div>
                 <div className="flex justify-between">
                   <span>MODE PAIEMENT:</span>

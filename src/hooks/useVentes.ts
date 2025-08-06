@@ -19,6 +19,7 @@ export interface VenteArticle {
   remise_unitaire?: number;
   total_ht: number;
   total_ttc: number;
+  image_url?: string; // URL de l'image du produit
   created_at?: string;
 }
 

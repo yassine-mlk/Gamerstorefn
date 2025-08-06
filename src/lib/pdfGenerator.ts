@@ -89,14 +89,44 @@ export class PDFGenerator {
     // Tableau des articles
     yPos += 20;
     
-    const tableColumns = ['Désignation', 'Qté', 'Prix unitaire HT', 'Total HT', 'Total TTC'];
-    const tableRows = vente.articles?.map(article => [
-      article.nom_produit,
-      article.quantite.toString(),
-      `${article.prix_unitaire_ht.toFixed(2)} MAD`,
-      `${article.total_ht.toFixed(2)} MAD`,
-      `${article.total_ttc.toFixed(2)} MAD`
-    ]) || [];
+    // Détecter le mode de taxe
+    const detectTaxMode = () => {
+      if (!vente.articles || vente.articles.length === 0) return "with_tax";
+      
+      const firstArticle = vente.articles[0];
+      const isWithoutTax = Math.abs(firstArticle.prix_unitaire_ttc - firstArticle.prix_unitaire_ht) < 0.01;
+      
+      return isWithoutTax ? "without_tax" : "with_tax";
+    };
+    
+    const taxMode = detectTaxMode();
+    
+    const tableColumns = taxMode === "with_tax" 
+      ? ['Image', 'Désignation', 'Qté', 'Prix unitaire HT', 'Total HT', 'Total TTC']
+      : ['Image', 'Désignation', 'Qté', 'Prix unitaire', 'Total'];
+      
+    const tableRows = vente.articles?.map(article => {
+      const imagePlaceholder = article.image_url ? "📷" : "📦";
+      
+      if (taxMode === "with_tax") {
+        return [
+          imagePlaceholder,
+          article.nom_produit,
+          article.quantite.toString(),
+          `${article.prix_unitaire_ht.toFixed(2)} MAD`,
+          `${article.total_ht.toFixed(2)} MAD`,
+          `${article.total_ttc.toFixed(2)} MAD`
+        ];
+      } else {
+        return [
+          imagePlaceholder,
+          article.nom_produit,
+          article.quantite.toString(),
+          `${article.prix_unitaire_ht.toFixed(2)} MAD`,
+          `${article.total_ht.toFixed(2)} MAD`
+        ];
+      }
+    }) || [];
     
     doc.autoTable({
       head: [tableColumns],
@@ -115,12 +145,19 @@ export class PDFGenerator {
       alternateRowStyles: { 
         fillColor: [249, 250, 251] 
       },
-      columnStyles: {
-        0: { cellWidth: 80 },
-        1: { cellWidth: 20, halign: 'center' },
-        2: { cellWidth: 30, halign: 'right' },
+      columnStyles: taxMode === "without_tax" ? {
+        0: { cellWidth: 15, halign: 'center' },
+        1: { cellWidth: 65, halign: 'left' },
+        2: { cellWidth: 20, halign: 'center' },
         3: { cellWidth: 30, halign: 'right' },
         4: { cellWidth: 30, halign: 'right' }
+      } : {
+        0: { cellWidth: 15, halign: 'center' },
+        1: { cellWidth: 85, halign: 'left' },
+        2: { cellWidth: 25, halign: 'center' },
+        3: { cellWidth: 40, halign: 'right' },
+        4: { cellWidth: 40, halign: 'right' },
+        5: { cellWidth: 40, halign: 'right' }
       }
     });
     
@@ -128,9 +165,11 @@ export class PDFGenerator {
     const finalY = (doc as any).lastAutoTable.finalY + 10;
     
     // Totaux
-    const totalsData = [
+    const totalsData = taxMode === "with_tax" && vente.tva > 0 ? [
       ['Sous-total HT', `${vente.total_ht.toFixed(2)} MAD`],
       ['TVA (20%)', `${vente.tva.toFixed(2)} MAD`]
+    ] : [
+      ['Total', `${vente.total_ttc.toFixed(2)} MAD`]
     ];
     
     if (vente.remise > 0) {

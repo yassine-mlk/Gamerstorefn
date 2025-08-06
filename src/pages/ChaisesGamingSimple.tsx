@@ -26,6 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSuppliers } from "@/hooks/useSuppliers";
 import { useChaisesGamingSupabase, type ChaiseGamingSupabase, type NewChaiseGamingSupabase } from "@/hooks/useChaisesGamingSupabase";
 import { AssignProductDialog } from "@/components/AssignProductDialog";
+import { AddSupplierDialog } from "@/components/AddSupplierDialog";
 import { uploadImageByType, uploadImageFromBase64ByType } from "@/lib/imageUpload";
 
 // Marques de chaises gaming
@@ -33,7 +34,7 @@ const marques = ["DXRacer", "Secretlab", "Corsair", "Razer", "ASUS ROG", "MSI", 
 const garanties = ["Sans garantie", "3 mois", "6 mois", "9 mois", "12 mois"];
 
 export default function ChaisesGaming({ embedded = false }: { embedded?: boolean }) {
-  const { suppliers, loading: loadingSuppliers } = useSuppliers();
+  const { suppliers, loading: loadingSuppliers, refreshSuppliers } = useSuppliers();
   const { chaisesGaming, loading, addChaiseGaming, updateChaiseGaming, deleteChaiseGaming } = useChaisesGamingSupabase();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -61,6 +62,20 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
   });
   
   const { toast } = useToast();
+
+  // Fonction pour gérer l'ajout d'un nouveau fournisseur
+  const handleSupplierAdded = async (supplierId: string) => {
+    // Rafraîchir la liste des fournisseurs
+    await refreshSuppliers();
+    
+    // Sélectionner automatiquement le nouveau fournisseur
+    setNewProduct(prev => ({ ...prev, fournisseur_id: supplierId }));
+    
+    toast({
+      title: "Fournisseur ajouté",
+      description: "Le nouveau fournisseur a été ajouté et sélectionné",
+    });
+  };
 
   const filteredProducts = chaisesGaming.filter(product => 
     product.nom_produit.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -538,8 +553,19 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
                   </div>
                 </div>
                 
-                <div className="mt-4">
-                  <Label htmlFor="fournisseur_id">Fournisseur</Label>
+                <div className="mt-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="fournisseur_id">Fournisseur</Label>
+                    <AddSupplierDialog 
+                      onSupplierAdded={handleSupplierAdded}
+                      trigger={
+                        <Button variant="outline" size="sm" className="text-blue-600 border-blue-600 hover:bg-blue-50">
+                          <Plus className="w-4 h-4 mr-1" />
+                          Ajouter
+                        </Button>
+                      }
+                    />
+                  </div>
                   <Select value={newProduct.fournisseur_id} onValueChange={(value) => setNewProduct({ ...newProduct, fournisseur_id: value })}>
                     <SelectTrigger className="bg-white border-gray-200">
                       <SelectValue placeholder="Sélectionner un fournisseur" />

@@ -54,6 +54,7 @@ interface CartItem {
   categorie: string;
   type: 'pc_portable' | 'moniteur' | 'peripherique' | 'chaise_gaming' | 'pc_gamer' | 'composant_pc';
   stock_disponible: number;
+  image_url?: string; // Nouveau: URL de l'image du produit
 }
 
 type ProductType = 'pc_portable' | 'moniteur' | 'peripherique' | 'chaise_gaming' | 'pc_gamer' | 'composant_pc' | '';
@@ -88,6 +89,7 @@ export default function VendeurPOS() {
   const [paymentMethod, setPaymentMethod] = useState("especes");
   const [saleType, setSaleType] = useState("magasin");
   const [showProductSearch, setShowProductSearch] = useState(false);
+  const [taxMode, setTaxMode] = useState<"with_tax" | "without_tax">("with_tax"); // Nouveau: mode de taxe
   
   // États pour les paiements
   const [chequeNumber, setChequeNumber] = useState("");
@@ -254,7 +256,8 @@ export default function VendeurPOS() {
         codeBarre: product.code_barre || '',
         categorie: product.categorie || 'Autre',
         type: product.type,
-        stock_disponible: stockDisponible
+        stock_disponible: stockDisponible,
+        image_url: product.image_url // Ajouter l'image du produit
       };
       setCart([...cart, newItem]);
     }
@@ -303,6 +306,37 @@ export default function VendeurPOS() {
     return Math.max(0, getTotal() - reductionMontant);
   };
 
+  // Nouveau: Calculer le total selon le mode de taxe
+  const getTotalWithTaxMode = () => {
+    const totalAvecReduction = getTotalAvecReduction();
+    
+    if (taxMode === "with_tax") {
+      // Si mode avec taxe, on ajoute 20% au prix HT du système
+      return totalAvecReduction * 1.2;
+    } else {
+      // Si mode sans taxe, on garde le prix HT du système
+      return totalAvecReduction;
+    }
+  };
+
+  // Nouveau: Calculer le total HT (toujours le prix du système)
+  const getTotalHT = () => {
+    return getTotalAvecReduction();
+  };
+
+  // Nouveau: Calculer la TVA selon le mode de taxe
+  const getTVA = () => {
+    const totalAvecReduction = getTotalAvecReduction();
+    
+    if (taxMode === "with_tax") {
+      // Si mode avec taxe, TVA = 20% du prix HT du système
+      return totalAvecReduction * 0.2;
+    } else {
+      // Si mode sans taxe, pas de TVA
+      return 0;
+    }
+  };
+
   // Finaliser la vente
   const finaliserVente = async () => {
     if (cart.length === 0) {
@@ -315,8 +349,9 @@ export default function VendeurPOS() {
     }
 
     const total = getTotalAvecReduction();
-    const tva = total * 0.2;
-    const totalHt = total - tva;
+    const totalHT = getTotalHT();
+    const tva = getTVA();
+    const totalTTC = getTotalWithTaxMode();
 
     const venteData = {
       client_nom: selectedClient && selectedClient !== "anonymous" ? clients.find(c => c.id === selectedClient)?.nom || "Client anonyme" : "Client anonyme",
@@ -325,8 +360,8 @@ export default function VendeurPOS() {
       sous_total: getTotal(),
       tva: tva,
       remise: reductionMontant,
-      total_ht: totalHt,
-      total_ttc: total,
+      total_ht: totalHT,
+      total_ttc: totalTTC,
       mode_paiement: paymentMethod,
       type_vente: saleType,
       statut: "payee" as const,
@@ -334,26 +369,34 @@ export default function VendeurPOS() {
     };
 
     const articles: Omit<VenteArticle, 'id' | 'vente_id'>[] = cart.map(item => {
-      const prixUnitaireHt = item.prix / 1.2; // Calculer HT depuis TTC
-      const totalItemHt = prixUnitaireHt * item.quantite;
-      const totalItemTtc = item.prix * item.quantite;
+      const prixHT = item.prix; // Le prix du système est toujours HT
+      
+      let prixTTC: number;
+      if (taxMode === "with_tax") {
+        // Si mode avec taxe, on ajoute 20% au prix HT
+        prixTTC = item.prix * 1.2;
+      } else {
+        // Si mode sans taxe, le prix TTC = prix HT (pas de TVA)
+        prixTTC = item.prix;
+      }
       
       return {
         produit_id: safeProductId(item.id),
         produit_type: item.type,
         nom_produit: item.nom,
         code_barre: item.codeBarre,
-        prix_unitaire_ht: prixUnitaireHt,
-        prix_unitaire_ttc: item.prix,
+        prix_unitaire_ht: prixHT,
+        prix_unitaire_ttc: prixTTC,
         quantite: item.quantite,
-        total_ht: totalItemHt,
-        total_ttc: totalItemTtc
+        total_ht: prixHT * item.quantite,
+        total_ttc: prixTTC * item.quantite,
+        image_url: item.image_url // Ajouter l'image du produit
       };
     });
 
     const paiements: PaiementDetaille[] = [{
       mode_paiement: paymentMethod as 'especes' | 'carte' | 'virement' | 'cheque',
-      montant: total,
+      montant: totalTTC,
       numero_cheque: paymentMethod === 'cheque' ? chequeNumber : undefined,
       date_echeance: paymentMethod === 'cheque' ? chequeEcheance : undefined,
       compte_bancaire_id: paymentMethod === 'virement' ? selectedAccount : undefined
@@ -665,21 +708,28 @@ export default function VendeurPOS() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-gray-700">
                     <span>Sous-total:</span>
-                    <span>{getTotal().toFixed(2)}€</span>
+                    <span>{getTotal().toFixed(2)} MAD</span>
                   </div>
                   
                   {reductionMontant > 0 && (
                     <div className="flex justify-between text-green-600">
                       <span>Réduction:</span>
-                      <span>-{reductionMontant.toFixed(2)}€</span>
+                      <span>-{reductionMontant.toFixed(2)} MAD</span>
+                    </div>
+                  )}
+
+                  {taxMode === "without_tax" && (
+                    <div className="flex justify-between text-gray-600">
+                      <span>TVA (20%):</span>
+                      <span>+{getTVA().toFixed(2)} MAD</span>
                     </div>
                   )}
                   
                   <Separator className="bg-gray-300" />
                   
                   <div className="flex justify-between text-gray-900 font-bold text-lg">
-                    <span>Total:</span>
-                    <span>{getTotalAvecReduction().toFixed(2)}€</span>
+                    <span>{taxMode === "without_tax" ? "Total TTC:" : "Total:"}</span>
+                    <span>{getTotalWithTaxMode().toFixed(2)} MAD</span>
                   </div>
                 </div>
 
@@ -702,7 +752,7 @@ export default function VendeurPOS() {
               <CardHeader>
                 <CardTitle className="text-gray-900">Client</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
                 <Select value={selectedClient} onValueChange={setSelectedClient}>
                   <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                     <SelectValue placeholder="Sélectionner un client" />
@@ -716,6 +766,39 @@ export default function VendeurPOS() {
                     ))}
                   </SelectContent>
                 </Select>
+
+                {/* Mode de taxe */}
+                <div className="space-y-2">
+                  <Label className="text-gray-700">Mode de facturation</Label>
+                  <div className="space-y-2">
+                    {[
+                      { value: "with_tax", label: "Prix avec TVA (TTC)", icon: DollarSign },
+                      { value: "without_tax", label: "Prix hors taxe (HT)", icon: Percent }
+                    ].map(({ value, label, icon: Icon }) => (
+                      <div
+                        key={value}
+                        className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all ${
+                          taxMode === value
+                            ? 'border-green-600 bg-green-50 text-green-600'
+                            : 'border-gray-300 bg-white text-gray-900 hover:border-gray-400 hover:bg-gray-50'
+                        }`}
+                        onClick={() => setTaxMode(value as "with_tax" | "without_tax")}
+                      >
+                        <Icon className="w-4 h-4 mr-3" />
+                        <span className="font-medium">{label}</span>
+                        {taxMode === value && (
+                          <div className="ml-auto w-2 h-2 bg-green-600 rounded-full"></div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    {taxMode === "with_tax" 
+                      ? "Les prix du système (HT) + 20% de TVA. La facture affichera 'Total TTC'."
+                      : "Les prix du système (HT) sans TVA. La facture affichera juste 'Total'."
+                    }
+                  </p>
+                </div>
               </CardContent>
             </Card>
 

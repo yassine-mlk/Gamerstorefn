@@ -33,6 +33,7 @@ import { usePeripheriques, Peripherique, NewPeripherique } from "@/hooks/usePeri
 import { useSuppliers } from "@/hooks/useSuppliers";
 import { useSettings } from "@/hooks/useSettings";
 import { uploadImage, uploadImageFromBase64 } from "@/lib/imageUpload";
+import { AddSupplierDialog } from "@/components/AddSupplierDialog";
 
 // Données par défaut
 const categories = [
@@ -50,7 +51,7 @@ const etats = ["Neuf", "Comme neuf", "Occasion"];
 
 export default function Peripheriques({ embedded = false }: { embedded?: boolean }) {
   const { peripheriques, loading, addPeripherique, updatePeripherique, deletePeripherique } = usePeripheriques();
-  const { suppliers, loading: loadingSuppliers } = useSuppliers();
+  const { suppliers, loading: loadingSuppliers, refreshSuppliers } = useSuppliers();
   const { settings } = useSettings();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -84,6 +85,20 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
   });
   
   const { toast } = useToast();
+
+  // Fonction pour gérer l'ajout d'un nouveau fournisseur
+  const handleSupplierAdded = async (supplierId: string) => {
+    // Rafraîchir la liste des fournisseurs
+    await refreshSuppliers();
+    
+    // Sélectionner automatiquement le nouveau fournisseur
+    setNewPeripherique(prev => ({ ...prev, fournisseur_id: supplierId }));
+    
+    toast({
+      title: "Fournisseur ajouté",
+      description: "Le nouveau fournisseur a été ajouté et sélectionné",
+    });
+  };
 
   const filteredPeripheriques = peripheriques.filter(peripherique => 
     peripherique.nom_produit.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -595,8 +610,19 @@ export default function Peripheriques({ embedded = false }: { embedded?: boolean
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="fournisseur">Fournisseur</Label>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="fournisseur">Fournisseur</Label>
+                      <AddSupplierDialog 
+                        onSupplierAdded={handleSupplierAdded}
+                        trigger={
+                          <Button variant="outline" size="sm" className="text-blue-600 border-blue-600 hover:bg-blue-50">
+                            <Plus className="w-4 h-4 mr-1" />
+                            Ajouter
+                          </Button>
+                        }
+                      />
+                    </div>
                     <Select
                       value={newPeripherique.fournisseur_id}
                       onValueChange={(value) => setNewPeripherique({ ...newPeripherique, fournisseur_id: value })}

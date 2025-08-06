@@ -39,6 +39,19 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
     const totalTTC = vente.total_ttc || 0;
     const fraisLivraison = vente.frais_livraison || 0;
     
+    // Détecter le mode de taxe en comparant les prix des articles
+    const detectTaxMode = () => {
+      if (!vente.articles || vente.articles.length === 0) return "with_tax";
+      
+      // Si les prix unitaires TTC sont égaux aux prix unitaires HT, alors c'est du mode sans taxe
+      const firstArticle = vente.articles[0];
+      const isWithoutTax = Math.abs(firstArticle.prix_unitaire_ttc - firstArticle.prix_unitaire_ht) < 0.01;
+      
+      return isWithoutTax ? "without_tax" : "with_tax";
+    };
+    
+    const taxMode = detectTaxMode();
+    
     // Format des nombres en français
     const formatPrice = (price: number) => price.toFixed(2);
     const formatPriceText = (price: number) => {
@@ -193,9 +206,14 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
             vertical-align: middle;
         }
         
+        .products-table .product-image {
+            text-align: center;
+            width: 60px;
+        }
+        
         .products-table .product-name {
             text-align: left;
-            max-width: 300px;
+            max-width: 250px;
         }
         
         .products-table .price {
@@ -323,6 +341,7 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
             <thead>
                 <tr>
                     <th>ID</th>
+                    <th>IMAGE</th>
                     <th>NOM DU PRODUIT</th>
                     <th>PRIX</th>
                     <th>QTÉ</th>
@@ -333,16 +352,29 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
                 ${vente.articles?.map((article, index) => `
                     <tr>
                         <td>${index + 1}</td>
+                        <td class="product-image">
+                            ${article.image_url ? `
+                                <img src="${article.image_url}" alt="${article.nom_produit}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div style="width: 40px; height: 40px; background-color: #f5f5f5; border-radius: 4px; border: 1px solid #ddd; display: none; align-items: center; justify-content: center; font-size: 12px; color: #999;">
+                                    <span>📦</span>
+                                </div>
+                            ` : `
+                                <div style="width: 40px; height: 40px; background-color: #f5f5f5; border-radius: 4px; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #999;">
+                                    <span>📦</span>
+                                </div>
+                            `}
+                        </td>
                         <td class="product-name">${article.nom_produit}</td>
-                        <td class="price">${formatPrice(article.prix_unitaire_ttc)}</td>
+                        <td class="price">${formatPrice(taxMode === "without_tax" ? article.prix_unitaire_ht : article.prix_unitaire_ttc)}</td>
                         <td>${article.quantite}</td>
-                        <td class="price">${formatPrice(article.total_ttc)}</td>
+                        <td class="price">${formatPrice(taxMode === "without_tax" ? article.total_ht : article.total_ttc)}</td>
                     </tr>
                 `).join('') || ''}
                 
                 <!-- Lignes vides pour remplir l'espace -->
                 ${Array.from({ length: Math.max(0, 6 - (vente.articles?.length || 0)) }, (_, i) => `
                     <tr>
+                        <td>&nbsp;</td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
@@ -356,18 +388,27 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
         <!-- Totaux -->
         <div class="totals-section">
             <table class="totals-table">
-                <tr>
-                    <td class="label">Total HT:</td>
-                    <td class="amount">${formatPrice(totalHT)}</td>
-                </tr>
-                <tr>
-                    <td class="label">Total TVA (20%):</td>
-                    <td class="amount">${formatPrice(tva)}</td>
-                </tr>
-                <tr>
-                    <td class="label">Total Livraison:</td>
-                    <td class="amount">${formatPrice(fraisLivraison)}</td>
-                </tr>
+                ${taxMode === "with_tax" && tva > 0 ? `
+                    <tr>
+                        <td class="label">Total HT:</td>
+                        <td class="amount">${formatPrice(totalHT)}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Total TVA (20%):</td>
+                        <td class="amount">${formatPrice(tva)}</td>
+                    </tr>
+                ` : `
+                    <tr>
+                        <td class="label">Total:</td>
+                        <td class="amount">${formatPrice(totalTTC)}</td>
+                    </tr>
+                `}
+                ${fraisLivraison > 0 ? `
+                    <tr>
+                        <td class="label">Total Livraison:</td>
+                        <td class="amount">${formatPrice(fraisLivraison)}</td>
+                    </tr>
+                ` : ''}
                 <tr class="total-final">
                     <td class="label total-final">Prix Total:</td>
                     <td class="amount total-final">${formatPrice(totalTTC)}</td>
@@ -377,7 +418,7 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
         
         <!-- Montant en lettres -->
         <div class="amount-in-words">
-            Arrête le présente facture à la somme de ${formatPriceText(totalTTC)} ttc .
+            Arrête le présente facture à la somme de ${formatPriceText(totalTTC)} ${taxMode === "with_tax" ? "ttc" : ""} .
         </div>
         
         <!-- Pied de page -->

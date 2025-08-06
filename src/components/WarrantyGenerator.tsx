@@ -80,6 +80,16 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
             border-bottom: 3px solid #000;
         }
         
+        .header .logo-section {
+            flex: 0 0 auto;
+        }
+        
+        .header .warranty-title {
+            flex: 1;
+            text-align: center;
+            margin-left: -40px;
+        }
+        
         .logo-section {
             display: flex;
             align-items: center;
@@ -87,8 +97,8 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
         }
         
         .logo {
-            width: 80px;
-            height: 60px;
+            width: 120px;
+            height: 90px;
             background: #000;
             color: white;
             display: flex;
@@ -111,12 +121,12 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
         }
         
         .warranty-title {
-            font-size: 32px;
+            font-size: 36px;
             font-weight: bold;
             text-align: center;
-            margin: 0 20px;
-            color: #d4af37;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            margin: 0 auto;
+            color: #ff0000;
+            flex: 1;
         }
         
         .warranty-subtitle {
@@ -131,7 +141,7 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
             padding: 20px;
             margin-bottom: 25px;
             border-radius: 10px;
-            border: 2px solid #d4af37;
+            border: 2px solid #000;
         }
         
         .info-grid {
@@ -141,11 +151,11 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
         }
         
         .info-section h3 {
-            color: #d4af37;
+            color: #000;
             font-size: 14px;
             font-weight: bold;
             margin-bottom: 10px;
-            border-bottom: 1px solid #d4af37;
+            border-bottom: 1px solid #000;
             padding-bottom: 5px;
         }
         
@@ -165,7 +175,7 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
         }
         
         .products-title {
-            background: #d4af37;
+            background: #000;
             color: white;
             padding: 12px;
             font-size: 16px;
@@ -177,7 +187,7 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
         .products-table {
             width: 100%;
             border-collapse: collapse;
-            border: 2px solid #d4af37;
+            border: 2px solid #000;
         }
         
         .products-table th {
@@ -186,12 +196,12 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
             padding: 12px 8px;
             text-align: center;
             font-weight: bold;
-            border: 1px solid #d4af37;
+            border: 1px solid #000;
         }
         
         .products-table td {
             padding: 10px 8px;
-            border: 1px solid #d4af37;
+            border: 1px solid #000;
             text-align: center;
             vertical-align: middle;
         }
@@ -202,15 +212,15 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
         }
         
         .warranty-terms {
-            background: #fff3cd;
-            border: 2px solid #d4af37;
+            background: #ffe6e6;
+            border: 2px solid #000;
             border-radius: 10px;
             padding: 20px;
             margin-bottom: 25px;
         }
         
         .warranty-terms h3 {
-            color: #d4af37;
+            color: #000;
             font-size: 16px;
             font-weight: bold;
             margin-bottom: 15px;
@@ -230,7 +240,7 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
         
         .warranty-terms li:before {
             content: "✓";
-            color: #d4af37;
+            color: #000;
             font-weight: bold;
             position: absolute;
             left: 0;
@@ -249,7 +259,7 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
         .qr-code {
             width: 100px;
             height: 100px;
-            border: 2px solid #d4af37;
+            border: 2px solid #000;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -264,7 +274,7 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
         .validity-date {
             font-size: 18px;
             font-weight: bold;
-            color: #d4af37;
+            color: #000;
             margin-bottom: 5px;
         }
         
@@ -272,9 +282,30 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
             margin-top: 30px;
             text-align: center;
             font-size: 11px;
-            border-top: 2px solid #d4af37;
+            border-top: 2px solid #000;
             padding-top: 15px;
             color: #666;
+        }
+        
+        .stamp-section {
+            margin-top: 60px;
+            text-align: center;
+            padding: 40px;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            background: #f9f9f9;
+        }
+        
+        .stamp-placeholder {
+            font-size: 18px;
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .stamp-subtitle {
+            font-size: 12px;
+            color: #999;
         }
         
         .footer-info {
@@ -317,26 +348,16 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
         <div class="header">
             <div class="logo-section">
                 ${logo.type === "image" ? `
-                    <img src="${logo.url}" alt="${logo.alt}" style="width: ${logo.width}px; height: ${logo.height}px; object-fit: contain;">
+                    <img src="${logo.url}" alt="${logo.alt}" style="width: 120px; height: 90px; object-fit: contain;">
                 ` : `
                     <div class="logo">
                         <div class="gs">${logo.text}</div>
                         <div style="font-size: 8px;">${logo.subtext.replace('\n', '<br>')}</div>
                     </div>
                 `}
-                <div class="company-name">
-                    GAMER<br>STORE
-                </div>
             </div>
             
-            <div>
-                <div class="warranty-title">GARANTIE</div>
-                <div class="warranty-subtitle">Certificat de Garantie Officiel</div>
-            </div>
-            
-            <div style="text-align: right; font-weight: bold;">
-                ${COMPANY_CONFIG.nom}
-            </div>
+            <div class="warranty-title">CERTIFICAT DE GARANTIE</div>
         </div>
         
         <!-- Informations de garantie -->
@@ -363,22 +384,22 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
                 </div>
                 
                 <div class="info-section">
-                    <h3>PÉRIODE DE GARANTIE</h3>
+                    <h3>DURÉE DE GARANTIE</h3>
                     <div class="info-item">
-                        <span class="info-label">Début :</span>
-                        <span>${dateVente.toLocaleDateString('fr-FR')}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Fin :</span>
-                        <span>${dateGarantie.toLocaleDateString('fr-FR')}</span>
+                        <span class="info-label">N° Série :</span>
+                        <span>${vente.articles?.[0]?.code_barre || 'N/A'}</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Durée :</span>
                         <span>12 mois</span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Type :</span>
-                        <span>Garantie constructeur + SAV</span>
+                        <span class="info-label">Début garantie :</span>
+                        <span>${dateVente.toLocaleDateString('fr-FR')}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Fin garantie :</span>
+                        <span>${dateGarantie.toLocaleDateString('fr-FR')}</span>
                     </div>
                 </div>
             </div>
@@ -427,7 +448,7 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
             </div>
             
             <div style="text-align: center;">
-                <div style="font-weight: bold; color: #d4af37;">N° GARANTIE</div>
+                <div style="font-weight: bold; color: #000;">N° GARANTIE</div>
                 <div style="font-size: 14px; font-weight: bold;">GAR-${numeroFacture}</div>
             </div>
         </div>
@@ -436,30 +457,24 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
         <div class="warranty-terms">
             <h3>CONDITIONS DE GARANTIE</h3>
             <ul>
-                <li>Cette garantie couvre les défauts de fabrication et de matériaux</li>
-                <li>La garantie ne couvre pas les dommages dus à une mauvaise utilisation</li>
-                <li>Les dommages causés par l'eau, les chocs ou les chutes ne sont pas couverts</li>
-                <li>La garantie est valide uniquement avec cette facture et ce certificat</li>
-                <li>Réparation ou remplacement à la discrétion de GAMER STORE</li>
-                <li>Transport et frais de port à la charge du client</li>
-                <li>Garantie non transférable à un tiers</li>
-                <li>Service après-vente disponible du lundi au samedi</li>
+                <li>Gamer store vous garantit que votre ordinateur portable est exempt de tout défaut matériel ou de main-d'œuvre, sous une utilisation normale, durant la Période de Garantie Limitée indiquée. La Période de Garantie d'achat. En cas de besoin de réparation survenant durant la Période de Garantie Limitée, vous pourrez prétendre à notre Page Facebook Gamer store ou nous consulter sur WhatsApp, le prestataire de services autorisé par Game store pourra vous demander cette preuve d'achat en échange du service de garantie.</li>
+                <li>Gamer store garantit que ce produit fonctionnera sans erreur ni interruption. Pour le produit soumis à garantie, tout support technique ou autre, tel qu'une assistance par téléphone concernant les réglages du produit, sera fournie sans garantie d'aucune sorte. La Garantie Limitée ne couvre que les pannes ou les défaillances se produisant pendant la période indiquée et sous des conditions d'utilisation normales, aussi bien que tous les défauts matériels et de main d'œuvre. Toutefois, la Garantie Limitée ne pourra pas s'appliquer si:</li>
+                <li>Le produit a été examiné, démonté, réparé et/ou modifié par du personnel non autorisé;</li>
+                <li>Le numéro de série a été altéré, annulé, enlevé ou effacé;</li>
+                <li>Les sceaux de garantie ont été brisés, enlevés ou altérés ;</li>
+                <li>Des dégâts ont été causés par une panne électrique externe; en cas d'accident, de catastrophe naturelle, d'une utilisation incorrecte intentionnelle ou accidentelle du produit, en cas d'abus, de négligence ou d'une maintenance inappropriée ou enfin d'une utilisation dans des conditions anormales</li>
+                <li>Des dégâts ont été causés par une mauvaise installation ou une mauvaise connexion avec une périphérique externe (moniteur, clavier, etc.);</li>
+                <li>Des dégâts ont été causés par un accident ou une anomalie électrique externe;</li>
+                <li>Des dégâts ont été causés par une utilisation en dehors des paramètres d'opération, de stockage, d'entretien ou d'environnement établis par le manuel de l'utilisateur;</li>
+                <li>Des dégâts ont été causés par l'utilisation de composants non fabriqués ou vendus par Gamer Store;</li>
+                <li>Des dégâts ont été causés par des logiciels tiers ou des virus informatiques;</li>
             </ul>
         </div>
         
-        <!-- Signatures -->
-        <div class="signature-section">
-            <div class="signature-box">
-                <div class="signature-line"></div>
-                <div style="font-weight: bold;">Signature du vendeur</div>
-                <div style="font-size: 10px;">GAMER STORE SARL</div>
-            </div>
-            
-            <div class="signature-box">
-                <div class="signature-line"></div>
-                <div style="font-weight: bold;">Signature du client</div>
-                <div style="font-size: 10px;">${vente.client_nom}</div>
-            </div>
+        <!-- Espace pour cachet du magasin -->
+        <div class="stamp-section">
+            <div class="stamp-placeholder">CACHET DU MAGASIN</div>
+            <div class="stamp-subtitle">GAMER STORE SARL</div>
         </div>
         
         <!-- Pied de page -->

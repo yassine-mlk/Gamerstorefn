@@ -36,6 +36,7 @@ import { usePcPortables, PcPortable, NewPcPortable } from "@/hooks/usePcPortable
 import { useSuppliers } from "@/hooks/useSuppliers";
 import { useNavigate } from "react-router-dom";
 import { AssignProductDialog } from "@/components/AssignProductDialog";
+import { AddSupplierDialog } from "@/components/AddSupplierDialog";
 import { uploadImageByType, uploadImageFromBase64ByType } from "@/lib/imageUpload";
 
 // Marques par défaut - seront gérées via les paramètres plus tard
@@ -188,7 +189,7 @@ const typesStockage = [
 
 export default function PCPortableNew({ embedded = false }: { embedded?: boolean }) {
   const { pcPortables, loading, addPcPortable, updatePcPortable, deletePcPortable } = usePcPortables();
-  const { suppliers, loading: loadingSuppliers } = useSuppliers();
+  const { suppliers, loading: loadingSuppliers, refreshSuppliers } = useSuppliers();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<PcPortable | null>(null);
@@ -245,6 +246,20 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
   });
   
   const { toast } = useToast();
+
+  // Fonction pour gérer l'ajout d'un nouveau fournisseur
+  const handleSupplierAdded = async (supplierId: string) => {
+    // Rafraîchir la liste des fournisseurs
+    await refreshSuppliers();
+    
+    // Sélectionner automatiquement le nouveau fournisseur
+    setNewProduct(prev => ({ ...prev, fournisseur_id: supplierId }));
+    
+    toast({
+      title: "Fournisseur ajouté",
+      description: "Le nouveau fournisseur a été ajouté et sélectionné",
+    });
+  };
 
   const filteredProducts = pcPortables.filter(product => 
     product.nom_produit.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -1377,8 +1392,19 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <Label htmlFor="fournisseur">Fournisseur</Label>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="fournisseur">Fournisseur</Label>
+                      <AddSupplierDialog 
+                        onSupplierAdded={handleSupplierAdded}
+                        trigger={
+                          <Button variant="outline" size="sm" className="text-blue-600 border-blue-600 hover:bg-blue-50">
+                            <Plus className="w-4 h-4 mr-1" />
+                            Ajouter
+                          </Button>
+                        }
+                      />
+                    </div>
                     <Select 
                       value={newProduct.fournisseur_id} 
                       onValueChange={(value) => setNewProduct({ ...newProduct, fournisseur_id: value })}
@@ -1388,7 +1414,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                         <SelectValue placeholder="Sélectionner un fournisseur" />
                       </SelectTrigger>
                       <SelectContent className="bg-white border-gray-200">
-                        {activeFournisseurs.map((fournisseur) => (
+                        {suppliers.map((fournisseur) => (
                           <SelectItem key={fournisseur.id} value={fournisseur.id}>
                             {fournisseur.nom}
                             {fournisseur.statut === 'Privilégié' && (
