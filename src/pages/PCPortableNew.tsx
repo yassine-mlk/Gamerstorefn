@@ -220,6 +220,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
   const [isMultipleBarcodeMode, setIsMultipleBarcodeMode] = useState(false);
   const [multipleBarcodes, setMultipleBarcodes] = useState<string[]>([""]);
   const [multipleDepots, setMultipleDepots] = useState<('magasin principal' | 'depot')[]>(["magasin principal"]);
+  const [multipleSuppliers, setMultipleSuppliers] = useState<string[]>(["none"]);
   
   // État pour gérer l'expansion des groupes de produits
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
@@ -333,6 +334,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
         for (let i = 0; i < validBarcodes.length; i++) {
           const barcode = validBarcodes[i];
           const depot = multipleDepots[i] || "magasin principal";
+          const supplier = multipleSuppliers[i] === "none" ? "" : (multipleSuppliers[i] || "");
           
           // Calculer le statut pour cet exemplaire individuel (stock = 1)
           const stockMinimum = newProduct.stock_minimum || 1;
@@ -342,6 +344,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
             ...baseProduct,
             code_barre: barcode.trim(),
             depot: depot,
+            fournisseur_id: supplier,
             stock_actuel: 1, // Chaque exemplaire est unique
             statut: exemplaireStat as "Disponible" | "Stock faible" | "Rupture" | "Réservé" | "Archivé"
           };
@@ -477,6 +480,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
     setIsMultipleBarcodeMode(false);
     setMultipleBarcodes([""]);
     setMultipleDepots(["magasin principal"]);
+    setMultipleSuppliers(["none"]);
     setImagePreview("");
     stopCamera();
   };
@@ -713,12 +717,14 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
   const addBarcodeField = () => {
     setMultipleBarcodes([...multipleBarcodes, ""]);
     setMultipleDepots([...multipleDepots, "magasin principal"]);
+    setMultipleSuppliers([...multipleSuppliers, "none"]);
   };
 
   const removeBarcodeField = (index: number) => {
     if (multipleBarcodes.length > 1) {
       setMultipleBarcodes(multipleBarcodes.filter((_, i) => i !== index));
       setMultipleDepots(multipleDepots.filter((_, i) => i !== index));
+      setMultipleSuppliers(multipleSuppliers.filter((_, i) => i !== index));
     }
   };
 
@@ -732,6 +738,12 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
     const newDepots = [...multipleDepots];
     newDepots[index] = value;
     setMultipleDepots(newDepots);
+  };
+
+  const updateSupplierField = (index: number, value: string) => {
+    const newSuppliers = [...multipleSuppliers];
+    newSuppliers[index] = value;
+    setMultipleSuppliers(newSuppliers);
   };
 
   // Fonction pour gérer l'expansion des groupes
@@ -867,10 +879,12 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                           if (checked) {
                             setMultipleBarcodes([""]);
                             setMultipleDepots(["magasin principal"]);
+                            setMultipleSuppliers(["none"]);
                             setNewProduct({ ...newProduct, code_barre: "" });
                           } else {
                             setMultipleBarcodes([""]);
                             setMultipleDepots(["magasin principal"]);
+                            setMultipleSuppliers(["none"]);
                           }
                         }}
                       />
@@ -894,7 +908,8 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                       
                       <div className="flex gap-2 text-sm font-medium text-gray-700 px-1">
                         <div className="flex-1">Code-barres</div>
-                        <div className="w-48">Lieu de stockage</div>
+                        <div className="flex-1">Lieu de stockage</div>
+                        <div className="flex-1">Fournisseur</div>
                         <div className="w-10"></div>
                       </div>
                       
@@ -908,7 +923,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                               placeholder={`Code-barres ${index + 1}`}
                             />
                           </div>
-                          <div className="w-48">
+                          <div className="flex-1">
                             <Select 
                               value={multipleDepots[index] || "magasin principal"} 
                               onValueChange={(value: 'magasin principal' | 'depot') => updateDepotField(index, value)}
@@ -919,6 +934,27 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                               <SelectContent className="bg-white border-gray-200">
                                 <SelectItem value="magasin principal">🏪 Magasin principal</SelectItem>
                                 <SelectItem value="depot">📦 Dépôt</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="flex-1">
+                            <Select 
+                              value={multipleSuppliers[index] || "none"} 
+                              onValueChange={(value: string) => updateSupplierField(index, value)}
+                            >
+                              <SelectTrigger className="bg-white border-gray-200">
+                                <SelectValue placeholder="Sélectionner un fournisseur" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-white border-gray-200">
+                                <SelectItem value="none">Aucun fournisseur</SelectItem>
+                                {suppliers.map((fournisseur) => (
+                                  <SelectItem key={fournisseur.id} value={fournisseur.id}>
+                                    {fournisseur.nom}
+                                    {fournisseur.statut === 'Privilégié' && (
+                                      <Badge className="ml-2 bg-gaming-purple text-xs">Privilégié</Badge>
+                                    )}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                           </div>
@@ -1392,39 +1428,41 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="fournisseur">Fournisseur</Label>
-                      <AddSupplierDialog 
-                        onSupplierAdded={handleSupplierAdded}
-                        trigger={
-                          <Button variant="outline" size="sm" className="text-blue-600 border-blue-600 hover:bg-blue-50">
-                            <Plus className="w-4 h-4 mr-1" />
-                            Ajouter
-                          </Button>
-                        }
-                      />
+                  {!isMultipleBarcodeMode && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="fournisseur">Fournisseur</Label>
+                        <AddSupplierDialog 
+                          onSupplierAdded={handleSupplierAdded}
+                          trigger={
+                            <Button variant="outline" size="sm" className="text-blue-600 border-blue-600 hover:bg-blue-50">
+                              <Plus className="w-4 h-4 mr-1" />
+                              Ajouter
+                            </Button>
+                          }
+                        />
+                      </div>
+                      <Select 
+                        value={newProduct.fournisseur_id} 
+                        onValueChange={(value) => setNewProduct({ ...newProduct, fournisseur_id: value })}
+                        disabled={loadingSuppliers}
+                      >
+                        <SelectTrigger className="bg-white border-gray-200">
+                          <SelectValue placeholder="Sélectionner un fournisseur" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-200">
+                          {suppliers.map((fournisseur) => (
+                            <SelectItem key={fournisseur.id} value={fournisseur.id}>
+                              {fournisseur.nom}
+                              {fournisseur.statut === 'Privilégié' && (
+                                <Badge className="ml-2 bg-gaming-purple text-xs">Privilégié</Badge>
+                              )}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <Select 
-                      value={newProduct.fournisseur_id} 
-                      onValueChange={(value) => setNewProduct({ ...newProduct, fournisseur_id: value })}
-                      disabled={loadingSuppliers}
-                    >
-                      <SelectTrigger className="bg-white border-gray-200">
-                        <SelectValue placeholder="Sélectionner un fournisseur" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-200">
-                        {suppliers.map((fournisseur) => (
-                          <SelectItem key={fournisseur.id} value={fournisseur.id}>
-                            {fournisseur.nom}
-                            {fournisseur.statut === 'Privilégié' && (
-                              <Badge className="ml-2 bg-gaming-purple text-xs">Privilégié</Badge>
-                            )}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  )}
                   <div>
                     <Label htmlFor="garantie">Garantie</Label>
                     <Select value={newProduct.garantie} onValueChange={(value) => setNewProduct({ ...newProduct, garantie: value })}>
