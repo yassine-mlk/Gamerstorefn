@@ -110,7 +110,7 @@ export default function PCPortableDetails() {
   };
 
   const shouldShowPurchasePrice = () => {
-    return profile?.role === 'admin' || profile?.role === 'manager';
+    return isAdmin || profile?.role === 'admin' || profile?.role === 'manager';
   };
 
   if (loading) {

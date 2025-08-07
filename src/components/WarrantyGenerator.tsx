@@ -31,6 +31,11 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
     const dateGarantie = new Date(dateVente);
     dateGarantie.setFullYear(dateGarantie.getFullYear() + 1); // Garantie 1 an
     
+    // Calculer la durée de garantie en mois
+    const diffTime = dateGarantie.getTime() - dateVente.getTime();
+    const diffMonths = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 30.44)); // Approximation des mois
+    const dureeGarantie = diffMonths === 12 ? '12 mois' : `${diffMonths} mois`;
+    
     const logo = getCompanyLogo();
     
     // Format des nombres
@@ -87,7 +92,7 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
         .header .warranty-title {
             flex: 1;
             text-align: center;
-            margin-left: -40px;
+            margin-left: 40px;
         }
         
         .logo-section {
@@ -97,8 +102,8 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
         }
         
         .logo {
-            width: 120px;
-            height: 90px;
+            width: 100px;
+            height: 75px;
             background: #000;
             color: white;
             display: flex;
@@ -391,7 +396,7 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
                     </div>
                     <div class="info-item">
                         <span class="info-label">Durée :</span>
-                        <span>12 mois</span>
+                        <span>${dureeGarantie}</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Début garantie :</span>
