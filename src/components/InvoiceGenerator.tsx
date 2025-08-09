@@ -206,16 +206,40 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
             vertical-align: middle;
         }
         
-        .products-table .product-image {
-            text-align: center;
-            width: 60px;
-        }
-        
         .products-table .product-name {
             text-align: left;
             max-width: 250px;
         }
         
+        /* Ligne image produit séparée */
+        .product-image-row td {
+            padding: 12px 8px;
+            border: 1px solid #000;
+            background: #fafafa;
+        }
+        .product-image-large {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .product-image-large img,
+        .product-image-large .placeholder {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            background: #fff;
+        }
+        .product-image-large .placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: #999;
+        }
+
         .products-table .price {
             text-align: right;
             font-weight: bold;
@@ -341,7 +365,6 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>IMAGE</th>
                     <th>NOM DU PRODUIT</th>
                     <th>PRIX</th>
                     <th>QTÉ</th>
@@ -350,20 +373,19 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
             </thead>
             <tbody>
                 ${vente.articles?.map((article, index) => `
+                    ${article.image_url ? `
+                        <tr class="product-image-row">
+                            <td colspan="5">
+                                <div class="product-image-large">
+                                    <img src="${article.image_url}" alt="${article.nom_produit}"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                    <div class="placeholder" style="display: none;">📦</div>
+                                </div>
+                            </td>
+                        </tr>
+                    ` : ''}
                     <tr>
                         <td>${index + 1}</td>
-                        <td class="product-image">
-                            ${article.image_url ? `
-                                <img src="${article.image_url}" alt="${article.nom_produit}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div style="width: 40px; height: 40px; background-color: #f5f5f5; border-radius: 4px; border: 1px solid #ddd; display: none; align-items: center; justify-content: center; font-size: 12px; color: #999;">
-                                    <span>📦</span>
-                                </div>
-                            ` : `
-                                <div style="width: 40px; height: 40px; background-color: #f5f5f5; border-radius: 4px; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #999;">
-                                    <span>📦</span>
-                                </div>
-                            `}
-                        </td>
                         <td class="product-name">${article.nom_produit}</td>
                         <td class="price">${formatPrice(taxMode === "without_tax" ? article.prix_unitaire_ht : article.prix_unitaire_ttc)}</td>
                         <td>${article.quantite}</td>

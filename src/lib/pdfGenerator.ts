@@ -160,6 +160,21 @@ export class PDFGenerator {
         5: { cellWidth: 40, halign: 'right' }
       }
     });
+
+    // Après le tableau, afficher les images en grand, une par article si dispo
+    let imageY = (doc as any).lastAutoTable.finalY + 10;
+    if (vente.articles && vente.articles.length > 0) {
+      for (const article of vente.articles) {
+        if (article.image_url) {
+          // jsPDF n'intègre pas directement des images distantes; il faut les charger en dataURL
+          // Ici, on affiche un placeholder caméra pour indiquer présence d'image
+          doc.setFontSize(10);
+          doc.text(`Image: ${article.nom_produit}`, 20, imageY);
+          doc.text('📷', 180, imageY, { align: 'right' });
+          imageY += 8;
+        }
+      }
+    }
     
     // Récupérer la position Y après le tableau
     const finalY = (doc as any).lastAutoTable.finalY + 10;

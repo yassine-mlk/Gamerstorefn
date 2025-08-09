@@ -158,13 +158,41 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
             </thead>
             <tbody>
               {vente.articles?.map((article, index) => (
-                <tr key={index}>
-                  <td className="border border-black p-2 text-center">{index + 1}</td>
-                  <td className="border border-black p-2 text-left max-w-xs">{article.nom_produit}</td>
-                  <td className="border border-black p-2 text-right font-bold">{formatPrice(article.prix_unitaire_ttc)}</td>
-                  <td className="border border-black p-2 text-center">{article.quantite}</td>
-                  <td className="border border-black p-2 text-right font-bold">{formatPrice(article.total_ttc)}</td>
-                </tr>
+                <React.Fragment key={index}>
+                  {article.image_url && (
+                    <tr>
+                      <td className="border border-black p-3 bg-gray-50" colSpan={5}>
+                        <div className="w-full flex items-center justify-center">
+                          <img
+                            src={article.image_url}
+                            alt={article.nom_produit}
+                            className="object-contain border border-gray-300 rounded"
+                            style={{ width: 120, height: 120 }}
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const placeholder = target.nextElementSibling as HTMLDivElement;
+                              if (placeholder) placeholder.style.display = 'flex';
+                            }}
+                          />
+                          <div
+                            className="hidden items-center justify-center text-3xl text-gray-400 border border-gray-300 rounded"
+                            style={{ width: 120, height: 120 }}
+                          >
+                            📦
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  <tr>
+                    <td className="border border-black p-2 text-center">{index + 1}</td>
+                    <td className="border border-black p-2 text-left max-w-xs">{article.nom_produit}</td>
+                    <td className="border border-black p-2 text-right font-bold">{formatPrice(article.prix_unitaire_ttc)}</td>
+                    <td className="border border-black p-2 text-center">{article.quantite}</td>
+                    <td className="border border-black p-2 text-right font-bold">{formatPrice(article.total_ttc)}</td>
+                  </tr>
+                </React.Fragment>
               ))}
               
               {/* Lignes vides pour remplir l'espace */}
