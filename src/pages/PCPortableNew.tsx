@@ -204,6 +204,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
 
   // États pour la saisie manuelle des spécifications
   const [customSpecs, setCustomSpecs] = useState({
+    marque: { isCustom: false, value: "" },
     processeur: { isCustom: false, value: "" },
     ram: { isCustom: false, value: "" },
     vitesse_ram: { isCustom: false, value: "" },
@@ -270,7 +271,8 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
   );
 
   const handleAddProduct = async () => {
-    if (!newProduct.nom_produit || !newProduct.marque || !newProduct.prix_achat || !newProduct.prix_vente) {
+    const finalMarqueForValidation = customSpecs.marque.isCustom ? customSpecs.marque.value.trim() : (newProduct.marque || "").trim();
+    if (!newProduct.nom_produit || !finalMarqueForValidation || !newProduct.prix_achat || !newProduct.prix_vente) {
       toast({
         title: "Erreur",
         description: "Veuillez remplir tous les champs obligatoires",
@@ -312,6 +314,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
     // Créer le produit de base
     const baseProduct: NewPcPortable = {
       ...newProduct,
+      marque: customSpecs.marque.isCustom ? customSpecs.marque.value : newProduct.marque,
       processeur: customSpecs.processeur.isCustom ? customSpecs.processeur.value : newProduct.processeur,
       ram: customSpecs.ram.isCustom ? customSpecs.ram.value : newProduct.ram,
       vitesse_ram: customSpecs.vitesse_ram.isCustom ? customSpecs.vitesse_ram.value : newProduct.vitesse_ram,
@@ -393,7 +396,8 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
   };
 
   const handleEditProduct = async () => {
-    if (!editingProduct || !newProduct.nom_produit || !newProduct.marque || !newProduct.prix_achat || !newProduct.prix_vente) {
+    const finalMarqueForValidation = customSpecs.marque.isCustom ? customSpecs.marque.value.trim() : (newProduct.marque || "").trim();
+    if (!editingProduct || !newProduct.nom_produit || !finalMarqueForValidation || !newProduct.prix_achat || !newProduct.prix_vente) {
       toast({
         title: "Erreur",
         description: "Veuillez remplir tous les champs obligatoires",
@@ -411,6 +415,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
     // Utiliser les valeurs personnalisées si elles sont définies
     const finalProduct = {
       ...newProduct,
+      marque: customSpecs.marque.isCustom ? customSpecs.marque.value : newProduct.marque,
       processeur: customSpecs.processeur.isCustom ? customSpecs.processeur.value : newProduct.processeur,
       ram: customSpecs.ram.isCustom ? customSpecs.ram.value : newProduct.ram,
       vitesse_ram: customSpecs.vitesse_ram.isCustom ? customSpecs.vitesse_ram.value : newProduct.vitesse_ram,
@@ -466,6 +471,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
       depot: "magasin principal"
     });
     setCustomSpecs({
+      marque: { isCustom: false, value: "" },
       processeur: { isCustom: false, value: "" },
       ram: { isCustom: false, value: "" },
       vitesse_ram: { isCustom: false, value: "" },
@@ -489,6 +495,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
     setEditingProduct(product);
     
     // Vérifier si les valeurs existent dans les listes prédéfinies
+    const marqueIsCustom = !marques.includes(product.marque);
     const processeurIsCustom = !processeurs.includes(product.processeur);
     const ramIsCustom = !typesRAM.includes(product.ram);
     const stockageIsCustom = !typesStockage.includes(product.stockage);
@@ -500,6 +507,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
     const vramIsCustom = product.vram_carte_graphique && !vramOptions.includes(product.vram_carte_graphique);
 
     setCustomSpecs({
+      marque: { isCustom: marqueIsCustom, value: marqueIsCustom ? product.marque : "" },
       processeur: { isCustom: processeurIsCustom, value: processeurIsCustom ? product.processeur : "" },
       ram: { isCustom: ramIsCustom, value: ramIsCustom ? product.ram : "" },
       vitesse_ram: { isCustom: false, value: product.vitesse_ram || "" },
@@ -515,7 +523,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
     setNewProduct({
       nom_produit: product.nom_produit,
       code_barre: product.code_barre || "",
-      marque: product.marque,
+      marque: marqueIsCustom ? "CUSTOM" : product.marque,
       modele: product.modele || "",
       processeur: processeurIsCustom ? "CUSTOM" : product.processeur,
       ram: ramIsCustom ? "CUSTOM" : product.ram,
@@ -695,13 +703,21 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
         ...prev,
         [field]: { isCustom: true, value: "" }
       }));
-      setNewProduct(prev => ({ ...prev, [field]: "CUSTOM" }));
+      if (field === 'marque') {
+        setNewProduct(prev => ({ ...prev, marque: 'CUSTOM' as any }));
+      } else {
+        setNewProduct(prev => ({ ...prev, [field]: "CUSTOM" } as any));
+      }
     } else {
       setCustomSpecs(prev => ({
         ...prev,
         [field]: { isCustom: false, value: "" }
       }));
-      setNewProduct(prev => ({ ...prev, [field]: value }));
+      if (field === 'marque') {
+        setNewProduct(prev => ({ ...prev, marque: value }));
+      } else {
+        setNewProduct(prev => ({ ...prev, [field]: value } as any));
+      }
     }
   };
 
@@ -998,7 +1014,7 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="marque">Marque *</Label>
-                  <Select value={newProduct.marque} onValueChange={(value) => setNewProduct({ ...newProduct, marque: value })}>
+                  <Select value={newProduct.marque} onValueChange={(value) => handleSpecChange('marque' as any, value)}>
                     <SelectTrigger className="bg-white border-gray-200">
                       <SelectValue placeholder="Sélectionner une marque" />
                     </SelectTrigger>
@@ -1006,8 +1022,20 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                       {marques.map((marque) => (
                         <SelectItem key={marque} value={marque}>{marque}</SelectItem>
                       ))}
+                      <div className="border-t border-gray-200 my-1"></div>
+                      <SelectItem value="CUSTOM" className="text-gaming-cyan font-medium">
+                        ✏️ Autre - Saisie manuelle
+                      </SelectItem>
                     </SelectContent>
                   </Select>
+                  {(customSpecs as any).marque?.isCustom && (
+                    <Input
+                      className="mt-2 bg-white border-gray-200"
+                      placeholder="Saisissez la marque personnalisée"
+                      value={(customSpecs as any).marque.value}
+                      onChange={(e) => handleCustomValueChange('marque' as any, e.target.value)}
+                    />
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="modele">Modèle</Label>
