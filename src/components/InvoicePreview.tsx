@@ -5,6 +5,7 @@ import { Printer, Download, X } from "lucide-react";
 import { type Vente } from "@/hooks/useVentes";
 import { QRCodeGenerator } from "@/lib/qrCodeGenerator";
 import { COMPANY_CONFIG, getCompanyLogo } from "@/lib/companyConfig";
+import { supabase } from "@/lib/supabase";
 
 interface InvoicePreviewProps {
   vente: Vente;
@@ -16,6 +17,50 @@ interface InvoicePreviewProps {
 
 export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: InvoicePreviewProps) {
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string>('');
+  const [articlesWithImages, setArticlesWithImages] = useState<any[]>([]);
+
+  // Fonction pour récupérer l'image d'un produit depuis sa table source
+  const getProductImage = async (produit_id: string, produit_type: string): Promise<string | null> => {
+    try {
+      let tableName: string;
+      
+      switch (produit_type) {
+        case 'pc_portable':
+          tableName = 'pc_portables';
+          break;
+        case 'moniteur':
+          tableName = 'moniteurs';
+          break;
+        case 'peripherique':
+          tableName = 'peripheriques';
+          break;
+        case 'chaise_gaming':
+          tableName = 'chaises_gaming';
+          break;
+        case 'pc_gamer':
+          tableName = 'pc_gamer';
+          break;
+        case 'composant_pc':
+          tableName = 'composants_pc';
+          break;
+        default:
+          return null;
+      }
+
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('image_url')
+        .eq('id', produit_id)
+        .single();
+
+      if (error || !data) return null;
+      
+      return data.image_url || null;
+    } catch (err) {
+      console.error(`Erreur lors de la récupération de l'image pour ${produit_type} ${produit_id}:`, err);
+      return null;
+    }
+  };
 
   useEffect(() => {
     const generateQR = async () => {
@@ -24,7 +69,21 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
         setQrCodeDataURL(qrCode);
       }
     };
+    
+    const enrichArticlesWithImages = async () => {
+      if (vente.articles && vente.articles.length > 0) {
+        const enrichedArticles = await Promise.all(
+          vente.articles.map(async (article) => {
+            const image_url = await getProductImage(article.produit_id, article.produit_type);
+            return { ...article, image_url };
+          })
+        );
+        setArticlesWithImages(enrichedArticles);
+      }
+    };
+    
     generateQR();
+    enrichArticlesWithImages();
   }, [vente]);
 
   const numeroFacture = vente.numero_vente || 'N/A';
@@ -93,7 +152,7 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
           color: '#000'
         }}>
           {/* En-tête */}
-          <div className="flex justify-between items-center mb-6 pb-2 border-b-2 border-black">
+          <div className="flex justify-between items-center mb-6 pb-2 border-b-2 border-black relative">
             <div className="flex items-center gap-4">
               {logo.type === "image" ? (
                 <img 
@@ -110,16 +169,9 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
                   ))}</div>
                 </div>
               )}
-              <div className="text-base font-bold">
-                GAMER<br/>STORE
-              </div>
             </div>
             
-            <div className="text-2xl font-bold text-center mx-5">Facture</div>
-            
-            <div className="text-right text-sm font-bold">
-              {COMPANY_CONFIG.nom}
-            </div>
+            <div className="text-2xl font-bold absolute left-1/2 transform -translate-x-1/2">Facture</div>
           </div>
           
           {/* Détails de la facture */}
@@ -157,7 +209,7 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
               </tr>
             </thead>
             <tbody>
-              {vente.articles?.map((article, index) => (
+              {articlesWithImages.map((article, index) => (
                 <React.Fragment key={index}>
                   {article.image_url && (
                     <tr>
@@ -196,7 +248,7 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
               ))}
               
               {/* Lignes vides pour remplir l'espace */}
-              {Array.from({ length: Math.max(0, 6 - (vente.articles?.length || 0)) }, (_, i) => (
+              {Array.from({ length: Math.max(0, 6 - articlesWithImages.length) }, (_, i) => (
                 <tr key={`empty-${i}`}>
                   <td className="border border-black p-2">&nbsp;</td>
                   <td className="border border-black p-2">&nbsp;</td>

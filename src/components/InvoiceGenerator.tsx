@@ -5,6 +5,7 @@ import { type Vente } from "@/hooks/useVentes";
 import { QRCodeGenerator } from "@/lib/qrCodeGenerator";
 import { InvoicePreview } from "@/components/InvoicePreview";
 import { COMPANY_CONFIG, getCompanyLogo } from "@/lib/companyConfig";
+import { supabase } from "@/lib/supabase";
 
 interface InvoiceGeneratorProps {
   vente: Vente;
@@ -16,6 +17,50 @@ interface InvoiceGeneratorProps {
 export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: InvoiceGeneratorProps) {
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string>('');
   const [showPreview, setShowPreview] = useState(false);
+  const [articlesWithImages, setArticlesWithImages] = useState<any[]>([]);
+
+  // Fonction pour récupérer l'image d'un produit depuis sa table source
+  const getProductImage = async (produit_id: string, produit_type: string): Promise<string | null> => {
+    try {
+      let tableName: string;
+      
+      switch (produit_type) {
+        case 'pc_portable':
+          tableName = 'pc_portables';
+          break;
+        case 'moniteur':
+          tableName = 'moniteurs';
+          break;
+        case 'peripherique':
+          tableName = 'peripheriques';
+          break;
+        case 'chaise_gaming':
+          tableName = 'chaises_gaming';
+          break;
+        case 'pc_gamer':
+          tableName = 'pc_gamer';
+          break;
+        case 'composant_pc':
+          tableName = 'composants_pc';
+          break;
+        default:
+          return null;
+      }
+
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('image_url')
+        .eq('id', produit_id)
+        .single();
+
+      if (error || !data) return null;
+      
+      return data.image_url || null;
+    } catch (err) {
+      console.error(`Erreur lors de la récupération de l'image pour ${produit_type} ${produit_id}:`, err);
+      return null;
+    }
+  };
 
   useEffect(() => {
     const generateQR = async () => {
@@ -24,27 +69,55 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
         setQrCodeDataURL(qrCode);
       }
     };
+    
+    const enrichArticlesWithImages = async () => {
+      if (vente.articles && vente.articles.length > 0) {
+        const enrichedArticles = await Promise.all(
+          vente.articles.map(async (article) => {
+            const image_url = await getProductImage(article.produit_id, article.produit_type);
+            return { ...article, image_url };
+          })
+        );
+        setArticlesWithImages(enrichedArticles);
+      }
+    };
+    
     generateQR();
+    enrichArticlesWithImages();
   }, [vente]);
 
-  const generateInvoiceHTML = (): string => {
-    const numeroFacture = vente.numero_vente || 'N/A';
-    const dateFacture = new Date(vente.date_vente || Date.now()).toLocaleDateString('fr-FR');
-    
-    const logo = getCompanyLogo();
+      const generateInvoiceHTML = (): string => {
+      const numeroFacture = vente.numero_vente || 'N/A';
+      const dateFacture = new Date(vente.date_vente || Date.now()).toLocaleDateString('fr-FR');
+      
+      const logo = getCompanyLogo();
 
-    // Calculs
-    const totalHT = vente.total_ht || 0;
-    const tva = vente.tva || 0;
-    const totalTTC = vente.total_ttc || 0;
-    const fraisLivraison = vente.frais_livraison || 0;
+      // Calculs
+      const totalHT = vente.total_ht || 0;
+      const tva = vente.tva || 0;
+      const totalTTC = vente.total_ttc || 0;
+      const fraisLivraison = vente.frais_livraison || 0;
+
+      // Fonction pour normaliser les URLs d'images Supabase
+      const normalizeImageUrl = (url: string): string => {
+        if (!url) return '';
+        
+        // Si c'est déjà une URL complète, la retourner
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+          return url;
+        }
+        
+        // Si c'est un chemin relatif, essayer de construire l'URL Supabase
+        // Cette logique peut être adaptée selon votre configuration Supabase
+        return url;
+      };
     
     // Détecter le mode de taxe en comparant les prix des articles
     const detectTaxMode = () => {
-      if (!vente.articles || vente.articles.length === 0) return "with_tax";
+      if (!articlesWithImages || articlesWithImages.length === 0) return "with_tax";
       
       // Si les prix unitaires TTC sont égaux aux prix unitaires HT, alors c'est du mode sans taxe
-      const firstArticle = vente.articles[0];
+      const firstArticle = articlesWithImages[0];
       const isWithoutTax = Math.abs(firstArticle.prix_unitaire_ttc - firstArticle.prix_unitaire_ht) < 0.01;
       
       return isWithoutTax ? "without_tax" : "with_tax";
@@ -104,6 +177,7 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
             margin-bottom: 30px;
             padding-bottom: 10px;
             border-bottom: 2px solid #000;
+            position: relative;
         }
         
         .logo-section {
@@ -130,23 +204,13 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
             letter-spacing: 1px;
         }
         
-        .company-name {
-            font-size: 16px;
-            font-weight: bold;
-            color: #000;
-        }
-        
         .facture-title {
             font-size: 28px;
             font-weight: bold;
             text-align: center;
-            margin: 0 20px;
-        }
-        
-        .company-info {
-            text-align: right;
-            font-size: 12px;
-            font-weight: bold;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
         }
         
         .invoice-details {
@@ -323,16 +387,9 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
                         <div style="font-size: 8px;">${logo.subtext.replace('\n', '<br>')}</div>
                     </div>
                 `}
-                <div class="company-name">
-                    GAMER<br>STORE
-                </div>
             </div>
             
             <div class="facture-title">Facture</div>
-            
-            <div class="company-info">
-                ${COMPANY_CONFIG.nom}
-            </div>
         </div>
         
         <!-- Détails de la facture -->
@@ -372,12 +429,12 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
                 </tr>
             </thead>
             <tbody>
-                ${vente.articles?.map((article, index) => `
+                ${articlesWithImages.map((article, index) => `
                     ${article.image_url ? `
                         <tr class="product-image-row">
                             <td colspan="5">
                                 <div class="product-image-large">
-                                    <img src="${article.image_url}" alt="${article.nom_produit}"
+                                    <img src="${normalizeImageUrl(article.image_url)}" alt="${article.nom_produit}"
                                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
                                     <div class="placeholder" style="display: none;">📦</div>
                                 </div>
@@ -391,10 +448,10 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
                         <td>${article.quantite}</td>
                         <td class="price">${formatPrice(taxMode === "without_tax" ? article.total_ht : article.total_ttc)}</td>
                     </tr>
-                `).join('') || ''}
+                `).join('')}
                 
                 <!-- Lignes vides pour remplir l'espace -->
-                ${Array.from({ length: Math.max(0, 6 - (vente.articles?.length || 0)) }, (_, i) => `
+                ${Array.from({ length: Math.max(0, 6 - articlesWithImages.length) }, (_, i) => `
                     <tr>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
@@ -523,7 +580,7 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
       </div>
 
       <InvoicePreview
-        vente={vente}
+        vente={{ ...vente, articles: articlesWithImages }}
         isOpen={showPreview}
         onClose={() => setShowPreview(false)}
         onPrint={handlePrint}
