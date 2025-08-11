@@ -187,8 +187,8 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
         }
         
         .logo {
-            width: 80px;
-            height: 60px;
+            width: 160px;
+            height: 120px;
             background: #000;
             color: white;
             display: flex;
@@ -196,12 +196,12 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            border-radius: 5px;
+            border-radius: 10px;
         }
         
         .logo .gs {
-            font-size: 18px;
-            letter-spacing: 1px;
+            font-size: 36px;
+            letter-spacing: 2px;
         }
         
         .facture-title {
@@ -385,11 +385,11 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
         <div class="header">
             <div class="logo-section">
                 ${logo.type === "image" ? `
-                    <img src="${logo.url}" alt="${logo.alt}" style="width: ${logo.width}px; height: ${logo.height}px; object-fit: contain;">
+                    <img src="${logo.url}" alt="${logo.alt}" style="width: ${logo.width * 2}px; height: ${logo.height * 2}px; object-fit: contain;">
                 ` : `
                     <div class="logo">
                         <div class="gs">${logo.text}</div>
-                        <div style="font-size: 8px;">${logo.subtext.replace('\n', '<br>')}</div>
+                        <div style="font-size: 16px;">${logo.subtext.replace('\n', '<br>')}</div>
                     </div>
                 `}
             </div>

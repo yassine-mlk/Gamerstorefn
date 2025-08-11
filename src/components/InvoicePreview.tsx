@@ -159,12 +159,12 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
                   src={logo.url} 
                   alt={logo.alt} 
                   className="object-contain"
-                  style={{ width: `${logo.width}px`, height: `${logo.height}px` }}
+                  style={{ width: `${logo.width * 2}px`, height: `${logo.height * 2}px` }}
                 />
               ) : (
-                <div className="w-20 h-15 bg-black text-white flex flex-col items-center justify-center font-bold rounded">
-                  <div className="text-lg">{logo.text}</div>
-                  <div className="text-xs">{logo.subtext.split('\n').map((line, i) => (
+                <div className="w-40 h-30 bg-black text-white flex flex-col items-center justify-center font-bold rounded-lg">
+                  <div className="text-4xl">{logo.text}</div>
+                  <div className="text-base">{logo.subtext.split('\n').map((line, i) => (
                     <div key={i}>{line}</div>
                   ))}</div>
                 </div>
