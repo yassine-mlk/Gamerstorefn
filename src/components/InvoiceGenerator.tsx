@@ -92,11 +92,7 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
       
       const logo = getCompanyLogo();
 
-      // Calculs
-      const totalHT = vente.total_ht || 0;
-      const tva = vente.tva || 0;
-      const totalTTC = vente.total_ttc || 0;
-      const fraisLivraison = vente.frais_livraison || 0;
+
 
       // Fonction pour normaliser les URLs d'images Supabase
       const normalizeImageUrl = (url: string): string => {
