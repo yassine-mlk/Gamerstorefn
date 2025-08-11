@@ -184,8 +184,10 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
             
             <div className="flex-1 ml-10">
               <div className="font-bold mb-1">CLIENT :</div>
-              <div>Ste : {vente.client_nom}</div>
-              <div>Ice : {vente.client_email || 'N/A'}</div>
+              <div>{vente.client_type === 'societe' ? 'Ste : ' : ''}{vente.client_nom}</div>
+              {vente.client_type === 'societe' && (
+                <div>Ice : {vente.client_email || 'N/A'}</div>
+              )}
             </div>
             
             <div className="w-20 h-20 border-2 border-black flex items-center justify-center ml-5">
@@ -211,15 +213,22 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
             <tbody>
               {articlesWithImages.map((article, index) => (
                 <React.Fragment key={index}>
+                  <tr>
+                    <td className="border border-black p-2 text-center">{index + 1}</td>
+                    <td className="border border-black p-2 text-left max-w-xs">{article.nom_produit}</td>
+                    <td className="border border-black p-2 text-right font-bold">{formatPrice(article.prix_unitaire_ttc)}</td>
+                    <td className="border border-black p-2 text-center">{article.quantite}</td>
+                    <td className="border border-black p-2 text-right font-bold">{formatPrice(article.total_ttc)}</td>
+                  </tr>
                   {article.image_url && (
                     <tr>
-                      <td className="border border-black p-3 bg-gray-50" colSpan={5}>
-                        <div className="w-full flex items-center justify-center">
+                      <td className="border border-black p-0 bg-gray-50" colSpan={5}>
+                        <div className="w-full flex items-center justify-center py-8 px-8" style={{ minHeight: '350px' }}>
                           <img
                             src={article.image_url}
                             alt={article.nom_produit}
-                            className="object-contain border border-gray-300 rounded"
-                            style={{ width: 120, height: 120 }}
+                            className="object-contain border-2 border-gray-300 rounded-xl shadow-md"
+                            style={{ maxWidth: '480px', maxHeight: '300px' }}
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.style.display = 'none';
@@ -228,8 +237,8 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
                             }}
                           />
                           <div
-                            className="hidden items-center justify-center text-3xl text-gray-400 border border-gray-300 rounded"
-                            style={{ width: 120, height: 120 }}
+                            className="hidden items-center justify-center text-4xl text-gray-400 border-2 border-gray-300 rounded-xl shadow-md bg-white"
+                            style={{ maxWidth: '480px', maxHeight: '300px', width: '400px', height: '250px' }}
                           >
                             📦
                           </div>
@@ -237,25 +246,7 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
                       </td>
                     </tr>
                   )}
-                  <tr>
-                    <td className="border border-black p-2 text-center">{index + 1}</td>
-                    <td className="border border-black p-2 text-left max-w-xs">{article.nom_produit}</td>
-                    <td className="border border-black p-2 text-right font-bold">{formatPrice(article.prix_unitaire_ttc)}</td>
-                    <td className="border border-black p-2 text-center">{article.quantite}</td>
-                    <td className="border border-black p-2 text-right font-bold">{formatPrice(article.total_ttc)}</td>
-                  </tr>
                 </React.Fragment>
-              ))}
-              
-              {/* Lignes vides pour remplir l'espace */}
-              {Array.from({ length: Math.max(0, 6 - articlesWithImages.length) }, (_, i) => (
-                <tr key={`empty-${i}`}>
-                  <td className="border border-black p-2">&nbsp;</td>
-                  <td className="border border-black p-2">&nbsp;</td>
-                  <td className="border border-black p-2">&nbsp;</td>
-                  <td className="border border-black p-2">&nbsp;</td>
-                  <td className="border border-black p-2">&nbsp;</td>
-                </tr>
               ))}
             </tbody>
           </table>

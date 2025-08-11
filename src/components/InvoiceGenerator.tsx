@@ -277,24 +277,29 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
         
         /* Ligne image produit séparée */
         .product-image-row td {
-            padding: 12px 8px;
+            padding: 0;
             border: 1px solid #000;
             background: #fafafa;
+            vertical-align: middle;
         }
         .product-image-large {
             width: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 30px;
+            background: #f9f9f9;
+            min-height: 350px;
         }
         .product-image-large img,
         .product-image-large .placeholder {
-            width: 120px;
-            height: 120px;
+            max-width: 480px;
+            max-height: 300px;
             object-fit: contain;
-            border-radius: 6px;
-            border: 1px solid #ddd;
+            border-radius: 12px;
+            border: 2px solid #ccc;
             background: #fff;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
         .product-image-large .placeholder {
             display: flex;
@@ -402,8 +407,8 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
             
             <div class="client-info">
                 <div class="detail-label">CLIENT :</div>
-                <div>Ste : ${vente.client_nom}</div>
-                <div>Ice : ${vente.client_email || 'N/A'}</div>
+                <div>${vente.client_type === 'societe' ? 'Ste : ' : ''}${vente.client_nom}</div>
+                ${vente.client_type === 'societe' ? `<div>Ice : ${vente.client_email || 'N/A'}</div>` : ''}
             </div>
             
             <div class="qr-section">
@@ -430,6 +435,13 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
             </thead>
             <tbody>
                 ${articlesWithImages.map((article, index) => `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td class="product-name">${article.nom_produit}</td>
+                        <td class="price">${formatPrice(taxMode === "without_tax" ? article.prix_unitaire_ht : article.prix_unitaire_ttc)}</td>
+                        <td>${article.quantite}</td>
+                        <td class="price">${formatPrice(taxMode === "without_tax" ? article.total_ht : article.total_ttc)}</td>
+                    </tr>
                     ${article.image_url ? `
                         <tr class="product-image-row">
                             <td colspan="5">
@@ -441,25 +453,6 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
                             </td>
                         </tr>
                     ` : ''}
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td class="product-name">${article.nom_produit}</td>
-                        <td class="price">${formatPrice(taxMode === "without_tax" ? article.prix_unitaire_ht : article.prix_unitaire_ttc)}</td>
-                        <td>${article.quantite}</td>
-                        <td class="price">${formatPrice(taxMode === "without_tax" ? article.total_ht : article.total_ttc)}</td>
-                    </tr>
-                `).join('')}
-                
-                <!-- Lignes vides pour remplir l'espace -->
-                ${Array.from({ length: Math.max(0, 6 - articlesWithImages.length) }, (_, i) => `
-                    <tr>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                    </tr>
                 `).join('')}
             </tbody>
         </table>
