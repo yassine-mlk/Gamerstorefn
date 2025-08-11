@@ -482,12 +482,7 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
                         <td class="label">Total TVA (20%):</td>
                         <td class="amount">${formatPrice(tva)}</td>
                     </tr>
-                ` : `
-                    <tr>
-                        <td class="label">Total:</td>
-                        <td class="amount">${formatPrice(totalTTC)}</td>
-                    </tr>
-                `}
+                ` : ''}
                 ${fraisLivraison > 0 ? `
                     <tr>
                         <td class="label">Total Livraison:</td>
@@ -495,7 +490,7 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
                     </tr>
                 ` : ''}
                 <tr class="total-final">
-                    <td class="label total-final">Prix Total:</td>
+                    <td class="label total-final">${taxMode === "with_tax" && tva > 0 ? 'Prix Total:' : 'Total:'}</td>
                     <td class="amount total-final">${formatPrice(totalFinal)}</td>
                 </tr>
             </table>

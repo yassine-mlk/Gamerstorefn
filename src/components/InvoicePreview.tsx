@@ -279,7 +279,7 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
           <div className="flex justify-end mb-8">
             <table className="border-collapse">
                               <tbody>
-                 {taxMode === "with_tax" && tva > 0 ? (
+                 {taxMode === "with_tax" && tva > 0 && (
                    <>
                      <tr>
                        <td className="border border-black p-2 text-right bg-gray-100 font-bold min-w-36">Total HT:</td>
@@ -290,11 +290,6 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
                        <td className="border border-black p-2 text-right font-bold">{formatPrice(tva)}</td>
                      </tr>
                    </>
-                 ) : (
-                   <tr>
-                     <td className="border border-black p-2 text-right bg-gray-100 font-bold min-w-36">Total:</td>
-                     <td className="border border-black p-2 text-right font-bold min-w-24">{formatPrice(totalTTC)}</td>
-                   </tr>
                  )}
                  {fraisLivraison > 0 && (
                    <tr>
