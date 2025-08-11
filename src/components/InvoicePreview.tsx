@@ -91,11 +91,31 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
   
   const logo = getCompanyLogo();
 
-  // Calculs
-  const totalHT = vente.total_ht || 0;
-  const tva = vente.tva || 0;
-  const totalTTC = vente.total_ttc || 0;
+  // Détection du mode de taxe basé sur la présence de TVA dans la vente
+  const taxMode = (vente.tva && vente.tva > 0) ? "with_tax" : "without_tax";
+
+  // Calculs basés sur les prix HT et ajout de TVA si nécessaire
+  const calculerTotaux = () => {
+    if (!articlesWithImages || articlesWithImages.length === 0) {
+      return { totalHT: 0, tva: 0, totalTTC: 0 };
+    }
+    
+    // Calculer le total HT à partir des prix stockés
+    const totalHT = articlesWithImages.reduce((sum, article) => {
+      const prixHT = article.prix_unitaire_ht || article.prix_unitaire_ttc;
+      return sum + (prixHT * article.quantite);
+    }, 0);
+    
+    // Si mode avec TVA, calculer 20% de TVA
+    const tva = taxMode === "with_tax" ? totalHT * 0.20 : 0;
+    const totalTTC = totalHT + tva;
+    
+    return { totalHT, tva, totalTTC };
+  };
+  
+  const { totalHT, tva, totalTTC } = calculerTotaux();
   const fraisLivraison = vente.frais_livraison || 0;
+  const totalFinal = totalTTC + fraisLivraison;
   
   // Format des nombres
   const formatPrice = (price: number) => price.toFixed(2);
@@ -216,9 +236,13 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
                   <tr>
                     <td className="border border-black p-2 text-center">{index + 1}</td>
                     <td className="border border-black p-2 text-left max-w-xs">{article.nom_produit}</td>
-                    <td className="border border-black p-2 text-right font-bold">{formatPrice(article.prix_unitaire_ttc)}</td>
+                    <td className="border border-black p-2 text-right font-bold">
+                      {formatPrice(article.prix_unitaire_ht || article.prix_unitaire_ttc)}
+                    </td>
                     <td className="border border-black p-2 text-center">{article.quantite}</td>
-                    <td className="border border-black p-2 text-right font-bold">{formatPrice(article.total_ttc)}</td>
+                    <td className="border border-black p-2 text-right font-bold">
+                      {formatPrice((article.prix_unitaire_ht || article.prix_unitaire_ttc) * article.quantite)}
+                    </td>
                   </tr>
                   {article.image_url && (
                     <tr>
@@ -254,31 +278,44 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
           {/* Totaux */}
           <div className="flex justify-end mb-8">
             <table className="border-collapse">
-              <tbody>
-                <tr>
-                  <td className="border border-black p-2 text-right bg-gray-100 font-bold min-w-36">Total HT:</td>
-                  <td className="border border-black p-2 text-right font-bold min-w-24">{formatPrice(totalHT)}</td>
-                </tr>
-                <tr>
-                  <td className="border border-black p-2 text-right bg-gray-100 font-bold">Total TVA (20%):</td>
-                  <td className="border border-black p-2 text-right font-bold">{formatPrice(tva)}</td>
-                </tr>
-                <tr>
-                  <td className="border border-black p-2 text-right bg-gray-100 font-bold">Total Livraison:</td>
-                  <td className="border border-black p-2 text-right font-bold">{formatPrice(fraisLivraison)}</td>
-                </tr>
-                <tr className="bg-black text-white">
-                  <td className="border border-black p-2 text-right font-bold">Prix Total:</td>
-                  <td className="border border-black p-2 text-right font-bold">{formatPrice(totalTTC)}</td>
-                </tr>
-              </tbody>
+                              <tbody>
+                 {taxMode === "with_tax" && tva > 0 ? (
+                   <>
+                     <tr>
+                       <td className="border border-black p-2 text-right bg-gray-100 font-bold min-w-36">Total HT:</td>
+                       <td className="border border-black p-2 text-right font-bold min-w-24">{formatPrice(totalHT)}</td>
+                     </tr>
+                     <tr>
+                       <td className="border border-black p-2 text-right bg-gray-100 font-bold">Total TVA (20%):</td>
+                       <td className="border border-black p-2 text-right font-bold">{formatPrice(tva)}</td>
+                     </tr>
+                   </>
+                 ) : (
+                   <tr>
+                     <td className="border border-black p-2 text-right bg-gray-100 font-bold min-w-36">Total:</td>
+                     <td className="border border-black p-2 text-right font-bold min-w-24">{formatPrice(totalTTC)}</td>
+                   </tr>
+                 )}
+                 {fraisLivraison > 0 && (
+                   <tr>
+                     <td className="border border-black p-2 text-right bg-gray-100 font-bold">Total Livraison:</td>
+                     <td className="border border-black p-2 text-right font-bold">{formatPrice(fraisLivraison)}</td>
+                   </tr>
+                 )}
+                 <tr className="bg-black text-white">
+                   <td className="border border-black p-2 text-right font-bold">
+                     {taxMode === "with_tax" && tva > 0 ? 'Prix Total:' : 'Total:'}
+                   </td>
+                   <td className="border border-black p-2 text-right font-bold">{formatPrice(totalFinal)}</td>
+                 </tr>
+                </tbody>
             </table>
           </div>
           
           {/* Montant en lettres */}
-          <div className="text-center font-bold my-8 p-4 border border-gray-300 bg-gray-50 rounded">
-            Arrête le présente facture à la somme de {formatPriceText(totalTTC)} ttc .
-          </div>
+                      <div className="text-center font-bold my-8 p-4 border border-gray-300 bg-gray-50 rounded">
+             Arrête le présente facture à la somme de {formatPriceText(totalFinal)} {taxMode === "with_tax" ? "ttc" : ""} .
+            </div>
           
           {/* Pied de page */}
           <div className="mt-10 text-center text-xs border-t border-gray-300 pt-4">

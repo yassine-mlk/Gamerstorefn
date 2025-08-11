@@ -112,19 +112,32 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
         return url;
       };
     
-    // Détecter le mode de taxe en comparant les prix des articles
-    const detectTaxMode = () => {
-      if (!articlesWithImages || articlesWithImages.length === 0) return "with_tax";
+    // Détection du mode de taxe basé sur la présence de TVA dans la vente
+    const taxMode = (vente.tva && vente.tva > 0) ? "with_tax" : "without_tax";
+    
+    // Calculs basés sur les prix HT et ajout de TVA si nécessaire
+    const calculerTotaux = () => {
+      if (!articlesWithImages || articlesWithImages.length === 0) {
+        return { totalHT: 0, tva: 0, totalTTC: 0 };
+      }
       
-      // Si les prix unitaires TTC sont égaux aux prix unitaires HT, alors c'est du mode sans taxe
-      const firstArticle = articlesWithImages[0];
-      const isWithoutTax = Math.abs(firstArticle.prix_unitaire_ttc - firstArticle.prix_unitaire_ht) < 0.01;
+      // Calculer le total HT à partir des prix stockés
+      const totalHT = articlesWithImages.reduce((sum, article) => {
+        const prixHT = article.prix_unitaire_ht || article.prix_unitaire_ttc;
+        return sum + (prixHT * article.quantite);
+      }, 0);
       
-      return isWithoutTax ? "without_tax" : "with_tax";
+      // Si mode avec TVA, calculer 20% de TVA
+      const tva = taxMode === "with_tax" ? totalHT * 0.20 : 0;
+      const totalTTC = totalHT + tva;
+      
+      return { totalHT, tva, totalTTC };
     };
     
-    const taxMode = detectTaxMode();
-    
+    const { totalHT, tva, totalTTC } = calculerTotaux();
+    const fraisLivraison = vente.frais_livraison || 0;
+    const totalFinal = totalTTC + fraisLivraison;
+
     // Format des nombres en français
     const formatPrice = (price: number) => price.toFixed(2);
     const formatPriceText = (price: number) => {
@@ -438,9 +451,9 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
                     <tr>
                         <td>${index + 1}</td>
                         <td class="product-name">${article.nom_produit}</td>
-                        <td class="price">${formatPrice(taxMode === "without_tax" ? article.prix_unitaire_ht : article.prix_unitaire_ttc)}</td>
+                        <td class="price">${formatPrice(article.prix_unitaire_ht || article.prix_unitaire_ttc)}</td>
                         <td>${article.quantite}</td>
-                        <td class="price">${formatPrice(taxMode === "without_tax" ? article.total_ht : article.total_ttc)}</td>
+                        <td class="price">${formatPrice((article.prix_unitaire_ht || article.prix_unitaire_ttc) * article.quantite)}</td>
                     </tr>
                     ${article.image_url ? `
                         <tr class="product-image-row">
@@ -483,14 +496,14 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
                 ` : ''}
                 <tr class="total-final">
                     <td class="label total-final">Prix Total:</td>
-                    <td class="amount total-final">${formatPrice(totalTTC)}</td>
+                    <td class="amount total-final">${formatPrice(totalFinal)}</td>
                 </tr>
             </table>
         </div>
         
         <!-- Montant en lettres -->
         <div class="amount-in-words">
-            Arrête le présente facture à la somme de ${formatPriceText(totalTTC)} ${taxMode === "with_tax" ? "ttc" : ""} .
+            Arrête le présente facture à la somme de ${formatPriceText(totalFinal)} ${taxMode === "with_tax" ? "ttc" : ""} .
         </div>
         
         <!-- Pied de page -->
