@@ -1,7 +1,8 @@
-import { COMPANY_CONFIG, getCompanyLogo } from '@/lib/companyConfig';
+import { COMPANY_CONFIG, getCompanyLogo, getCompanyLogoBase64 } from '@/lib/companyConfig';
 import { supabase } from '@/lib/supabase';
 import { convertirMontantEnLettres } from './numberToWords';
 import { QRCodeGenerator } from '@/lib/qrCodeGenerator';
+import { PDFGenerator } from '@/lib/pdfGenerator';
 
 interface QuoteItem {
   id: string;
@@ -103,6 +104,22 @@ const normalizeImageUrl = (url: string): string => {
   return url;
 };
 
+// Fonction pour générer le HTML du devis avec logo base64 (pour téléchargement)
+export const generateQuoteHTMLWithBase64Logo = async (quote: QuoteData): Promise<string> => {
+  const numeroDevis = quote.numero_devis || 'N/A';
+  const dateDevis = new Date(quote.date_devis || Date.now()).toLocaleDateString('fr-FR');
+  
+  const logo = await getCompanyLogoBase64();
+
+  // Générer le QR code pour le devis
+  const qrCodeDataURL = await QRCodeGenerator.generateQuoteQR(quote);
+
+  // Enrichir les articles avec leurs images
+  const articlesWithImages = await enrichArticlesWithImages(quote.articles);
+
+  return generateQuoteHTMLContent(numeroDevis, dateDevis, logo, qrCodeDataURL, articlesWithImages, quote);
+};
+
 // Fonction principale pour générer le HTML du devis
 export const generateQuoteHTML = async (quote: QuoteData): Promise<string> => {
   const numeroDevis = quote.numero_devis || 'N/A';
@@ -115,6 +132,12 @@ export const generateQuoteHTML = async (quote: QuoteData): Promise<string> => {
 
   // Enrichir les articles avec leurs images
   const articlesWithImages = await enrichArticlesWithImages(quote.articles);
+
+  return generateQuoteHTMLContent(numeroDevis, dateDevis, logo, qrCodeDataURL, articlesWithImages, quote);
+};
+
+// Fonction commune pour générer le contenu HTML
+const generateQuoteHTMLContent = (numeroDevis: string, dateDevis: string, logo: any, qrCodeDataURL: string, articlesWithImages: QuoteItem[], quote: QuoteData): string => {
 
   // Détection du mode de taxe basé sur la présence de TVA dans le devis
   const taxMode = (quote.tva && quote.tva > 0) ? "with_tax" : "without_tax";
@@ -472,10 +495,10 @@ export const generateQuoteHTML = async (quote: QuoteData): Promise<string> => {
                             <td rowspan="2" style="vertical-align: top; padding: 5px; text-align: left;">
                                 ${article.image_url ? `
                                 <img src="${normalizeImageUrl(article.image_url)}" alt="${article.nom_produit}"
-                                     style="width: 120px; height: 90px; object-fit: contain; border: 1px solid #ccc; border-radius: 4px;"
+                                     style="width: 100%; height: 90px; object-fit: cover; border: 1px solid #ccc; border-radius: 4px;"
                                      onerror="this.style.display='none';" />
                             ` : `
-                                <div style="width: 120px; height: 90px; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #999; border-radius: 4px;">No Image</div>
+                                <div style="width: 100%; height: 90px; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #999; border-radius: 4px;">No Image</div>
                             `}
                             </td>
                             <td class="product-name" style="vertical-align: top;">
@@ -520,7 +543,7 @@ export const generateQuoteHTML = async (quote: QuoteData): Promise<string> => {
                     </tr>
                 ` : ''}
                 <tr class="total-final">
-                    <td class="label total-final">Total TTC :</td>
+                    <td class="label total-final">${taxMode === "with_tax" && tva > 0 ? 'Total TTC :' : 'Total HT :'}</td>
                     <td class="amount total-final">${formatPrice(totalFinal)}</td>
                 </tr>
             </table>
@@ -528,7 +551,7 @@ export const generateQuoteHTML = async (quote: QuoteData): Promise<string> => {
         
         <!-- Montant en lettres -->
         <div class="amount-in-words">
-            Arrete le present devis a la somme de ${convertirMontantEnLettres(totalFinal)} TTC
+            Arrete le present devis a la somme de ${convertirMontantEnLettres(totalFinal)} ${taxMode === "with_tax" && tva > 0 ? 'TTC' : 'HT'}
         </div>
         
         <!-- Pied de page -->
@@ -572,6 +595,39 @@ export const downloadQuote = (htmlContent: string, numeroDevis: string) => {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+};
+
+// Fonction de téléchargement PDF avec logo base64
+export const downloadQuoteWithBase64Logo = async (quote: QuoteData) => {
+  try {
+    // Générer le HTML avec logo base64 pour le PDF
+    const htmlContent = await generateQuoteHTMLWithBase64Logo(quote);
+    const filename = `devis-${quote.numero_devis || 'nouveau'}.pdf`;
+    
+    // Générer le PDF à partir du HTML
+    await PDFGenerator.generateQuoteFromHTML(htmlContent, filename);
+  } catch (error) {
+    console.error('Erreur lors de la génération du PDF:', error);
+    
+    // Fallback : télécharger en HTML si le PDF échoue
+    try {
+      const htmlContent = await generateQuoteHTMLWithBase64Logo(quote);
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `devis-${quote.numero_devis || 'nouveau'}.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (fallbackError) {
+      console.error('Erreur lors du fallback HTML:', fallbackError);
+      // Dernier fallback : version normale
+      const htmlContent = await generateQuoteHTML(quote);
+      downloadQuote(htmlContent, quote.numero_devis || 'nouveau');
+    }
+  }
 };
 
 export type { QuoteData, QuoteItem };

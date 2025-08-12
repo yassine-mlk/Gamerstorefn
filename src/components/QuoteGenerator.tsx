@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { COMPANY_CONFIG, getCompanyLogo } from '@/lib/companyConfig';
+import { COMPANY_CONFIG, getCompanyLogo, getCompanyLogoBase64 } from '@/lib/companyConfig';
 import { supabase } from '@/lib/supabase';
 import { convertirMontantEnLettres } from '@/utils/numberToWords';
 import { QRCodeGenerator } from '@/lib/qrCodeGenerator';
@@ -521,10 +521,10 @@ export function QuoteGenerator({ quote, onPreview, onPrint, onDownload }: QuoteG
                             <td rowspan="2" style="vertical-align: top; padding: 5px; text-align: left;">
                                 ${article.image_url ? `
                                 <img src="${normalizeImageUrl(article.image_url)}" alt="${article.nom_produit}"
-                                     style="width: 120px; height: 90px; object-fit: contain; border: 1px solid #ccc; border-radius: 4px;"
+                                     style="width: 100%; height: 90px; object-fit: cover; border: 1px solid #ccc; border-radius: 4px;"
                                      onerror="this.style.display='none';" />
                             ` : `
-                                <div style="width: 120px; height: 90px; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #999; border-radius: 4px;">No Image</div>
+                                <div style="width: 100%; height: 90px; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #999; border-radius: 4px;">No Image</div>
                             `}
                             </td>
                             <td class="product-name" style="vertical-align: top;">
@@ -569,7 +569,7 @@ export function QuoteGenerator({ quote, onPreview, onPrint, onDownload }: QuoteG
                     </tr>
                 ` : ''}
                 <tr class="total-final">
-                    <td class="label total-final">Total TTC :</td>
+                    <td class="label total-final">${taxMode === "with_tax" && tva > 0 ? 'Total TTC :' : 'Total HT :'}</td>
                     <td class="amount total-final">${formatPrice(totalFinal)}</td>
                 </tr>
             </table>
@@ -577,7 +577,7 @@ export function QuoteGenerator({ quote, onPreview, onPrint, onDownload }: QuoteG
         
         <!-- Montant en lettres -->
         <div class="amount-in-words">
-            Arrete le present devis a la somme de ${convertirMontantEnLettres(totalFinal)} TTC
+            Arrete le present devis a la somme de ${convertirMontantEnLettres(totalFinal)} ${taxMode === "with_tax" && tva > 0 ? 'TTC' : 'HT'}
         </div>
         
         <!-- Pied de page -->

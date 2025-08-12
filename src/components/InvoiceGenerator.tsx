@@ -4,9 +4,10 @@ import { Printer, Download, Eye } from "lucide-react";
 import { type Vente } from "@/hooks/useVentes";
 import { QRCodeGenerator } from "@/lib/qrCodeGenerator";
 import { InvoicePreview } from "@/components/InvoicePreview";
-import { COMPANY_CONFIG, getCompanyLogo } from "@/lib/companyConfig";
+import { COMPANY_CONFIG, getCompanyLogo, getCompanyLogoBase64 } from "@/lib/companyConfig";
 import { supabase } from "@/lib/supabase";
 import { convertirMontantEnLettres } from "@/utils/numberToWords";
+import { PDFGenerator } from "@/lib/pdfGenerator";
 
 interface InvoiceGeneratorProps {
   vente: Vente;
@@ -94,11 +95,28 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
     enrichArticlesWithImages();
   }, [vente]);
 
+      // Fonction pour générer le HTML avec logo base64 (pour téléchargement)
+      const generateInvoiceHTMLWithBase64Logo = async (): Promise<string> => {
+        const numeroFacture = vente.numero_vente || 'N/A';
+        const dateFacture = new Date(vente.date_vente || Date.now()).toLocaleDateString('fr-FR');
+        
+        const logo = await getCompanyLogoBase64();
+        
+        return generateHTMLContent(numeroFacture, dateFacture, logo);
+      };
+
+      // Fonction pour générer le HTML normal (pour aperçu/impression)
       const generateInvoiceHTML = (): string => {
-      const numeroFacture = vente.numero_vente || 'N/A';
-      const dateFacture = new Date(vente.date_vente || Date.now()).toLocaleDateString('fr-FR');
-      
-      const logo = getCompanyLogo();
+        const numeroFacture = vente.numero_vente || 'N/A';
+        const dateFacture = new Date(vente.date_vente || Date.now()).toLocaleDateString('fr-FR');
+        
+        const logo = getCompanyLogo();
+        
+        return generateHTMLContent(numeroFacture, dateFacture, logo);
+      };
+
+      // Fonction commune pour générer le contenu HTML
+      const generateHTMLContent = (numeroFacture: string, dateFacture: string, logo: any): string => {
 
 
 
@@ -488,10 +506,10 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
                             <td rowspan="2" style="vertical-align: top; padding: 5px; text-align: left;">
                                 ${article.image_url ? `
                                 <img src="${normalizeImageUrl(article.image_url)}" alt="${article.nom_produit}"
-                                     style="width: 120px; height: 90px; object-fit: contain; border: 1px solid #ccc; border-radius: 4px;"
+                                     style="width: 100%; height: 90px; object-fit: cover; border: 1px solid #ccc; border-radius: 4px;"
                                      onerror="this.style.display='none';" />
                             ` : `
-                                <div style="width: 120px; height: 90px; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #999; border-radius: 4px;">No Image</div>
+                                <div style="width: 100%; height: 90px; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #999; border-radius: 4px;">No Image</div>
                             `}
                             </td>
                             <td class="product-name" style="vertical-align: top;">
@@ -536,7 +554,7 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
                     </tr>
                 ` : ''}
                 <tr class="total-final">
-                    <td class="label total-final">Total TTC :</td>
+                    <td class="label total-final">${taxMode === "with_tax" && tva > 0 ? 'Total TTC :' : 'Total HT :'}</td>
                     <td class="amount total-final">${formatPrice(totalFinal)}</td>
                 </tr>
             </table>
@@ -544,7 +562,7 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
         
         <!-- Montant en lettres -->
         <div class="amount-in-words">
-            Arrete le presente facture a la somme de ${convertirMontantEnLettres(totalFinal)} TTC
+            Arrete le presente facture a la somme de ${convertirMontantEnLettres(totalFinal)} ${taxMode === "with_tax" && tva > 0 ? 'TTC' : 'HT'}
         </div>
         
         <!-- Pied de page -->
@@ -557,7 +575,7 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
 </body>
 </html>
     `;
-  };
+      };
 
   const handlePreview = () => {
     setShowPreview(true);
@@ -578,18 +596,48 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
     onPrint?.();
   };
 
-  const handleDownload = () => {
-    const htmlContent = generateInvoiceHTML();
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Facture_${vente.numero_vente}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    onDownload?.();
+  const handleDownload = async () => {
+    try {
+      // Générer le HTML avec logo base64 pour le PDF
+      const htmlContent = await generateInvoiceHTMLWithBase64Logo();
+      const filename = `Facture_${vente.numero_vente}.pdf`;
+      
+      // Générer le PDF à partir du HTML
+      await PDFGenerator.generateInvoiceFromHTML(htmlContent, filename);
+      
+      onDownload?.();
+    } catch (error) {
+      console.error('Erreur lors de la génération du PDF:', error);
+      
+      // Fallback : télécharger en HTML si le PDF échoue
+      try {
+        const htmlContent = await generateInvoiceHTMLWithBase64Logo();
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Facture_${vente.numero_vente}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        onDownload?.();
+      } catch (fallbackError) {
+        console.error('Erreur lors du fallback HTML:', fallbackError);
+        // Dernier fallback : version normale
+        const htmlContent = generateInvoiceHTML();
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Facture_${vente.numero_vente}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        onDownload?.();
+      }
+    }
   };
 
   return (

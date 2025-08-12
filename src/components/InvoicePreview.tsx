@@ -289,14 +289,14 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
                         <img 
                           src={article.image_url} 
                           alt={article.nom_produit}
-                          className="w-32 h-24 object-contain border border-gray-300 rounded"
+                          className="w-full h-24 object-cover border border-gray-300 rounded"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.style.display = 'none';
                           }}
                         />
                       ) : (
-                        <div className="w-32 h-24 border border-gray-300 flex items-center justify-center text-xs text-gray-500 rounded">
+                        <div className="w-full h-24 border border-gray-300 flex items-center justify-center text-xs text-gray-500 rounded">
                           No Image
                         </div>
                       )}
@@ -357,7 +357,7 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
                  )}
                  <tr className="bg-black text-white">
                    <td className="border border-black p-2 text-right font-bold">
-                     Total TTC :
+                     {taxMode === "with_tax" && tva > 0 ? 'Total TTC :' : 'Total HT :'}
                    </td>
                    <td className="border border-black p-2 text-right font-bold">{formatPrice(totalFinal)}</td>
                  </tr>
@@ -367,7 +367,7 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
           
           {/* Montant en lettres */}
                       <div className="text-center font-bold my-8 p-4 border border-gray-300 bg-gray-50 rounded">
-             Arrete le presente facture a la somme de {convertirMontantEnLettres(totalFinal)} TTC
+             Arrete le presente facture a la somme de {convertirMontantEnLettres(totalFinal)} {taxMode === "with_tax" && tva > 0 ? 'TTC' : 'HT'}
             </div>
           
           {/* Pied de page */}

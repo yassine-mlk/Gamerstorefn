@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import html2canvas from 'html2canvas';
 import { type Vente } from '@/hooks/useVentes';
 
 declare module 'jspdf' {
@@ -241,6 +242,68 @@ export class PDFGenerator {
     
     // Sauvegarde
     doc.save(`Facture_${vente.numero_vente}.pdf`);
+  }
+
+  // Nouvelle méthode pour générer un PDF à partir du HTML (identique à l'aperçu)
+  static async generateInvoiceFromHTML(htmlContent: string, filename: string = 'facture.pdf'): Promise<void> {
+    try {
+      // Créer un élément temporaire pour le HTML
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = htmlContent;
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      tempDiv.style.top = '0';
+      tempDiv.style.width = '210mm'; // Format A4
+      tempDiv.style.background = 'white';
+      document.body.appendChild(tempDiv);
+
+      // Convertir en canvas avec haute qualité
+      const canvas = await html2canvas(tempDiv, {
+        scale: 2, // Haute résolution
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        width: 794, // 210mm à 96 DPI
+        height: 1123, // 297mm à 96 DPI (A4)
+        scrollX: 0,
+        scrollY: 0
+      });
+
+      // Supprimer l'élément temporaire
+      document.body.removeChild(tempDiv);
+
+      // Créer le PDF
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      // Calculer les dimensions pour s'adapter au PDF
+      const imgWidth = 210; // Largeur A4 en mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      // Ajouter l'image au PDF
+      const imgData = canvas.toDataURL('image/jpeg', 1.0);
+      doc.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+
+      // Télécharger le PDF
+      doc.save(filename);
+    } catch (error) {
+      console.error('Erreur lors de la génération du PDF:', error);
+      throw error;
+    }
+  }
+
+  // Méthode pour générer un PDF de devis à partir du HTML
+  static async generateQuoteFromHTML(htmlContent: string, filename: string = 'devis.pdf'): Promise<void> {
+    try {
+      // Utiliser la même logique que pour les factures
+      await this.generateInvoiceFromHTML(htmlContent, filename);
+    } catch (error) {
+      console.error('Erreur lors de la génération du PDF de devis:', error);
+      throw error;
+    }
   }
 
   static generateReceipt(vente: Vente): void {

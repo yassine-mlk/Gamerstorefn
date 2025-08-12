@@ -26,6 +26,53 @@ export const COMPANY_CONFIG = {
   }
 };
 
+// Fonction pour convertir l'image en base64
+export const convertImageToBase64 = async (imagePath: string): Promise<string> => {
+  try {
+    // Si c'est déjà une data URL, la retourner directement
+    if (imagePath.startsWith('data:')) {
+      return imagePath;
+    }
+
+    // Créer un canvas pour convertir l'image
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = img.width;
+        canvas.height = img.height;
+        
+        if (ctx) {
+          // Définir un fond blanc transparent pour éviter le fond noir
+          ctx.fillStyle = 'white';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          
+          ctx.drawImage(img, 0, 0);
+          const dataURL = canvas.toDataURL('image/png', 1.0); // PNG pour préserver la transparence
+          resolve(dataURL);
+        } else {
+          reject(new Error('Unable to get canvas context'));
+        }
+      };
+      
+      img.onerror = () => {
+        reject(new Error(`Failed to load image: ${imagePath}`));
+      };
+      
+      // Construire l'URL complète si c'est un chemin relatif
+      const fullPath = imagePath.startsWith('/') ? window.location.origin + imagePath : imagePath;
+      img.src = fullPath;
+    });
+  } catch (error) {
+    console.error('Error converting image to base64:', error);
+    return '';
+  }
+};
+
 // Fonction pour obtenir le logo à utiliser
 export const getCompanyLogo = () => {
   if (COMPANY_CONFIG.logo.url && COMPANY_CONFIG.logo.url.trim() !== "") {
@@ -39,4 +86,28 @@ export const getCompanyLogo = () => {
     type: "fallback" as const,
     ...COMPANY_CONFIG.logoFallback
   };
+};
+
+// Fonction pour obtenir le logo en base64 pour le téléchargement
+export const getCompanyLogoBase64 = async () => {
+  const logo = getCompanyLogo();
+  
+  if (logo.type === "image") {
+    try {
+      const base64Logo = await convertImageToBase64(logo.url);
+      return {
+        ...logo,
+        url: base64Logo
+      };
+    } catch (error) {
+      console.error('Error converting logo to base64:', error);
+      // Fallback au logo textuel en cas d'erreur
+      return {
+        type: "fallback" as const,
+        ...COMPANY_CONFIG.logoFallback
+      };
+    }
+  }
+  
+  return logo;
 }; 
