@@ -187,6 +187,12 @@ const generateQuoteHTMLContent = (numeroDevis: string, dateDevis: string, logo: 
             box-sizing: border-box;
         }
         
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
         body {
             font-family: Arial, sans-serif;
             font-size: 11px;
@@ -196,11 +202,20 @@ const generateQuoteHTMLContent = (numeroDevis: string, dateDevis: string, logo: 
         }
         
         .quote-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
             width: 100%;
             max-width: 210mm;
             margin: 0 auto;
             background: white;
+            padding: 0;
+        }
+        
+        .quote-content {
+            flex: 1;
             padding: 20px;
+            padding-bottom: 0;
         }
         
         .header {
@@ -389,6 +404,7 @@ const generateQuoteHTMLContent = (numeroDevis: string, dateDevis: string, logo: 
 </head>
 <body>
     <div class="quote-container">
+        <div class="quote-content">
         <!-- En-tête -->
         <div class="header">
             <div class="logo-section">
@@ -553,6 +569,8 @@ const generateQuoteHTMLContent = (numeroDevis: string, dateDevis: string, logo: 
         <div class="amount-in-words">
             Arrete le present devis a la somme de ${convertirMontantEnLettres(totalFinal)} ${taxMode === "with_tax" && tva > 0 ? 'TTC' : 'HT'}
         </div>
+        
+        </div> <!-- Fin du contenu principal -->
         
         <!-- Pied de page -->
         <div class="footer">

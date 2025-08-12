@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Printer, Download, Eye } from "lucide-react";
+import { Eye } from "lucide-react";
 import { type Vente } from "@/hooks/useVentes";
 import { QRCodeGenerator } from "@/lib/qrCodeGenerator";
 import { InvoicePreview } from "@/components/InvoicePreview";
@@ -182,6 +182,12 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
             box-sizing: border-box;
         }
         
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
         body {
             font-family: Arial, sans-serif;
             font-size: 11px;
@@ -191,11 +197,20 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
         }
         
         .invoice-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
             width: 100%;
             max-width: 210mm;
             margin: 0 auto;
             background: white;
+            padding: 0;
+        }
+        
+        .invoice-content {
+            flex: 1;
             padding: 20px;
+            padding-bottom: 0;
         }
         
         .header {
@@ -368,14 +383,16 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
             padding: 15px;
             border: 1px solid #ccc;
             background: #f9f9f9;
+            margin-bottom: auto;
         }
         
         .footer {
-            margin-top: 40px;
+            margin-top: auto;
             text-align: center;
             font-size: 10px;
             border-top: 1px solid #ccc;
-            padding-top: 15px;
+            padding: 15px 20px;
+            background: white;
         }
         
         .footer-info {
@@ -396,6 +413,7 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
 </head>
 <body>
     <div class="invoice-container">
+        <div class="invoice-content">
         <!-- En-tête -->
         <div class="header">
             <div class="logo-section">
@@ -565,6 +583,8 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
             Arrete le presente facture a la somme de ${convertirMontantEnLettres(totalFinal)} ${taxMode === "with_tax" && tva > 0 ? 'TTC' : 'HT'}
         </div>
         
+        </div> <!-- Fin du contenu principal -->
+        
         <!-- Pied de page -->
         <div class="footer">
             <div class="footer-info">Télé: ${COMPANY_CONFIG.telephone}</div>
@@ -597,6 +617,7 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
   };
 
   const handleDownload = async () => {
+    setIsDownloading(true);
     try {
       // Générer le HTML avec logo base64 pour le PDF
       const htmlContent = await generateInvoiceHTMLWithBase64Logo();
@@ -637,6 +658,8 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
         URL.revokeObjectURL(url);
         onDownload?.();
       }
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -650,27 +673,7 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
           className="flex items-center gap-2"
         >
           <Eye className="w-4 h-4" />
-          Aperçu
-        </Button>
-        
-        <Button
-          onClick={handlePrint}
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-2"
-        >
-          <Printer className="w-4 h-4" />
-          Imprimer
-        </Button>
-        
-        <Button
-          onClick={handleDownload}
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-2"
-        >
-          <Download className="w-4 h-4" />
-          Télécharger
+          Facture
         </Button>
       </div>
 

@@ -166,12 +166,13 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
           </div>
         </DialogHeader>
 
-        <div className="invoice-preview-container bg-white p-8 border rounded-lg" style={{
+        <div className="invoice-preview-container bg-white border rounded-lg flex flex-col min-h-[297mm]" style={{
           fontFamily: 'Arial, sans-serif',
           fontSize: '11px',
           lineHeight: '1.4',
           color: '#000'
         }}>
+          <div className="flex-1 p-8 pb-0">
           {/* En-tête */}
           <div className="flex justify-between items-center mb-6 pb-2 border-b-2 border-black relative">
             <div className="flex items-center gap-4">
@@ -366,12 +367,14 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
           </div>
           
           {/* Montant en lettres */}
-                      <div className="text-center font-bold my-8 p-4 border border-gray-300 bg-gray-50 rounded">
+                      <div className="text-center font-bold my-8 p-4 border border-gray-300 bg-gray-50 rounded mb-auto">
              Arrete le presente facture a la somme de {convertirMontantEnLettres(totalFinal)} {taxMode === "with_tax" && tva > 0 ? 'TTC' : 'HT'}
             </div>
           
+          </div> {/* Fin du contenu principal */}
+          
           {/* Pied de page */}
-          <div className="mt-10 text-center text-xs border-t border-gray-300 pt-4">
+          <div className="mt-auto text-center text-xs border-t border-gray-300 pt-4 px-8 pb-4 bg-white">
             <div className="mb-1">Télé: {COMPANY_CONFIG.telephone}</div>
             <div className="mb-1">Adresse: {COMPANY_CONFIG.adresse}</div>
             <div>RC: {COMPANY_CONFIG.rc} / IF: {COMPANY_CONFIG.if} / ICE: {COMPANY_CONFIG.ice}</div>

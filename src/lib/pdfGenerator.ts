@@ -257,16 +257,19 @@ export class PDFGenerator {
       tempDiv.style.background = 'white';
       document.body.appendChild(tempDiv);
 
-      // Convertir en canvas avec haute qualité
+      // Convertir en canvas avec options optimisées pour la vitesse
       const canvas = await html2canvas(tempDiv, {
-        scale: 2, // Haute résolution
+        scale: 1.5, // Résolution réduite pour plus de vitesse
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
         width: 794, // 210mm à 96 DPI
         height: 1123, // 297mm à 96 DPI (A4)
         scrollX: 0,
-        scrollY: 0
+        scrollY: 0,
+        logging: false, // Désactiver les logs pour plus de vitesse
+        imageTimeout: 5000, // Timeout plus court pour les images
+        removeContainer: true // Optimisation
       });
 
       // Supprimer l'élément temporaire
@@ -283,8 +286,8 @@ export class PDFGenerator {
       const imgWidth = 210; // Largeur A4 en mm
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      // Ajouter l'image au PDF
-      const imgData = canvas.toDataURL('image/jpeg', 1.0);
+      // Ajouter l'image au PDF avec compression optimisée
+      const imgData = canvas.toDataURL('image/jpeg', 0.85); // Légère compression pour plus de vitesse
       doc.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
 
       // Télécharger le PDF

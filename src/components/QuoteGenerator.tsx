@@ -195,6 +195,12 @@ export function QuoteGenerator({ quote, onPreview, onPrint, onDownload }: QuoteG
             box-sizing: border-box;
         }
         
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
         body {
             font-family: Arial, sans-serif;
             font-size: 11px;
@@ -204,11 +210,20 @@ export function QuoteGenerator({ quote, onPreview, onPrint, onDownload }: QuoteG
         }
         
         .quote-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
             width: 100%;
             max-width: 210mm;
             margin: 0 auto;
             background: white;
+            padding: 0;
+        }
+        
+        .quote-content {
+            flex: 1;
             padding: 20px;
+            padding-bottom: 0;
         }
         
         .header {
@@ -351,6 +366,7 @@ export function QuoteGenerator({ quote, onPreview, onPrint, onDownload }: QuoteG
             padding: 15px;
             border: 1px solid #ccc;
             background: #f9f9f9;
+            margin-bottom: auto;
         }
         
         .totals-section {
@@ -386,11 +402,12 @@ export function QuoteGenerator({ quote, onPreview, onPrint, onDownload }: QuoteG
         }
         
         .footer {
-            margin-top: 40px;
+            margin-top: auto;
             text-align: center;
             font-size: 10px;
             border-top: 1px solid #ccc;
-            padding-top: 15px;
+            padding: 15px 20px;
+            background: white;
         }
         
         .footer-info {
@@ -411,6 +428,7 @@ export function QuoteGenerator({ quote, onPreview, onPrint, onDownload }: QuoteG
 </head>
 <body>
     <div class="quote-container">
+        <div class="quote-content">
         <!-- En-tête -->
         <div class="header">
             <div class="logo-section">
@@ -579,6 +597,8 @@ export function QuoteGenerator({ quote, onPreview, onPrint, onDownload }: QuoteG
         <div class="amount-in-words">
             Arrete le present devis a la somme de ${convertirMontantEnLettres(totalFinal)} ${taxMode === "with_tax" && tva > 0 ? 'TTC' : 'HT'}
         </div>
+        
+        </div> <!-- Fin du contenu principal -->
         
         <!-- Pied de page -->
         <div class="footer">
