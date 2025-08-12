@@ -29,7 +29,8 @@ import {
   Barcode,
   ChevronDown,
   ChevronRight,
-  Package
+  Package,
+  FileText
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePcPortables, PcPortable, NewPcPortable } from "@/hooks/usePcPortables";
@@ -38,6 +39,7 @@ import { useNavigate } from "react-router-dom";
 import { AssignProductDialog } from "@/components/AssignProductDialog";
 import { AddSupplierDialog } from "@/components/AddSupplierDialog";
 import { uploadImageByType, uploadImageFromBase64ByType } from "@/lib/imageUpload";
+import { QuoteDialog } from "@/components/QuoteDialog";
 
 // Marques par défaut - seront gérées via les paramètres plus tard
 const marques = ["Acemajic", "Acer", "Alienware", "Apple", "ASUS", "Clevo", "Dell", "Gigabyte", "HP", "Lenovo", "MSI", "Razer", "Samsung"];
@@ -248,6 +250,21 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
   });
   
   const { toast } = useToast();
+
+  // États pour le devis
+  const [isQuoteDialogOpen, setIsQuoteDialogOpen] = useState(false);
+  const [selectedProductForQuote, setSelectedProductForQuote] = useState<PcPortable | null>(null);
+
+  // Fonctions pour gérer le devis
+  const handleOpenQuote = (product: PcPortable) => {
+    setSelectedProductForQuote(product);
+    setIsQuoteDialogOpen(true);
+  };
+
+  const handleCloseQuote = () => {
+    setIsQuoteDialogOpen(false);
+    setSelectedProductForQuote(null);
+  };
 
   // Fonction pour gérer l'ajout d'un nouveau fournisseur
   const handleSupplierAdded = async (supplierId: string) => {
@@ -1825,6 +1842,16 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
                                 </Button>
                                 
                                 <Button
+                                  onClick={() => handleOpenQuote(exemplaire)}
+                                  variant="outline"
+                                  size="sm"
+                                  className="border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white h-8 px-2"
+                                  title="Générer un devis"
+                                >
+                                  <FileText className="w-3 h-3" />
+                                </Button>
+                                
+                                <Button
                                   onClick={() => openEditDialog(exemplaire)}
                                   variant="outline"
                                   size="sm"
@@ -1878,6 +1905,23 @@ export default function PCPortableNew({ embedded = false }: { embedded?: boolean
           </div>
         </CardContent>
       </Card>
+
+      {/* Quote Dialog */}
+      {selectedProductForQuote && (
+        <QuoteDialog
+          isOpen={isQuoteDialogOpen}
+          onClose={handleCloseQuote}
+          product={{
+            id: selectedProductForQuote.id!.toString(),
+            nom: selectedProductForQuote.nom_produit,
+            marque: selectedProductForQuote.marque,
+            modele: selectedProductForQuote.modele || '',
+            prix: selectedProductForQuote.prix_vente,
+            image_url: selectedProductForQuote.image_url,
+          }}
+          productType="pc_portable"
+        />
+      )}
     </div>
   );
 } 

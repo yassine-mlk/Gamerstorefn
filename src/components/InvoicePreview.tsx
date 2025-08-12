@@ -6,6 +6,7 @@ import { type Vente } from "@/hooks/useVentes";
 import { QRCodeGenerator } from "@/lib/qrCodeGenerator";
 import { COMPANY_CONFIG, getCompanyLogo } from "@/lib/companyConfig";
 import { supabase } from "@/lib/supabase";
+import { convertirMontantEnLettres } from "@/utils/numberToWords";
 
 interface InvoicePreviewProps {
   vente: Vente;
@@ -19,29 +20,36 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string>('');
   const [articlesWithImages, setArticlesWithImages] = useState<any[]>([]);
 
-  // Fonction pour récupérer l'image d'un produit depuis sa table source
-  const getProductImage = async (produit_id: string, produit_type: string): Promise<string | null> => {
+  // Fonction pour récupérer toutes les données d'un produit depuis sa table source
+  const getProductData = async (produit_id: string, produit_type: string): Promise<any> => {
     try {
       let tableName: string;
+      let selectFields: string;
       
       switch (produit_type) {
         case 'pc_portable':
           tableName = 'pc_portables';
+          selectFields = 'image_url, marque, modele, processeur, carte_graphique, ram, stockage, ecran, etat';
           break;
         case 'moniteur':
           tableName = 'moniteurs';
+          selectFields = 'image_url, marque, modele, taille_ecran, resolution, taux_rafraichissement, etat';
           break;
         case 'peripherique':
           tableName = 'peripheriques';
+          selectFields = 'image_url, marque, modele, type_peripherique, etat';
           break;
         case 'chaise_gaming':
           tableName = 'chaises_gaming';
+          selectFields = 'image_url, marque, modele, materiau, couleur, etat';
           break;
         case 'pc_gamer':
           tableName = 'pc_gamer';
+          selectFields = 'image_url, nom_configuration, processeur, carte_graphique, ram, stockage, etat';
           break;
         case 'composant_pc':
           tableName = 'composants_pc';
+          selectFields = 'image_url, nom_produit, categorie, etat';
           break;
         default:
           return null;
@@ -49,15 +57,15 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
 
       const { data, error } = await supabase
         .from(tableName)
-        .select('image_url')
+        .select(selectFields)
         .eq('id', produit_id)
         .single();
 
       if (error || !data) return null;
       
-      return data.image_url || null;
+      return data;
     } catch (err) {
-      console.error(`Erreur lors de la récupération de l'image pour ${produit_type} ${produit_id}:`, err);
+      console.error(`Erreur lors de la récupération des données pour ${produit_type} ${produit_id}:`, err);
       return null;
     }
   };
@@ -74,8 +82,8 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
       if (vente.articles && vente.articles.length > 0) {
         const enrichedArticles = await Promise.all(
           vente.articles.map(async (article) => {
-            const image_url = await getProductImage(article.produit_id, article.produit_type);
-            return { ...article, image_url };
+            const productData = await getProductData(article.produit_id, article.produit_type);
+            return { ...article, ...productData };
           })
         );
         setArticlesWithImages(enrichedArticles);
@@ -119,13 +127,6 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
   
   // Format des nombres
   const formatPrice = (price: number) => price.toFixed(2);
-  const formatPriceText = (price: number) => {
-    const formatter = new Intl.NumberFormat('fr-FR');
-    const parts = formatter.formatToParts(Math.floor(price));
-    const integerPart = parts.map(part => part.value).join('');
-    const decimal = Math.round((price - Math.floor(price)) * 100);
-    return `${integerPart} dirham${price >= 2 ? 's' : ''} et ${decimal} centimes`;
-  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -192,6 +193,10 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
             </div>
             
             <div className="text-2xl font-bold absolute left-1/2 transform -translate-x-1/2">Facture</div>
+            
+            <div className="text-right">
+              <strong className="underline">{COMPANY_CONFIG.nom}</strong>
+            </div>
           </div>
           
           {/* Détails de la facture */}
@@ -203,10 +208,10 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
             </div>
             
             <div className="flex-1 ml-10">
-              <div className="font-bold mb-1">CLIENT :</div>
+              <div className="font-bold mb-1">Client :</div>
               <div>{vente.client_type === 'societe' ? 'Ste : ' : ''}{vente.client_nom}</div>
               {vente.client_type === 'societe' && (
-                <div>Ice : {vente.client_email || 'N/A'}</div>
+                <div>ICE : {(vente as any).client_ice || vente.client_email || '00004974700087'}</div>
               )}
             </div>
             
@@ -231,47 +236,100 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
               </tr>
             </thead>
             <tbody>
-              {articlesWithImages.map((article, index) => (
-                <React.Fragment key={index}>
-                  <tr>
-                    <td className="border border-black p-2 text-center">{index + 1}</td>
-                    <td className="border border-black p-2 text-left max-w-xs">{article.nom_produit}</td>
-                    <td className="border border-black p-2 text-right font-bold">
+              {articlesWithImages.map((article, index) => {
+                // Créer les spécifications détaillées avec les vraies données
+                const specifications = [];
+                
+                // Marque et modèle (toujours présents)
+                if (article.marque) specifications.push(`• Brand: ${article.marque}`);
+                if (article.modele) specifications.push(`• Model: ${article.modele}`);
+                
+                // Spécifications selon le type de produit
+                if (article.produit_type === 'pc_portable') {
+                    if (article.processeur) specifications.push(`• Processor Type: ${article.processeur}`);
+                    if (article.carte_graphique) specifications.push(`• Graphics Chipset: ${article.carte_graphique}`);
+                    if (article.ram) specifications.push(`• RAM: ${article.ram}`);
+                    if (article.stockage) specifications.push(`• Storage: ${article.stockage}`);
+                    if (article.ecran) specifications.push(`• Display: ${article.ecran}`);
+                    if (article.etat) specifications.push(`• Condition: ${article.etat}`);
+                    specifications.push(`• Bonus: Free RGB Mouse`); // Toujours offerte avec PC portable
+                } else if (article.produit_type === 'moniteur') {
+                    if (article.taille_ecran) specifications.push(`• Screen Size: ${article.taille_ecran}`);
+                    if (article.resolution) specifications.push(`• Resolution: ${article.resolution}`);
+                    if (article.taux_rafraichissement) specifications.push(`• Refresh Rate: ${article.taux_rafraichissement}`);
+                    if (article.etat) specifications.push(`• Condition: ${article.etat}`);
+                } else if (article.produit_type === 'peripherique') {
+                    if (article.type_peripherique) specifications.push(`• Type: ${article.type_peripherique}`);
+                    if (article.etat) specifications.push(`• Condition: ${article.etat}`);
+                } else if (article.produit_type === 'chaise_gaming') {
+                    if (article.materiau) specifications.push(`• Material: ${article.materiau}`);
+                    if (article.couleur) specifications.push(`• Color: ${article.couleur}`);
+                    if (article.etat) specifications.push(`• Condition: ${article.etat}`);
+                } else if (article.produit_type === 'pc_gamer') {
+                    if (article.processeur) specifications.push(`• Processor: ${article.processeur}`);
+                    if (article.carte_graphique) specifications.push(`• Graphics Card: ${article.carte_graphique}`);
+                    if (article.ram) specifications.push(`• RAM: ${article.ram}`);
+                    if (article.stockage) specifications.push(`• Storage: ${article.stockage}`);
+                    if (article.etat) specifications.push(`• Condition: ${article.etat}`);
+                } else if (article.produit_type === 'composant_pc') {
+                    if (article.categorie) specifications.push(`• Category: ${article.categorie}`);
+                    if (article.etat) specifications.push(`• Condition: ${article.etat}`);
+                }
+                
+                // Si aucune spécification, afficher au moins le nom du produit
+                if (specifications.length === 0) {
+                    specifications.push(`• Product: ${article.nom_produit}`);
+                    if (article.etat) specifications.push(`• Condition: ${article.etat}`);
+                }
+                
+                return [
+                  <tr key={`product-${index}`}>
+                    <td rowSpan={2} className="border border-black p-1 text-left align-top">
+                      {article.image_url ? (
+                        <img 
+                          src={article.image_url} 
+                          alt={article.nom_produit}
+                          className="w-32 h-24 object-contain border border-gray-300 rounded"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-32 h-24 border border-gray-300 flex items-center justify-center text-xs text-gray-500 rounded">
+                          No Image
+                        </div>
+                      )}
+                    </td>
+                    <td className="border border-black p-2 text-left align-top">
+                      <div className="font-bold mb-1">Specification</div>
+                      <div className="text-xs leading-tight">
+                        {specifications.map((spec, i) => (
+                          <div key={`spec-${index}-${i}`}>{spec}</div>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="border border-black p-2 text-right font-bold align-top">
                       {formatPrice(article.prix_unitaire_ht || article.prix_unitaire_ttc)}
                     </td>
-                    <td className="border border-black p-2 text-center">{article.quantite}</td>
-                    <td className="border border-black p-2 text-right font-bold">
+                    <td className="border border-black p-2 text-center align-top">{article.quantite}</td>
+                    <td className="border border-black p-2 text-right font-bold align-top">
                       {formatPrice((article.prix_unitaire_ht || article.prix_unitaire_ttc) * article.quantite)}
                     </td>
+                  </tr>,
+                  <tr key={`product-detail-${index}`}>
+                    <td className="border-l border-r border-b border-black p-2 text-left" style={{borderTop: 'none'}}>
+                      <div className="font-bold mb-1">Detail</div>
+                      <div className="text-xs text-gray-700">
+                        {(article as any).description || article.nom_produit}
+                      </div>
+                    </td>
+                    <td className="border-r border-b border-black" style={{borderTop: 'none'}}></td>
+                    <td className="border-r border-b border-black" style={{borderTop: 'none'}}></td>
+                    <td className="border-r border-b border-black" style={{borderTop: 'none'}}></td>
                   </tr>
-                  {article.image_url && (
-                    <tr>
-                      <td className="border border-black p-0 bg-gray-50" colSpan={5}>
-                        <div className="w-full flex items-center justify-center py-8 px-8" style={{ minHeight: '350px' }}>
-                          <img
-                            src={article.image_url}
-                            alt={article.nom_produit}
-                            className="object-contain border-2 border-gray-300 rounded-xl shadow-md"
-                            style={{ maxWidth: '480px', maxHeight: '300px' }}
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              const placeholder = target.nextElementSibling as HTMLDivElement;
-                              if (placeholder) placeholder.style.display = 'flex';
-                            }}
-                          />
-                          <div
-                            className="hidden items-center justify-center text-4xl text-gray-400 border-2 border-gray-300 rounded-xl shadow-md bg-white"
-                            style={{ maxWidth: '480px', maxHeight: '300px', width: '400px', height: '250px' }}
-                          >
-                            📦
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </React.Fragment>
-              ))}
+                ];
+              }).flat()}
             </tbody>
           </table>
           
@@ -282,11 +340,11 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
                  {taxMode === "with_tax" && tva > 0 && (
                    <>
                      <tr>
-                       <td className="border border-black p-2 text-right bg-gray-100 font-bold min-w-36">Total HT:</td>
+                       <td className="border border-black p-2 text-right bg-gray-100 font-bold min-w-36">Total HT :</td>
                        <td className="border border-black p-2 text-right font-bold min-w-24">{formatPrice(totalHT)}</td>
                      </tr>
                      <tr>
-                       <td className="border border-black p-2 text-right bg-gray-100 font-bold">Total TVA (20%):</td>
+                       <td className="border border-black p-2 text-right bg-gray-100 font-bold">Tva 20% :</td>
                        <td className="border border-black p-2 text-right font-bold">{formatPrice(tva)}</td>
                      </tr>
                    </>
@@ -299,7 +357,7 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
                  )}
                  <tr className="bg-black text-white">
                    <td className="border border-black p-2 text-right font-bold">
-                     {taxMode === "with_tax" && tva > 0 ? 'Prix Total:' : 'Total:'}
+                     Total TTC :
                    </td>
                    <td className="border border-black p-2 text-right font-bold">{formatPrice(totalFinal)}</td>
                  </tr>
@@ -309,7 +367,7 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
           
           {/* Montant en lettres */}
                       <div className="text-center font-bold my-8 p-4 border border-gray-300 bg-gray-50 rounded">
-             Arrête le présente facture à la somme de {formatPriceText(totalFinal)} {taxMode === "with_tax" ? "ttc" : ""} .
+             Arrete le presente facture a la somme de {convertirMontantEnLettres(totalFinal)} TTC
             </div>
           
           {/* Pied de page */}

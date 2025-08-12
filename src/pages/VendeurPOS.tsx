@@ -121,7 +121,8 @@ export default function VendeurPOS() {
         stock: pc.stock_actuel,
         categorie: 'PC Portable',
         type: 'pc_portable' as const,
-        marque: pc.marque
+        marque: pc.marque,
+        image_url: pc.image_url
       }));
     } else if (selectedProductType === 'moniteur') {
       products = moniteurs.map(moniteur => ({
@@ -132,7 +133,8 @@ export default function VendeurPOS() {
         stock: moniteur.stock_actuel,
         categorie: 'Moniteur',
         type: 'moniteur' as const,
-        marque: moniteur.marque
+        marque: moniteur.marque,
+        image_url: moniteur.image_url
       }));
     } else if (selectedProductType === 'peripherique') {
       products = peripheriques.map(periph => ({
@@ -143,7 +145,8 @@ export default function VendeurPOS() {
         stock: periph.stock_actuel,
         categorie: periph.categorie,
         type: 'peripherique' as const,
-        marque: periph.marque || 'Non défini'
+        marque: periph.marque || 'Non défini',
+        image_url: periph.image_url
       }));
     } else if (selectedProductType === 'chaise_gaming') {
       products = chaisesGaming.map(chaise => ({
@@ -154,7 +157,8 @@ export default function VendeurPOS() {
         stock: chaise.stock_actuel,
         categorie: 'Chaise Gaming',
         type: 'chaise_gaming' as const,
-        marque: chaise.marque
+        marque: chaise.marque,
+        image_url: chaise.image_url
       }));
     } else if (selectedProductType === 'pc_gamer') {
       products = pcGamerConfigs
@@ -167,7 +171,8 @@ export default function VendeurPOS() {
           stock: config.stock_possible,
           categorie: 'PC Gamer',
           type: 'pc_gamer' as const,
-          marque: 'Configuration'
+          marque: 'Configuration',
+          image_url: config.image_url
         }));
     } else if (selectedProductType === 'composant_pc') {
       products = composantsPC
@@ -180,7 +185,8 @@ export default function VendeurPOS() {
           stock: comp.stock_actuel,
           categorie: comp.categorie,
           type: 'composant_pc' as const,
-          marque: 'Composant'
+          marque: 'Composant',
+          image_url: comp.image_url
         }));
     }
     
@@ -390,7 +396,7 @@ export default function VendeurPOS() {
         quantite: item.quantite,
         total_ht: prixHT * item.quantite,
         total_ttc: prixTTC * item.quantite,
-        image_url: item.image_url // Ajouter l'image du produit
+        // L'image sera récupérée dynamiquement lors de la génération de facture
       };
     });
 

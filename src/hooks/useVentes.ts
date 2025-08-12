@@ -54,6 +54,7 @@ export interface Vente {
   client_id?: string;
   client_nom: string;
   client_email?: string;
+  client_type?: 'particulier' | 'societe';
   vendeur_id?: string;
   vendeur_nom?: string;
   sous_total: number;
@@ -114,6 +115,8 @@ export function useVentes() {
   const { addMouvementFromVente } = useBankAccounts();
   const { addCashTransactionFromVente } = useCash();
 
+
+
   // Charger toutes les ventes
   const fetchVentes = async (filters?: VenteFilters) => {
     try {
@@ -125,6 +128,7 @@ export function useVentes() {
         .from('ventes')
         .select(`
           *,
+          clients!inner(type_client),
           articles:ventes_articles(*),
           paiements:ventes_paiements(*)
         `)
@@ -214,8 +218,20 @@ export function useVentes() {
                 .select('*')
                 .eq('vente_id', vente.id);
 
+              // Charger le type de client
+              let client_type = undefined;
+              if (vente.client_id) {
+                const { data: clientData } = await supabase
+                  .from('clients')
+                  .select('type_client')
+                  .eq('id', vente.client_id)
+                  .single();
+                client_type = clientData?.type_client;
+              }
+
               return {
                 ...vente,
+                client_type,
                 articles: articles || [],
                 paiements: paiements || []
               };
@@ -230,7 +246,13 @@ export function useVentes() {
           throw error;
         }
       } else {
-        setVentes(data || []);
+        // Mapper les données pour inclure le type de client depuis la relation
+        const ventesWithClientType = (data || []).map(vente => ({
+          ...vente,
+          client_type: vente.clients?.type_client,
+          clients: undefined // Supprimer la relation clients pour éviter la confusion
+        }));
+        setVentes(ventesWithClientType);
       }
     } catch (err) {
       console.error('Erreur lors du chargement des ventes:', err);

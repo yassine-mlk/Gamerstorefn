@@ -37,6 +37,38 @@ export class QRCodeGenerator {
   }
 
   /**
+   * Génère un QR code pour un devis contenant les informations essentielles
+   */
+  static async generateQuoteQR(quote: any): Promise<string> {
+    const qrData = {
+      quote_number: quote.numero_devis,
+      date: quote.date_devis,
+      client: quote.client_nom,
+      total: quote.total_ttc || 0,
+      verification_url: `https://gamerstore.ma/verify-quote/${quote.numero_devis}`
+    };
+
+    try {
+      const qrCodeDataURL = await QRCode.toDataURL(JSON.stringify(qrData), {
+        errorCorrectionLevel: 'M',
+        type: 'image/png',
+        quality: 0.92,
+        margin: 1,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF',
+        },
+        width: 200,
+      });
+      
+      return qrCodeDataURL;
+    } catch (error) {
+      console.error('Erreur lors de la génération du QR code pour le devis:', error);
+      return '';
+    }
+  }
+
+  /**
    * Génère un QR code simple avec juste le numéro de facture
    */
   static async generateSimpleQR(numeroFacture: string): Promise<string> {

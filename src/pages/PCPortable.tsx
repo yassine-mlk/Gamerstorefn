@@ -19,9 +19,11 @@ import {
   XCircle,
   Upload,
   Image as ImageIcon,
-  Eye
+  Eye,
+  FileText
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { QuoteDialog } from "@/components/QuoteDialog";
 
 interface PCPortable {
   id: number;
@@ -122,6 +124,8 @@ export default function PCPortable() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<PCPortable | null>(null);
+  const [isQuoteDialogOpen, setIsQuoteDialogOpen] = useState(false);
+  const [selectedProductForQuote, setSelectedProductForQuote] = useState<PCPortable | null>(null);
   const [newProduct, setNewProduct] = useState({
     nom: "",
     marque: "",
@@ -188,6 +192,16 @@ export default function PCPortable() {
       title: "PC Portable ajouté",
       description: `${product.nom} a été ajouté au stock`,
     });
+  };
+
+  const handleOpenQuote = (product: PCPortable) => {
+    setSelectedProductForQuote(product);
+    setIsQuoteDialogOpen(true);
+  };
+
+  const handleCloseQuote = () => {
+    setIsQuoteDialogOpen(false);
+    setSelectedProductForQuote(null);
   };
 
   const handleEditProduct = () => {
@@ -735,6 +749,16 @@ export default function PCPortable() {
                     <Button
                       variant="ghost"
                       size="sm"
+                      onClick={() => handleOpenQuote(product)}
+                      className="text-blue-400 hover:bg-blue-400/20 h-8 w-8 p-0"
+                      title="Générer un devis"
+                    >
+                      <FileText className="w-4 h-4" />
+                    </Button>
+                    
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => openEditDialog(product)}
                       className="text-gaming-purple hover:bg-gaming-purple/20 h-8 w-8 p-0"
                     >
@@ -763,6 +787,23 @@ export default function PCPortable() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Quote Dialog */}
+      {selectedProductForQuote && (
+        <QuoteDialog
+          isOpen={isQuoteDialogOpen}
+          onClose={handleCloseQuote}
+          product={{
+            id: selectedProductForQuote.id.toString(),
+            nom: selectedProductForQuote.nom,
+            marque: selectedProductForQuote.marque,
+            modele: selectedProductForQuote.modele,
+            prix: selectedProductForQuote.prixVente,
+            image_url: selectedProductForQuote.image,
+          }}
+          productType="pc_portable"
+        />
+      )}
     </div>
   );
 } 

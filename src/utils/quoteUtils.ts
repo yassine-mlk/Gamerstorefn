@@ -1,157 +1,157 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { Printer, Download, Eye } from "lucide-react";
-import { type Vente } from "@/hooks/useVentes";
-import { QRCodeGenerator } from "@/lib/qrCodeGenerator";
-import { InvoicePreview } from "@/components/InvoicePreview";
-import { COMPANY_CONFIG, getCompanyLogo } from "@/lib/companyConfig";
-import { supabase } from "@/lib/supabase";
-import { convertirMontantEnLettres } from "@/utils/numberToWords";
+import { COMPANY_CONFIG, getCompanyLogo } from '@/lib/companyConfig';
+import { supabase } from '@/lib/supabase';
+import { convertirMontantEnLettres } from './numberToWords';
+import { QRCodeGenerator } from '@/lib/qrCodeGenerator';
 
-interface InvoiceGeneratorProps {
-  vente: Vente;
-  onPreview?: () => void;
-  onPrint?: () => void;
-  onDownload?: () => void;
+interface QuoteItem {
+  id: string;
+  nom_produit: string;
+  prix_unitaire_ht: number;
+  prix_unitaire_ttc: number;
+  quantite: number;
+  produit_type: string;
+  produit_id: string;
+  image_url?: string;
 }
 
-export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: InvoiceGeneratorProps) {
-  const [qrCodeDataURL, setQrCodeDataURL] = useState<string>('');
-  const [showPreview, setShowPreview] = useState(false);
-  const [articlesWithImages, setArticlesWithImages] = useState<any[]>([]);
+interface QuoteData {
+  numero_devis: string;
+  date_devis: string;
+  client_nom: string;
+  client_email?: string;
+  client_type?: 'particulier' | 'societe';
+  articles: QuoteItem[];
+  tva: number;
+  frais_livraison?: number;
+  notes?: string;
+}
 
-  // Fonction pour récupérer toutes les données d'un produit depuis sa table source
-  const getProductData = async (produit_id: string, produit_type: string): Promise<any> => {
-    try {
-      let tableName: string;
-      let selectFields: string;
-      
-      switch (produit_type) {
-        case 'pc_portable':
-          tableName = 'pc_portables';
-          selectFields = 'image_url, marque, modele, processeur, carte_graphique, ram, stockage, ecran, etat';
-          break;
-        case 'moniteur':
-          tableName = 'moniteurs';
-          selectFields = 'image_url, marque, modele, taille_ecran, resolution, taux_rafraichissement, etat';
-          break;
-        case 'peripherique':
-          tableName = 'peripheriques';
-          selectFields = 'image_url, marque, modele, type_peripherique, etat';
-          break;
-        case 'chaise_gaming':
-          tableName = 'chaises_gaming';
-          selectFields = 'image_url, marque, modele, materiau, couleur, etat';
-          break;
-        case 'pc_gamer':
-          tableName = 'pc_gamer';
-          selectFields = 'image_url, nom_configuration, processeur, carte_graphique, ram, stockage, etat';
-          break;
-        case 'composant_pc':
-          tableName = 'composants_pc';
-          selectFields = 'image_url, nom_produit, categorie, etat';
-          break;
-        default:
-          return null;
-      }
-
-      const { data, error } = await supabase
-        .from(tableName)
-        .select(selectFields)
-        .eq('id', produit_id)
-        .single();
-
-      if (error || !data) return null;
-      
-      return data;
-    } catch (err) {
-      console.error(`Erreur lors de la récupération des données pour ${produit_type} ${produit_id}:`, err);
-      return null;
+// Fonction pour récupérer toutes les données d'un produit depuis sa table source
+const getProductData = async (produit_id: string, produit_type: string): Promise<any> => {
+  try {
+    let tableName: string;
+    let selectFields: string;
+    
+    switch (produit_type) {
+      case 'pc_portable':
+        tableName = 'pc_portables';
+        selectFields = 'image_url, marque, modele, processeur, carte_graphique, ram, stockage, ecran, etat';
+        break;
+      case 'moniteur':
+        tableName = 'moniteurs';
+        selectFields = 'image_url, marque, modele, taille_ecran, resolution, taux_rafraichissement, etat';
+        break;
+      case 'peripherique':
+        tableName = 'peripheriques';
+        selectFields = 'image_url, marque, modele, type_peripherique, etat';
+        break;
+      case 'chaise_gaming':
+        tableName = 'chaises_gaming';
+        selectFields = 'image_url, marque, modele, materiau, couleur, etat';
+        break;
+      case 'pc_gamer':
+        tableName = 'pc_gamer';
+        selectFields = 'image_url, nom_configuration, processeur, carte_graphique, ram, stockage, etat';
+        break;
+      case 'composant_pc':
+        tableName = 'composants_pc';
+        selectFields = 'image_url, nom_produit, categorie, etat';
+        break;
+      default:
+        return null;
     }
+
+    const { data, error } = await supabase
+      .from(tableName)
+      .select(selectFields)
+      .eq('id', produit_id)
+      .single();
+
+    if (error || !data) return null;
+    
+    return data;
+  } catch (err) {
+    console.error(`Erreur lors de la récupération des données pour ${produit_type} ${produit_id}:`, err);
+    return null;
+  }
+};
+
+// Fonction pour enrichir les articles avec toutes leurs données
+const enrichArticlesWithImages = async (articles: QuoteItem[]): Promise<QuoteItem[]> => {
+  if (!articles || articles.length === 0) return [];
+  
+  const enrichedArticles = await Promise.all(
+    articles.map(async (article) => {
+      const productData = await getProductData(article.produit_id, article.produit_type);
+      return { ...article, ...productData };
+    })
+  );
+  
+  return enrichedArticles;
+};
+
+// Fonction pour normaliser les URLs d'images Supabase
+const normalizeImageUrl = (url: string): string => {
+  if (!url) return '';
+  
+  // Si c'est déjà une URL complète, la retourner
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // Si c'est un chemin relatif, essayer de construire l'URL Supabase
+  return url;
+};
+
+// Fonction principale pour générer le HTML du devis
+export const generateQuoteHTML = async (quote: QuoteData): Promise<string> => {
+  const numeroDevis = quote.numero_devis || 'N/A';
+  const dateDevis = new Date(quote.date_devis || Date.now()).toLocaleDateString('fr-FR');
+  
+  const logo = getCompanyLogo();
+
+  // Générer le QR code pour le devis
+  const qrCodeDataURL = await QRCodeGenerator.generateQuoteQR(quote);
+
+  // Enrichir les articles avec leurs images
+  const articlesWithImages = await enrichArticlesWithImages(quote.articles);
+
+  // Détection du mode de taxe basé sur la présence de TVA dans le devis
+  const taxMode = (quote.tva && quote.tva > 0) ? "with_tax" : "without_tax";
+  
+  // Calculs basés sur les prix HT et ajout de TVA si nécessaire
+  const calculerTotaux = () => {
+    if (!articlesWithImages || articlesWithImages.length === 0) {
+      return { totalHT: 0, tva: 0, totalTTC: 0 };
+    }
+    
+    // Calculer le total HT à partir des prix stockés
+    const totalHT = articlesWithImages.reduce((sum, article) => {
+      const prixHT = article.prix_unitaire_ht || article.prix_unitaire_ttc;
+      return sum + (prixHT * article.quantite);
+    }, 0);
+    
+    // Si mode avec TVA, calculer 20% de TVA
+    const tva = taxMode === "with_tax" ? totalHT * 0.20 : 0;
+    const totalTTC = totalHT + tva;
+    
+    return { totalHT, tva, totalTTC };
   };
+  
+  const { totalHT, tva, totalTTC } = calculerTotaux();
+  const fraisLivraison = quote.frais_livraison || 0;
+  const totalFinal = totalTTC + fraisLivraison;
 
-  useEffect(() => {
-    const generateQR = async () => {
-      if (vente.numero_vente) {
-        const qrCode = await QRCodeGenerator.generateInvoiceQR(vente);
-        setQrCodeDataURL(qrCode);
-      }
-    };
-    
-    const enrichArticlesWithImages = async () => {
-      if (vente.articles && vente.articles.length > 0) {
-        const enrichedArticles = await Promise.all(
-          vente.articles.map(async (article) => {
-            const productData = await getProductData(article.produit_id, article.produit_type);
-            return { ...article, ...productData };
-          })
-        );
-        setArticlesWithImages(enrichedArticles);
-      }
-    };
-    
-    generateQR();
-    enrichArticlesWithImages();
-  }, [vente]);
+  // Format des nombres en français
+  const formatPrice = (price: number) => price.toFixed(2);
 
-      const generateInvoiceHTML = (): string => {
-      const numeroFacture = vente.numero_vente || 'N/A';
-      const dateFacture = new Date(vente.date_vente || Date.now()).toLocaleDateString('fr-FR');
-      
-      const logo = getCompanyLogo();
-
-
-
-      // Fonction pour normaliser les URLs d'images Supabase
-      const normalizeImageUrl = (url: string): string => {
-        if (!url) return '';
-        
-        // Si c'est déjà une URL complète, la retourner
-        if (url.startsWith('http://') || url.startsWith('https://')) {
-          return url;
-        }
-        
-        // Si c'est un chemin relatif, essayer de construire l'URL Supabase
-        // Cette logique peut être adaptée selon votre configuration Supabase
-        return url;
-      };
-    
-    // Détection du mode de taxe basé sur la présence de TVA dans la vente
-    const taxMode = (vente.tva && vente.tva > 0) ? "with_tax" : "without_tax";
-    
-    // Calculs basés sur les prix HT et ajout de TVA si nécessaire
-    const calculerTotaux = () => {
-      if (!articlesWithImages || articlesWithImages.length === 0) {
-        return { totalHT: 0, tva: 0, totalTTC: 0 };
-      }
-      
-      // Calculer le total HT à partir des prix stockés
-      const totalHT = articlesWithImages.reduce((sum, article) => {
-        const prixHT = article.prix_unitaire_ht || article.prix_unitaire_ttc;
-        return sum + (prixHT * article.quantite);
-      }, 0);
-      
-      // Si mode avec TVA, calculer 20% de TVA
-      const tva = taxMode === "with_tax" ? totalHT * 0.20 : 0;
-      const totalTTC = totalHT + tva;
-      
-      return { totalHT, tva, totalTTC };
-    };
-    
-    const { totalHT, tva, totalTTC } = calculerTotaux();
-    const fraisLivraison = vente.frais_livraison || 0;
-    const totalFinal = totalTTC + fraisLivraison;
-
-    // Format des nombres en français
-    const formatPrice = (price: number) => price.toFixed(2);
-
-    return `
+  return `
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Facture ${numeroFacture}</title>
+    <title>Devis ${numeroDevis}</title>
     <style>
         @page {
             size: A4;
@@ -172,7 +172,7 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
             background: white;
         }
         
-        .invoice-container {
+        .quote-container {
             width: 100%;
             max-width: 210mm;
             margin: 0 auto;
@@ -230,6 +230,15 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
             text-decoration: underline;
         }
         
+        .amount-in-words {
+            text-align: center;
+            font-weight: bold;
+            margin: 30px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            background: #f9f9f9;
+        }
+        
         .invoice-details {
             background: #f5f5f5;
             padding: 15px;
@@ -281,7 +290,7 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
         }
         
         .products-table td {
-            padding: 8px 6px;
+            padding: 10px 8px;
             border: 1px solid #000;
             text-align: center;
             vertical-align: middle;
@@ -292,19 +301,7 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
             max-width: 250px;
         }
         
-        /* Spécifications produit */
-        .product-specs {
-            font-size: 10px;
-            line-height: 1.3;
-            text-align: left;
-        }
-        
-        .product-detail {
-            font-size: 10px;
-            line-height: 1.3;
-            text-align: left;
-            color: #333;
-        }
+
 
         .products-table .price {
             text-align: right;
@@ -343,15 +340,6 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
             color: white !important;
         }
         
-        .amount-in-words {
-            text-align: center;
-            font-weight: bold;
-            margin: 30px 0;
-            padding: 15px;
-            border: 1px solid #ccc;
-            background: #f9f9f9;
-        }
-        
         .footer {
             margin-top: 40px;
             text-align: center;
@@ -377,7 +365,7 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
     </style>
 </head>
 <body>
-    <div class="invoice-container">
+    <div class="quote-container">
         <!-- En-tête -->
         <div class="header">
             <div class="logo-section">
@@ -391,25 +379,21 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
                 `}
             </div>
             
-            <div class="facture-title">Facture</div>
-            
-            <div class="company-name">
-                <strong>${COMPANY_CONFIG.nom}</strong>
-            </div>
+            <div class="facture-title">Devis</div>
         </div>
         
-        <!-- Détails de la facture -->
+        <!-- Détails du devis -->
         <div class="invoice-details">
             <div class="invoice-info">
-                <div class="detail-label">Facture :</div>
-                <div>Numéro : ${numeroFacture}</div>
-                <div>Date : ${dateFacture}</div>
+                <div class="detail-label">Devis :</div>
+                <div>Numéro : ${numeroDevis}</div>
+                <div>Date : ${dateDevis}</div>
             </div>
             
             <div class="client-info">
-                <div class="detail-label">Client :</div>
-                <div>${vente.client_type === 'societe' ? 'Ste : ' : ''}${vente.client_nom}</div>
-                ${vente.client_type === 'societe' ? `<div>ICE : ${vente.client_ice || vente.client_email || '00004974700087'}</div>` : ''}
+                <div class="detail-label">CLIENT :</div>
+                <div>${quote.client_type === 'societe' ? 'Ste : ' : ''}${quote.client_nom}</div>
+                ${quote.client_type === 'societe' ? `<div>Ice : ${quote.client_email || 'N/A'}</div>` : ''}
             </div>
             
             <div class="qr-section">
@@ -505,7 +489,7 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
                         <tr>
                             <td style="border-top: none; padding-top: 0;">
                                 <div style="font-weight: bold; margin-bottom: 5px;">Detail</div>
-                                <div style="font-size: 10px;">${article.description || article.nom_produit}</div>
+                                <div style="font-size: 10px;">${(article as any).description || article.nom_produit}</div>
                             </td>
                             <td style="border-top: none;"></td>
                             <td style="border-top: none;"></td>
@@ -544,7 +528,7 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
         
         <!-- Montant en lettres -->
         <div class="amount-in-words">
-            Arrete le presente facture a la somme de ${convertirMontantEnLettres(totalFinal)} TTC
+            Arrete le present devis a la somme de ${convertirMontantEnLettres(totalFinal)} TTC
         </div>
         
         <!-- Pied de page -->
@@ -557,82 +541,37 @@ export function InvoiceGenerator({ vente, onPreview, onPrint, onDownload }: Invo
 </body>
 </html>
     `;
-  };
+};
 
-  const handlePreview = () => {
-    setShowPreview(true);
-    onPreview?.();
-  };
+// Fonctions utilitaires pour les actions
+export const previewQuote = (htmlContent: string) => {
+  const previewWindow = window.open('', '_blank');
+  if (previewWindow) {
+    previewWindow.document.write(htmlContent);
+    previewWindow.document.close();
+  }
+};
 
-  const handlePrint = () => {
-    const htmlContent = generateInvoiceHTML();
-    const newWindow = window.open('', '_blank');
-    if (newWindow) {
-      newWindow.document.write(htmlContent);
-      newWindow.document.close();
-      newWindow.onload = () => {
-        newWindow.print();
-        newWindow.close();
-      };
-    }
-    onPrint?.();
-  };
+export const printQuote = (htmlContent: string) => {
+  const printWindow = window.open('', '_blank');
+  if (printWindow) {
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  }
+};
 
-  const handleDownload = () => {
-    const htmlContent = generateInvoiceHTML();
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Facture_${vente.numero_vente}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    onDownload?.();
-  };
+export const downloadQuote = (htmlContent: string, numeroDevis: string) => {
+  const blob = new Blob([htmlContent], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `devis-${numeroDevis || 'nouveau'}.html`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
 
-  return (
-    <>
-      <div className="flex gap-2">
-        <Button
-          onClick={handlePreview}
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-2"
-        >
-          <Eye className="w-4 h-4" />
-          Aperçu
-        </Button>
-        
-        <Button
-          onClick={handlePrint}
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-2"
-        >
-          <Printer className="w-4 h-4" />
-          Imprimer
-        </Button>
-        
-        <Button
-          onClick={handleDownload}
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-2"
-        >
-          <Download className="w-4 h-4" />
-          Télécharger
-        </Button>
-      </div>
-
-      <InvoicePreview
-        vente={{ ...vente, articles: articlesWithImages }}
-        isOpen={showPreview}
-        onClose={() => setShowPreview(false)}
-        onPrint={handlePrint}
-        onDownload={handleDownload}
-      />
-    </>
-  );
-} 
+export type { QuoteData, QuoteItem };
