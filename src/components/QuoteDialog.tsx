@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { User, Building, FileText, Printer, Download, Eye } from 'lucide-react';
 import { generateQuoteHTML, previewQuote, printQuote, downloadQuote, QuoteData } from '@/utils/quoteUtils';
 import { useToast } from '@/hooks/use-toast';
+import { useClients } from '@/hooks/useClients';
 
 interface Product {
   id: string;
@@ -29,12 +30,9 @@ interface QuoteDialogProps {
 
 export function QuoteDialog({ isOpen, onClose, product, productType }: QuoteDialogProps) {
   const { toast } = useToast();
+  const { clients, loading: loadingClients } = useClients();
   
-  const [clientData, setClientData] = useState({
-    type_client: 'particulier' as 'particulier' | 'societe',
-    nom: '',
-    email: '',
-  });
+  const [selectedClient, setSelectedClient] = useState('');
   
   const [quoteData, setQuoteData] = useState({
     quantite: 1,
@@ -53,15 +51,26 @@ export function QuoteDialog({ isOpen, onClose, product, productType }: QuoteDial
   };
 
   const createQuoteData = (): QuoteData => {
+    const selectedClientData = clients.find(c => c.id === selectedClient);
+    if (!selectedClientData) {
+      throw new Error('Client non trouvé');
+    }
+
     const productName = product.nom || `${product.marque} ${product.modele}`;
     const productPrice = product.prix || product.prix_achat || 0;
+    
+    // Construire le nom du client selon le type
+    const clientName = selectedClientData.type_client === 'societe' 
+      ? selectedClientData.nom 
+      : `${selectedClientData.prenom} ${selectedClientData.nom}`;
     
     return {
       numero_devis: generateQuoteNumber(),
       date_devis: new Date().toISOString(),
-      client_nom: clientData.nom,
-      client_email: clientData.email,
-      client_type: clientData.type_client,
+      client_nom: clientName,
+      client_email: selectedClientData.email || '',
+      client_type: selectedClientData.type_client || 'particulier',
+      client_ice: selectedClientData.ice || '',
       articles: [{
         id: product.id,
         nom_produit: productName,
@@ -79,10 +88,10 @@ export function QuoteDialog({ isOpen, onClose, product, productType }: QuoteDial
   };
 
   const handleAction = async (action: 'preview' | 'print' | 'download') => {
-    if (!clientData.nom.trim()) {
+    if (!selectedClient) {
       toast({
         title: "Erreur",
-        description: "Veuillez saisir le nom du client",
+        description: "Veuillez sélectionner un client",
         variant: "destructive",
       });
       return;
@@ -147,64 +156,86 @@ export function QuoteDialog({ isOpen, onClose, product, productType }: QuoteDial
             </div>
           </div>
 
-          {/* Type de client */}
+          {/* Sélection du client */}
           <div className="space-y-3">
-            <Label className="text-base font-semibold">Type de client</Label>
-            <RadioGroup 
-              value={clientData.type_client} 
-              onValueChange={(value: 'particulier' | 'societe') => 
-                setClientData({...clientData, type_client: value, email: value === 'particulier' ? '' : clientData.email})
-              }
-              className="grid grid-cols-2 gap-4"
-            >
-              <div className="flex items-center space-x-3 p-3 border border-gray-300 rounded-lg hover:border-blue-500 transition-colors">
-                <RadioGroupItem value="particulier" id="particulier" />
-                <Label htmlFor="particulier" className="flex items-center gap-2 cursor-pointer">
-                  <User className="w-4 h-4 text-green-600" />
-                  <div>
-                    <div className="font-medium">Particulier</div>
-                    <div className="text-xs text-gray-600">Client individuel</div>
-                  </div>
-                </Label>
-              </div>
-              <div className="flex items-center space-x-3 p-3 border border-gray-300 rounded-lg hover:border-blue-500 transition-colors">
-                <RadioGroupItem value="societe" id="societe" />
-                <Label htmlFor="societe" className="flex items-center gap-2 cursor-pointer">
-                  <Building className="w-4 h-4 text-purple-600" />
-                  <div>
-                    <div className="font-medium">Société</div>
-                    <div className="text-xs text-gray-600">Entreprise</div>
-                  </div>
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
-
-          {/* Informations client */}
-          <div className="grid grid-cols-1 gap-4">
-            <div>
-              <Label htmlFor="client_nom">
-                Nom {clientData.type_client === 'societe' ? 'de la société' : 'du client'} *
-              </Label>
-              <Input
-                id="client_nom"
-                value={clientData.nom}
-                onChange={(e) => setClientData({ ...clientData, nom: e.target.value })}
-                placeholder={clientData.type_client === 'societe' ? 'Nom de l\'entreprise' : 'Nom complet du client'}
-                className="mt-1"
-              />
-            </div>
+            <Label className="text-base font-semibold">Sélectionner un client</Label>
+            <Select value={selectedClient} onValueChange={setSelectedClient}>
+              <SelectTrigger className="bg-white border-gray-300 text-gray-900">
+                <SelectValue placeholder="Choisir un client" />
+              </SelectTrigger>
+              <SelectContent className="bg-white border-gray-300 max-h-60">
+                {loadingClients ? (
+                  <SelectItem value="loading" disabled>
+                    Chargement...
+                  </SelectItem>
+                ) : clients.length === 0 ? (
+                  <SelectItem value="no-clients" disabled>
+                    Aucun client disponible
+                  </SelectItem>
+                ) : (
+                  clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      <div className="flex items-center gap-2">
+                        {client.type_client === 'societe' ? (
+                          <Building className="w-4 h-4 text-purple-600" />
+                        ) : (
+                          <User className="w-4 h-4 text-green-600" />
+                        )}
+                        <div>
+                          <div className="font-medium">
+                            {client.type_client === 'societe' 
+                              ? client.nom 
+                              : `${client.prenom} ${client.nom}`
+                            }
+                          </div>
+                          {client.type_client === 'societe' && client.ice && (
+                            <div className="text-xs text-gray-600">
+                              ICE: {client.ice}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
             
-            {clientData.type_client === 'societe' && (
-              <div>
-                <Label htmlFor="client_email">ICE</Label>
-                <Input
-                  id="client_email"
-                  value={clientData.email}
-                  onChange={(e) => setClientData({ ...clientData, email: e.target.value })}
-                  placeholder="Numéro ICE de l'entreprise"
-                  className="mt-1"
-                />
+            {/* Affichage des informations du client sélectionné */}
+            {selectedClient && (
+              <div className="p-3 bg-gray-50 rounded-lg">
+                {(() => {
+                  const client = clients.find(c => c.id === selectedClient);
+                  if (!client) return null;
+                  
+                  return (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        {client.type_client === 'societe' ? (
+                          <Building className="w-4 h-4 text-purple-600" />
+                        ) : (
+                          <User className="w-4 h-4 text-green-600" />
+                        )}
+                        <span className="font-medium">
+                          {client.type_client === 'societe' 
+                            ? `${client.nom} (Société)` 
+                            : `${client.prenom} ${client.nom} (Particulier)`
+                          }
+                        </span>
+                      </div>
+                      {client.email && (
+                        <div className="text-sm text-gray-600">
+                          Email: {client.email}
+                        </div>
+                      )}
+                      {client.type_client === 'societe' && client.ice && (
+                        <div className="text-sm text-gray-600">
+                          ICE: {client.ice}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </div>

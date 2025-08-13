@@ -21,6 +21,7 @@ interface QuoteData {
   client_nom: string;
   client_email?: string;
   client_type?: 'particulier' | 'societe';
+  client_ice?: string;
   articles: QuoteItem[];
   tva: number;
   frais_livraison?: number;

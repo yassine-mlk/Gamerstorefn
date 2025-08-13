@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Printer, Download, X } from "lucide-react";
+import { Printer, Download, X, FileText, Loader2 } from "lucide-react";
 import { type Vente } from "@/hooks/useVentes";
 import { QRCodeGenerator } from "@/lib/qrCodeGenerator";
 import { COMPANY_CONFIG, getCompanyLogo } from "@/lib/companyConfig";
 import { supabase } from "@/lib/supabase";
 import { convertirMontantEnLettres } from "@/utils/numberToWords";
+import { PDFGenerator } from "@/lib/pdfGenerator";
 
 interface InvoicePreviewProps {
   vente: Vente;
@@ -19,6 +20,7 @@ interface InvoicePreviewProps {
 export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: InvoicePreviewProps) {
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string>('');
   const [articlesWithImages, setArticlesWithImages] = useState<any[]>([]);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   // Fonction pour récupérer toutes les données d'un produit depuis sa table source
   const getProductData = async (produit_id: string, produit_type: string): Promise<any> => {
@@ -128,29 +130,60 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
   // Format des nombres
   const formatPrice = (price: number) => price.toFixed(2);
 
+  // Fonction pour imprimer en PDF natif
+  const handlePrintPDF = async () => {
+    setIsGeneratingPDF(true);
+    try {
+      await PDFGenerator.generateNativeInvoicePDF(vente, articlesWithImages);
+    } catch (error) {
+      console.error('Erreur lors de la génération du PDF:', error);
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white text-black">
-        <DialogHeader>
+        <DialogHeader className="no-print">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-black text-xl">
               Aperçu Facture {numeroFacture}
             </DialogTitle>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 no-print">
               <Button
                 onClick={onPrint}
                 variant="outline"
                 size="sm"
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 no-print"
               >
                 <Printer className="w-4 h-4" />
                 Imprimer
               </Button>
               <Button
+                onClick={handlePrintPDF}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2 no-print"
+                disabled={isGeneratingPDF}
+              >
+                {isGeneratingPDF ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Génération PDF...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="w-4 h-4" />
+                    Imprimer PDF
+                  </>
+                )}
+              </Button>
+              <Button
                 onClick={onDownload}
                 variant="outline"
                 size="sm"
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 no-print"
               >
                 <Download className="w-4 h-4" />
                 Télécharger
@@ -159,6 +192,7 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
                 onClick={onClose}
                 variant="outline"
                 size="sm"
+                className="no-print"
               >
                 <X className="w-4 h-4" />
               </Button>
@@ -166,6 +200,75 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
           </div>
         </DialogHeader>
 
+        <>
+        <style>
+          {`
+            @media print {
+              .invoice-preview-container {
+                border: none !important;
+                border-radius: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                min-height: 100vh !important;
+                display: flex !important;
+                flex-direction: column !important;
+                background: white !important;
+              }
+              
+              .flex-1 {
+                flex: 1 !important;
+                padding: 20mm !important;
+                padding-bottom: 0 !important;
+              }
+              
+              .mt-auto {
+                margin-top: auto !important;
+                padding: 15mm 20mm !important;
+                border-top: 1px solid #ccc !important;
+                background: white !important;
+              }
+              
+              .mb-auto {
+                margin-bottom: auto !important;
+              }
+              
+              /* Forcer la structure flexbox en impression */
+              html, body {
+                height: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+              }
+              
+              /* Assurer que le dialog prend toute la page */
+              .fixed, .absolute, [role="dialog"], 
+              [data-radix-dialog-content] {
+                position: static !important;
+                transform: none !important;
+                height: 100vh !important;
+                width: 100% !important;
+                max-width: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+                border-radius: 0 !important;
+                overflow: visible !important;
+              }
+              
+              @page {
+                size: A4;
+                margin: 0;
+              }
+              
+              /* Masquer les éléments d'interface lors de l'impression */
+              .dialog-header,
+              button,
+              .no-print {
+                display: none !important;
+              }
+            }
+          `}
+        </style>
         <div className="invoice-preview-container bg-white border rounded-lg flex flex-col min-h-[297mm]" style={{
           fontFamily: 'Arial, sans-serif',
           fontSize: '11px',
@@ -380,6 +483,7 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
             <div>RC: {COMPANY_CONFIG.rc} / IF: {COMPANY_CONFIG.if} / ICE: {COMPANY_CONFIG.ice}</div>
           </div>
         </div>
+        </>
       </DialogContent>
     </Dialog>
   );
