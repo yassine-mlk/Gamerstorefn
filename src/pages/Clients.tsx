@@ -36,6 +36,7 @@ export default function Clients() {
   const { clients, loading, addClient, updateClient, deleteClient, searchClients } = useClients();
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
+  const [activeTab, setActiveTab] = useState("tous"); // "tous", "particuliers", "societes"
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [showPurchaseHistory, setShowPurchaseHistory] = useState(false);
@@ -57,18 +58,29 @@ export default function Clients() {
 
   // Filtrer les clients localement ou par recherche
   useEffect(() => {
+    let clientsToFilter = clients;
+    
+    // Filtrer par type selon l'onglet actif
+    if (activeTab === "particuliers") {
+      clientsToFilter = clients.filter(client => client.type_client === 'particulier');
+    } else if (activeTab === "societes") {
+      clientsToFilter = clients.filter(client => client.type_client === 'societe');
+    }
+    
+    // Filtrer par terme de recherche
     if (searchTerm.trim()) {
-      const filtered = clients.filter(client =>
+      const filtered = clientsToFilter.filter(client =>
         client.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
         client.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
         client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (client.telephone && client.telephone.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (client.ice && client.ice.toLowerCase().includes(searchTerm.toLowerCase()))
       );
       setFilteredClients(filtered);
     } else {
-      setFilteredClients(clients);
+      setFilteredClients(clientsToFilter);
     }
-  }, [clients, searchTerm]);
+  }, [clients, searchTerm, activeTab]);
 
   const handleAddClient = async () => {
     if (!newClient.nom) {
@@ -557,13 +569,53 @@ export default function Clients() {
         </CardContent>
       </Card>
 
-      {/* Clients List */}
+      {/* Clients List avec onglets */}
       <Card className="bg-white border-gray-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-gray-900">Liste des clients</CardTitle>
-          <CardDescription className="text-gray-600">
-            {filteredClients.length} client{filteredClients.length > 1 ? 's' : ''} trouvé{filteredClients.length > 1 ? 's' : ''}
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-gray-900">Liste des clients</CardTitle>
+              <CardDescription className="text-gray-600">
+                {filteredClients.length} client{filteredClients.length > 1 ? 's' : ''} trouvé{filteredClients.length > 1 ? 's' : ''}
+              </CardDescription>
+            </div>
+            
+            {/* Onglets de filtrage */}
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setActiveTab("tous")}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === "tous"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Tous ({clients.length})
+              </button>
+              <button
+                onClick={() => setActiveTab("particuliers")}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+                  activeTab === "particuliers"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                <User className="w-4 h-4" />
+                Particuliers ({clients.filter(c => c.type_client === 'particulier').length})
+              </button>
+              <button
+                onClick={() => setActiveTab("societes")}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+                  activeTab === "societes"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                <Building className="w-4 h-4" />
+                Sociétés ({clients.filter(c => c.type_client === 'societe').length})
+              </button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">

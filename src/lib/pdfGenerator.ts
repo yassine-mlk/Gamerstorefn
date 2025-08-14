@@ -27,12 +27,21 @@ export class PDFGenerator {
   // Fonction pour convertir une image URL en base64
   private static async convertImageToBase64(imageUrl: string): Promise<string | null> {
     try {
-      const response = await fetch(imageUrl);
+      // Construire l'URL complète si c'est un chemin relatif
+      const fullUrl = imageUrl.startsWith('/') ? window.location.origin + imageUrl : imageUrl;
+      console.log('Tentative de récupération de l\'image:', fullUrl);
+      
+      const response = await fetch(fullUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const blob = await response.blob();
+      console.log('Blob récupéré:', blob.size, 'bytes, type:', blob.type);
       
       return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = () => {
+          // Créer un canvas pour convertir l'image avec un fond blanc
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
           const img = new Image();
@@ -41,19 +50,37 @@ export class PDFGenerator {
             canvas.width = img.width;
             canvas.height = img.height;
             
-            // Fond blanc pour les images transparentes
-            ctx!.fillStyle = 'white';
-            ctx!.fillRect(0, 0, canvas.width, canvas.height);
-            
-            ctx!.drawImage(img, 0, 0);
-            resolve(canvas.toDataURL('image/jpeg', 0.8));
+            if (ctx) {
+              // Définir un fond blanc opaque pour éviter le fond noir
+              ctx.fillStyle = '#FFFFFF';
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              
+              // Dessiner l'image par-dessus avec une composition qui préserve la transparence
+              ctx.globalCompositeOperation = 'source-over';
+              ctx.drawImage(img, 0, 0);
+              
+              // Convertir en base64 avec le format JPEG pour éviter les problèmes de transparence
+              const base64 = canvas.toDataURL('image/jpeg', 0.95);
+              console.log('Base64 généré avec canvas, longueur:', base64.length);
+              resolve(base64);
+            } else {
+              console.error('Impossible d\'obtenir le contexte canvas');
+              resolve(null);
+            }
           };
           
-          img.onerror = () => resolve(null);
+          img.onerror = () => {
+            console.error('Erreur lors du chargement de l\'image dans le canvas');
+            resolve(null);
+          };
+          
           img.src = reader.result as string;
         };
         
-        reader.onerror = () => resolve(null);
+        reader.onerror = () => {
+          console.error('Erreur lors de la lecture du blob');
+          resolve(null);
+        };
         reader.readAsDataURL(blob);
       });
     } catch (error) {
@@ -375,52 +402,75 @@ export class PDFGenerator {
 
     // === EN-TÊTE ===
     
-    // Logo réel - approche directe
+    // Logo réel - dimensions comme dans l'aperçu HTML
     try {
       console.log('Chargement du logo pour PDF...');
       
-      // Essayer de charger directement le logo depuis le chemin public
-      const logoPath = '/logo-gamer-store.jpg';
-      console.log('Tentative de chargement du logo depuis:', logoPath);
+      // Utiliser la fonction convertImageToBase64 de companyConfig qui gère mieux le fond blanc
+      const logoBase64 = await convertImageToBase64('/logo-gamer-store.jpg');
       
-      const logoBase64 = await convertImageToBase64(logoPath);
-      console.log('Logo base64 généré:', logoBase64 ? 'OK' : 'ECHEC');
+      console.log('Logo base64 obtenu:', logoBase64 ? `Longueur: ${logoBase64.length}` : 'null');
       
-      if (logoBase64 && logoBase64.length > 100) { // Vérifier que c'est une vraie image base64
+      if (logoBase64 && logoBase64.length > 100) {
         console.log('Ajout du logo image au PDF...');
-        // Déterminer le format basé sur l'extension
-        const imageFormat = logoPath.includes('.jpg') || logoPath.includes('.jpeg') ? 'JPEG' : 'PNG';
-        doc.addImage(logoBase64, imageFormat, marginLeft, currentY, 40, 30);
+        
+        // Utiliser les dimensions de l'aperçu HTML avec object-fit: contain
+        // Configuration COMPANY_CONFIG : width: 80, height: 60 → Aperçu: 160x120px → PDF: 42mm x 32mm
+        // Mais ajuster pour préserver les proportions comme object-fit: contain
+        const targetWidth = (COMPANY_CONFIG.logo.width * 2) * 0.265; // Conversion px vers mm
+        const targetHeight = (COMPANY_CONFIG.logo.height * 2) * 0.265;
+        
+        // Pour préserver les proportions comme object-fit: contain, utiliser des dimensions plus petites
+        // Le logo original a probablement des proportions différentes de 4:3
+        // Utiliser des dimensions qui s'adaptent mieux au conteneur
+        const logoWidth = targetWidth * 0.8; // Réduire légèrement pour éviter la déformation
+        const logoHeight = targetHeight * 0.8;
+        
+        const imageFormat = 'JPEG'; // Forcer JPEG pour éviter les problèmes de transparence
+        console.log('Format d\'image détecté:', imageFormat);
+        console.log('Dimensions du logo:', logoWidth, 'x', logoHeight, 'mm');
+        
+        // Centrer le logo dans son espace (comme object-fit: contain)
+        const logoX = marginLeft + (targetWidth - logoWidth) / 2;
+        const logoY = currentY + (targetHeight - logoHeight) / 2;
+        
+        doc.addImage(logoBase64, imageFormat, logoX, logoY, logoWidth, logoHeight);
         console.log('Logo ajouté avec succès au PDF');
       } else {
-        throw new Error('Logo base64 invalide ou trop court');
+        console.log('Logo base64 invalide, utilisation du fallback');
+        throw new Error(`Logo base64 invalide ou trop court: ${logoBase64 ? logoBase64.length : 'null'}`);
       }
     } catch (error) {
       console.error('Erreur lors du chargement du logo:', error);
       console.log('Utilisation du logo fallback');
-      // Fallback au logo textuel en cas d'erreur
+      // Fallback au logo textuel - dimensions réduites
       doc.setFillColor(0, 0, 0);
-      doc.rect(marginLeft, currentY, 40, 30, 'F');
+      doc.rect(marginLeft, currentY, 42, 32, 'F');
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(18);
+      doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
-      doc.text('GS', marginLeft + 20, currentY + 15, { align: 'center' });
-      doc.setFontSize(8);
-      doc.text('GAMER', marginLeft + 20, currentY + 20, { align: 'center' });
-      doc.text('STORE', marginLeft + 20, currentY + 25, { align: 'center' });
+      doc.text('GS', marginLeft + 21, currentY + 14, { align: 'center' });
+      doc.setFontSize(7);
+      doc.text('GAMER', marginLeft + 21, currentY + 20, { align: 'center' });
+      doc.text('STORE', marginLeft + 21, currentY + 25, { align: 'center' });
     }
 
-    // Titre "Facture" au centre
+    // Titre "Facture" au centre - taille réduite comme dans l'aperçu
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(28);
+    doc.setFontSize(20); // Réduit de 28 à 20 (équivalent text-2xl)
     doc.setFont('helvetica', 'bold');
-    doc.text('Facture', pageWidth / 2, currentY + 20, { align: 'center' });
+    doc.text('Facture', pageWidth / 2, currentY + 18, { align: 'center' });
 
-    // "GAMER STORE SARL" à droite
-    doc.setFontSize(16);
+    // "GAMER STORE SARL" à droite - avec soulignement et taille réduite
+    doc.setFontSize(12); // Réduit de 16 à 12
     doc.setFont('helvetica', 'bold');
     const rightX = pageWidth - marginRight;
-    doc.text('GAMER STORE SARL', rightX, currentY + 15, { align: 'right' });
+    doc.text(COMPANY_CONFIG.nom, rightX, currentY + 15, { align: 'right' });
+    
+    // Ajouter le soulignement sous GAMER STORE SARL
+    const textWidth = doc.getTextWidth(COMPANY_CONFIG.nom);
+    doc.setLineWidth(0.5);
+    doc.line(rightX - textWidth, currentY + 16, rightX, currentY + 16);
 
     // Ligne de séparation
     currentY += 35;
@@ -616,23 +666,37 @@ export class PDFGenerator {
       
       if (product.imageBase64) {
         try {
-          doc.addImage(product.imageBase64, 'JPEG', currentX + 2, tableY + 2, colWidths[0] - 4, totalRowHeight - 4);
+          // Dimensions fixes pour maintenir les proportions (comme dans l'aperçu HTML h-24)
+          const imageWidth = colWidths[0] - 4; // Largeur disponible
+          const imageHeight = 18; // Hauteur fixe équivalente à h-24 (6rem = 96px ≈ 18mm)
+          const imageX = currentX + 2;
+          const imageY = tableY + 2; // Position en haut de la cellule
+          
+          // Centrer l'image verticalement dans la cellule si besoin
+          const centerY = tableY + (totalRowHeight - imageHeight) / 2;
+          
+          doc.addImage(product.imageBase64, 'JPEG', imageX, centerY, imageWidth, imageHeight);
         } catch (error) {
           console.error('Erreur lors de l\'ajout de l\'image au PDF:', error);
-          // Fallback propre
+          // Fallback propre avec dimensions fixes
+          const fallbackHeight = 18;
+          const fallbackY = tableY + (totalRowHeight - fallbackHeight) / 2;
           doc.setFillColor(245, 245, 245);
-          doc.rect(currentX + 2, tableY + 2, colWidths[0] - 4, totalRowHeight - 4, 'F');
+          doc.rect(currentX + 2, fallbackY, colWidths[0] - 4, fallbackHeight, 'F');
           doc.setFontSize(9);
           doc.setTextColor(120, 120, 120);
-          doc.text('IMG', currentX + colWidths[0] / 2, tableY + totalRowHeight / 2, { align: 'center' });
+          doc.text('IMG', currentX + colWidths[0] / 2, fallbackY + fallbackHeight / 2 + 2, { align: 'center' });
           doc.setTextColor(0, 0, 0);
         }
       } else {
+        // Placeholder avec dimensions fixes
+        const placeholderHeight = 18;
+        const placeholderY = tableY + (totalRowHeight - placeholderHeight) / 2;
         doc.setFillColor(245, 245, 245);
-        doc.rect(currentX + 2, tableY + 2, colWidths[0] - 4, totalRowHeight - 4, 'F');
+        doc.rect(currentX + 2, placeholderY, colWidths[0] - 4, placeholderHeight, 'F');
         doc.setFontSize(9);
         doc.setTextColor(120, 120, 120);
-        doc.text('IMG', currentX + colWidths[0] / 2, tableY + totalRowHeight / 2, { align: 'center' });
+        doc.text('IMG', currentX + colWidths[0] / 2, placeholderY + placeholderHeight / 2 + 2, { align: 'center' });
         doc.setTextColor(0, 0, 0);
       }
       doc.rect(currentX, tableY, colWidths[0], totalRowHeight);
@@ -700,64 +764,82 @@ export class PDFGenerator {
 
     currentY = tableY + 10;
 
-    // === TOTAUX avec design épuré et espacement amélioré ===
+    // === TABLEAU DES TOTAUX (structure tableau claire) ===
     
-    const totalsStartX = pageWidth - marginRight - 70; // Plus large pour éviter le collage
-    const totalsWidth = 65; // Largeur augmentée pour les gros montants
-    let totalsHeight = 8;
+    const totalsStartX = pageWidth - marginRight - 70;
+    const totalsWidth = 68;
+    const labelColWidth = 40;
+    const valueColWidth = 28;
+    const rowHeight = 8;
     
-    // Calculer la hauteur nécessaire avec nouveaux espacements
-    if (taxMode === "with_tax" && tva > 0) totalsHeight += 16; // HT + TVA (8mm x 2)
-    if (fraisLivraison > 0) totalsHeight += 8; // Livraison
-    totalsHeight += 13; // Total final (plus haut)
-    
-    // Cadre fin pour les totaux
-    doc.setLineWidth(0.3);
-    doc.setDrawColor(200, 200, 200);
-    doc.rect(totalsStartX, currentY - 2, totalsWidth, totalsHeight, 'S');
-    
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    
-    // Utiliser une mise en page avec colonnes fixes pour éviter le collage
-    const labelColumnWidth = 35; // Largeur fixe pour les labels
-    const valueColumnWidth = totalsWidth - labelColumnWidth - 6; // Largeur pour les valeurs
+    // Préparer les lignes du tableau des totaux
+    const totalsRows = [];
     
     if (taxMode === "with_tax" && tva > 0) {
-      // Total HT
-      doc.text('Total HT :', totalsStartX + 4, currentY + 4);
-      doc.text(this.formatAmount(totalHT) + ' DH', totalsStartX + totalsWidth - 4, currentY + 4, { align: 'right' });
-      currentY += 8;
-      
-      // TVA 20%
-      doc.text('TVA 20% :', totalsStartX + 4, currentY + 4);
-      doc.text(this.formatAmount(tva) + ' DH', totalsStartX + totalsWidth - 4, currentY + 4, { align: 'right' });
-      currentY += 8;
+      totalsRows.push({ label: 'Total HT :', value: this.formatAmount(totalHT) + ' DH', isFinal: false });
+      totalsRows.push({ label: 'TVA 20% :', value: this.formatAmount(tva) + ' DH', isFinal: false });
     }
-
+    
     if (fraisLivraison > 0) {
-      doc.text('Livraison :', totalsStartX + 4, currentY + 4);
-      doc.text(this.formatAmount(fraisLivraison) + ' DH', totalsStartX + totalsWidth - 4, currentY + 4, { align: 'right' });
-      currentY += 8;
+      totalsRows.push({ label: 'Livraison :', value: this.formatAmount(fraisLivraison) + ' DH', isFinal: false });
     }
-
-    // Total final avec fond noir élégant et espacement amélioré
-    doc.setFillColor(0, 0, 0);
-    doc.rect(totalsStartX + 1, currentY - 1, totalsWidth - 2, 13, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
+    
+    // Ligne finale
     const totalLabel = (taxMode === "with_tax" && tva > 0) ? 'Total TTC :' : 'Total HT :';
+    totalsRows.push({ label: totalLabel, value: this.formatAmount(totalFinal) + ' DH', isFinal: true });
     
-    // Positionner le label avec plus d'espace
-    doc.text(totalLabel, totalsStartX + 4, currentY + 7);
+    const tableHeight = totalsRows.length * rowHeight;
     
-    // Formater le montant final avec espacement et séparateurs de milliers
-    const finalAmountText = this.formatAmount(totalFinal) + ' DH';
-    doc.text(finalAmountText, totalsStartX + totalsWidth - 4, currentY + 7, { align: 'right' });
-
-    currentY += 20;
+    // Dessiner le cadre du tableau
+    doc.setLineWidth(0.5);
+    doc.setDrawColor(0, 0, 0);
+    doc.rect(totalsStartX, currentY, totalsWidth, tableHeight);
+    
+    // Dessiner les lignes et le contenu
+    totalsRows.forEach((row, index) => {
+      const rowY = currentY + (index * rowHeight);
+      
+      if (row.isFinal) {
+        // Ligne finale avec fond noir
+        doc.setFillColor(0, 0, 0);
+        doc.rect(totalsStartX, rowY, totalsWidth, rowHeight, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+      } else {
+        // Lignes normales avec fond blanc
+        doc.setFillColor(255, 255, 255);
+        doc.rect(totalsStartX, rowY, totalsWidth, rowHeight, 'F');
+        doc.setTextColor(0, 0, 0);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+      }
+      
+      // Ligne de séparation horizontale (sauf pour la dernière)
+      if (index > 0) {
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.3);
+        doc.line(totalsStartX, rowY, totalsStartX + totalsWidth, rowY);
+      }
+      
+      // Ligne de séparation verticale entre colonnes
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.3);
+      doc.line(totalsStartX + labelColWidth, rowY, totalsStartX + labelColWidth, rowY + rowHeight);
+      
+      // Texte du label (colonne gauche)
+      doc.text(row.label, totalsStartX + 3, rowY + (rowHeight / 2) + 2);
+      
+      // Texte de la valeur (colonne droite, aligné à droite)
+      doc.text(row.value, totalsStartX + totalsWidth - 3, rowY + (rowHeight / 2) + 2, { align: 'right' });
+    });
+    
+    // Bordure finale du tableau
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.5);
+    doc.rect(totalsStartX, currentY, totalsWidth, tableHeight);
+    
+    currentY += tableHeight + 10;
 
     // === MONTANT EN LETTRES ===
     
@@ -770,8 +852,8 @@ export class PDFGenerator {
     doc.setFontSize(10);
     
     // Centrer le texte
-    const textWidth = doc.getTextWidth(amountText);
-    const textX = (pageWidth - textWidth) / 2;
+    const amountTextWidth = doc.getTextWidth(amountText);
+    const textX = (pageWidth - amountTextWidth) / 2;
     doc.text(amountText, textX, currentY + 8);
 
     // === PIED DE PAGE ===

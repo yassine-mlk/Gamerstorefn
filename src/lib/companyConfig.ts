@@ -52,7 +52,9 @@ export const convertImageToBase64 = async (imagePath: string): Promise<string> =
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           
           ctx.drawImage(img, 0, 0);
-          const dataURL = canvas.toDataURL('image/png', 1.0); // PNG pour préserver la transparence
+          // Utiliser JPEG pour les images JPG, PNG pour les autres
+          const imageFormat = imagePath.toLowerCase().includes('.jpg') || imagePath.toLowerCase().includes('.jpeg') ? 'image/jpeg' : 'image/png';
+          const dataURL = canvas.toDataURL(imageFormat, 0.9);
           resolve(dataURL);
         } else {
           reject(new Error('Unable to get canvas context'));
@@ -94,7 +96,9 @@ export const getCompanyLogoBase64 = async () => {
   
   if (logo.type === "image") {
     try {
+      // Utiliser une approche plus simple et fiable
       const base64Logo = await convertImageToBase64(logo.url);
+      console.log('Logo base64 généré avec succès, longueur:', base64Logo.length);
       return {
         ...logo,
         url: base64Logo

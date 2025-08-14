@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,10 +6,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { User, Building, FileText, Printer, Download, Eye } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { User, Building, FileText, Printer, Download, Eye, Plus, Mail, Phone, MapPin, Receipt } from 'lucide-react';
 import { generateQuoteHTML, previewQuote, printQuote, downloadQuote, QuoteData } from '@/utils/quoteUtils';
 import { useToast } from '@/hooks/use-toast';
-import { useClients } from '@/hooks/useClients';
+import { useClients, type NewClient } from '@/hooks/useClients';
 
 interface Product {
   id: string;
@@ -30,15 +31,29 @@ interface QuoteDialogProps {
 
 export function QuoteDialog({ isOpen, onClose, product, productType }: QuoteDialogProps) {
   const { toast } = useToast();
-  const { clients, loading: loadingClients } = useClients();
+  const { clients, loading: loadingClients, addClient } = useClients();
   
   const [selectedClient, setSelectedClient] = useState('');
+  const [showAddClientForm, setShowAddClientForm] = useState(false);
+  const [isAddingClient, setIsAddingClient] = useState(false);
   
   const [quoteData, setQuoteData] = useState({
     quantite: 1,
     avec_tva: false,
     frais_livraison: 0,
     notes: '',
+  });
+
+  const [newClient, setNewClient] = useState<NewClient>({
+    nom: "",
+    prenom: "",
+    email: "",
+    telephone: "",
+    adresse: "",
+    statut: "Actif",
+    type_client: "particulier",
+    ice: "",
+    notes: ""
   });
 
   const generateQuoteNumber = () => {
@@ -85,6 +100,55 @@ export function QuoteDialog({ isOpen, onClose, product, productType }: QuoteDial
       frais_livraison: quoteData.frais_livraison,
       notes: quoteData.notes,
     };
+  };
+
+  const handleAddClient = async () => {
+    if (!newClient.nom) {
+      toast({
+        title: "Erreur",
+        description: "Le nom est obligatoire",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsAddingClient(true);
+    try {
+      const addedClient = await addClient(newClient);
+      
+      // Sélectionner automatiquement le nouveau client
+      setSelectedClient(addedClient.id);
+      
+      // Réinitialiser le formulaire
+      setNewClient({
+        nom: "",
+        prenom: "",
+        email: "",
+        telephone: "",
+        adresse: "",
+        statut: "Actif",
+        type_client: "particulier",
+        ice: "",
+        notes: ""
+      });
+      
+      // Fermer le formulaire d'ajout
+      setShowAddClientForm(false);
+      
+      toast({
+        title: "Succès",
+        description: `Client ${newClient.type_client === 'societe' ? newClient.nom : `${newClient.prenom} ${newClient.nom}`} ajouté avec succès`,
+      });
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout du client:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible d'ajouter le client",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAddingClient(false);
+    }
   };
 
   const handleAction = async (action: 'preview' | 'print' | 'download') => {
@@ -158,12 +222,26 @@ export function QuoteDialog({ isOpen, onClose, product, productType }: QuoteDial
 
           {/* Sélection du client */}
           <div className="space-y-3">
-            <Label className="text-base font-semibold">Sélectionner un client</Label>
-            <Select value={selectedClient} onValueChange={setSelectedClient}>
+            <div className="flex items-center justify-between">
+              <Label className="text-base font-semibold">Sélectionner un client</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAddClientForm(!showAddClientForm)}
+                className="flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Nouveau client
+              </Button>
+            </div>
+            
+            {!showAddClientForm && (
+              <Select value={selectedClient} onValueChange={setSelectedClient}>
               <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                 <SelectValue placeholder="Choisir un client" />
               </SelectTrigger>
-              <SelectContent className="bg-white border-gray-300 max-h-60">
+              <SelectContent className="bg-white border-gray-300 max-h-80">
                 {loadingClients ? (
                   <SelectItem value="loading" disabled>
                     Chargement...
@@ -173,33 +251,232 @@ export function QuoteDialog({ isOpen, onClose, product, productType }: QuoteDial
                     Aucun client disponible
                   </SelectItem>
                 ) : (
-                  clients.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      <div className="flex items-center gap-2">
-                        {client.type_client === 'societe' ? (
-                          <Building className="w-4 h-4 text-purple-600" />
-                        ) : (
-                          <User className="w-4 h-4 text-green-600" />
-                        )}
-                        <div>
-                          <div className="font-medium">
-                            {client.type_client === 'societe' 
-                              ? client.nom 
-                              : `${client.prenom} ${client.nom}`
-                            }
+                  <>
+                    {/* Section Particuliers */}
+                    {clients.filter(c => c.type_client === 'particulier').length > 0 && (
+                      <>
+                        <SelectItem value="header-particuliers" disabled className="font-semibold text-green-700 bg-green-50">
+                          <div className="flex items-center gap-2">
+                            <User className="w-4 h-4" />
+                            Particuliers ({clients.filter(c => c.type_client === 'particulier').length})
                           </div>
-                          {client.type_client === 'societe' && client.ice && (
-                            <div className="text-xs text-gray-600">
-                              ICE: {client.ice}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </SelectItem>
-                  ))
+                        </SelectItem>
+                        {clients
+                          .filter(client => client.type_client === 'particulier')
+                          .map((client) => (
+                            <SelectItem key={client.id} value={client.id} className="pl-6">
+                              <div className="flex items-center gap-2">
+                                <User className="w-4 h-4 text-green-600" />
+                                <div>
+                                  <div className="font-medium">
+                                    {client.prenom} {client.nom}
+                                  </div>
+                                  {client.email && (
+                                    <div className="text-xs text-gray-600">
+                                      {client.email}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </SelectItem>
+                          ))}
+                      </>
+                    )}
+
+                    {/* Section Sociétés */}
+                    {clients.filter(c => c.type_client === 'societe').length > 0 && (
+                      <>
+                        <SelectItem value="header-societes" disabled className="font-semibold text-purple-700 bg-purple-50 mt-2">
+                          <div className="flex items-center gap-2">
+                            <Building className="w-4 h-4" />
+                            Sociétés ({clients.filter(c => c.type_client === 'societe').length})
+                          </div>
+                        </SelectItem>
+                        {clients
+                          .filter(client => client.type_client === 'societe')
+                          .map((client) => (
+                            <SelectItem key={client.id} value={client.id} className="pl-6">
+                              <div className="flex items-center gap-2">
+                                <Building className="w-4 h-4 text-purple-600" />
+                                <div>
+                                  <div className="font-medium">
+                                    {client.nom}
+                                  </div>
+                                  {client.ice && (
+                                    <div className="text-xs text-gray-600">
+                                      ICE: {client.ice}
+                                    </div>
+                                  )}
+                                  {client.email && (
+                                    <div className="text-xs text-gray-600">
+                                      {client.email}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </SelectItem>
+                          ))}
+                      </>
+                    )}
+                  </>
                 )}
               </SelectContent>
             </Select>
+            )}
+            
+            {/* Formulaire d'ajout de nouveau client */}
+            {showAddClientForm && (
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Ajouter un nouveau client</h3>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowAddClientForm(false)}
+                    className="h-8 w-8 p-0"
+                  >
+                    ×
+                  </Button>
+                </div>
+                
+                {/* Type de client */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Type de client</Label>
+                  <RadioGroup 
+                    value={newClient.type_client} 
+                    onValueChange={(value: any) => setNewClient({...newClient, type_client: value, ice: value === 'particulier' ? '' : newClient.ice})}
+                    className="grid grid-cols-2 gap-3"
+                  >
+                    <div className="flex items-center space-x-2 p-2 border border-gray-300 rounded-lg bg-white">
+                      <RadioGroupItem value="particulier" id="particulier-quote" />
+                      <Label htmlFor="particulier-quote" className="flex items-center gap-2 cursor-pointer text-sm">
+                        <User className="w-4 h-4 text-green-600" />
+                        Particulier
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2 p-2 border border-gray-300 rounded-lg bg-white">
+                      <RadioGroupItem value="societe" id="societe-quote" />
+                      <Label htmlFor="societe-quote" className="flex items-center gap-2 cursor-pointer text-sm">
+                        <Building className="w-4 h-4 text-purple-600" />
+                        Société
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {/* Informations principales */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="nom-quote" className="text-sm font-medium">
+                      {newClient.type_client === 'societe' ? 'Nom de la société *' : 'Nom de famille *'}
+                    </Label>
+                    <Input
+                      id="nom-quote"
+                      value={newClient.nom}
+                      onChange={(e) => setNewClient({...newClient, nom: e.target.value})}
+                      placeholder={newClient.type_client === 'societe' ? "Ex: TechCorp Solutions" : "Ex: Dupont"}
+                      className="mt-1"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="prenom-quote" className="text-sm font-medium">
+                      {newClient.type_client === 'societe' ? 'Contact principal' : 'Prénom'}
+                    </Label>
+                    <Input
+                      id="prenom-quote"
+                      value={newClient.prenom}
+                      onChange={(e) => setNewClient({...newClient, prenom: e.target.value})}
+                      placeholder={newClient.type_client === 'societe' ? "Ex: Mohammed Alami" : "Ex: Jean"}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+
+                {/* Champ ICE pour les sociétés */}
+                {newClient.type_client === 'societe' && (
+                  <div>
+                    <Label htmlFor="ice-quote" className="text-sm font-medium">Numéro ICE</Label>
+                    <Input
+                      id="ice-quote"
+                      value={newClient.ice}
+                      onChange={(e) => setNewClient({...newClient, ice: e.target.value})}
+                      placeholder="Ex: 001234567000025"
+                      className="mt-1"
+                    />
+                  </div>
+                )}
+
+                {/* Contact */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="email-quote" className="text-sm font-medium">Email</Label>
+                    <Input
+                      id="email-quote"
+                      type="email"
+                      value={newClient.email}
+                      onChange={(e) => setNewClient({...newClient, email: e.target.value})}
+                      placeholder="Ex: client@exemple.com"
+                      className="mt-1"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="telephone-quote" className="text-sm font-medium">Téléphone</Label>
+                    <Input
+                      id="telephone-quote"
+                      value={newClient.telephone}
+                      onChange={(e) => setNewClient({...newClient, telephone: e.target.value})}
+                      placeholder="Ex: 06 12 34 56 78"
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+
+                {/* Adresse */}
+                <div>
+                  <Label htmlFor="adresse-quote" className="text-sm font-medium">Adresse</Label>
+                  <Textarea
+                    id="adresse-quote"
+                    value={newClient.adresse}
+                    onChange={(e) => setNewClient({...newClient, adresse: e.target.value})}
+                    placeholder="Ex: 123 Avenue Mohammed V, Casablanca"
+                    rows={2}
+                    className="mt-1"
+                  />
+                </div>
+
+                {/* Boutons d'action */}
+                <div className="flex gap-2 pt-2">
+                  <Button 
+                    type="button"
+                    onClick={handleAddClient}
+                    disabled={!newClient.nom || isAddingClient}
+                    className="flex-1"
+                  >
+                    {isAddingClient ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                        Ajout en cours...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Ajouter le client
+                      </>
+                    )}
+                  </Button>
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    onClick={() => setShowAddClientForm(false)}
+                  >
+                    Annuler
+                  </Button>
+                </div>
+              </div>
+            )}
             
             {/* Affichage des informations du client sélectionné */}
             {selectedClient && (
