@@ -53,6 +53,7 @@ interface QuoteGeneratorProps {
 export function QuoteGenerator({ quote, onPreview, onPrint, onDownload }: QuoteGeneratorProps) {
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string>('');
   const [articlesWithImages, setArticlesWithImages] = useState<QuoteItem[]>([]);
+  const [logoData, setLogoData] = useState<any | null>(null);
 
   // Fonction pour récupérer toutes les données d'un produit depuis sa table source
   const getProductData = async (produit_id: string, produit_type: string): Promise<any> => {
@@ -124,15 +125,26 @@ export function QuoteGenerator({ quote, onPreview, onPrint, onDownload }: QuoteG
       }
     };
 
+    const loadLogo = async () => {
+      try {
+        const logo = await getCompanyLogoBase64();
+        setLogoData(logo);
+      } catch (e) {
+        console.warn('Erreur chargement logo pour devis, fallback:', e);
+        setLogoData(null);
+      }
+    };
+
     generateQR();
     enrichArticlesWithImages();
+    loadLogo();
   }, [quote]);
 
   const generateQuoteHTML = (): string => {
     const numeroDevis = quote.numero_devis || 'N/A';
     const dateDevis = new Date(quote.date_devis || Date.now()).toLocaleDateString('fr-FR');
     
-    const logo = getCompanyLogo();
+    const logo = logoData || getCompanyLogo();
 
     // Fonction pour normaliser les URLs d'images Supabase
     const normalizeImageUrl = (url: string): string => {
