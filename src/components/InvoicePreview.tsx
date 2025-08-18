@@ -329,14 +329,14 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
           </div>
           
           {/* Tableau des produits */}
-          <table className="w-full border-collapse mb-5 border-2 border-black">
+          <table className="w-full border-collapse mb-5 border border-black">
             <thead>
               <tr className="bg-black text-white">
-                <th className="border border-black p-3 text-center font-bold">ID</th>
-                <th className="border border-black p-3 text-center font-bold">NOM DU PRODUIT</th>
-                <th className="border border-black p-3 text-center font-bold">PRIX</th>
-                <th className="border border-black p-3 text-center font-bold">QTÉ</th>
-                <th className="border border-black p-3 text-center font-bold">TOTAL</th>
+                <th className="border border-black p-2 text-center font-bold text-sm">ID</th>
+                <th className="border border-black p-2 text-center font-bold text-sm">NOM DU PRODUIT</th>
+                <th className="border border-black p-2 text-center font-bold text-sm">PRIX</th>
+                <th className="border border-black p-2 text-center font-bold text-sm">QTÉ</th>
+                <th className="border border-black p-2 text-center font-bold text-sm">TOTAL</th>
               </tr>
             </thead>
             <tbody>
@@ -344,11 +344,10 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
                 // Créer les spécifications détaillées avec les vraies données
                 const specifications = [];
                 
-                // Marque et modèle (toujours présents)
+                // Spécifications selon le type de produit (identique au PDF)
                 if (article.marque) specifications.push(`• Brand: ${article.marque}`);
                 if (article.modele) specifications.push(`• Model: ${article.modele}`);
                 
-                // Spécifications selon le type de produit
                 if (article.produit_type === 'pc_portable') {
                     if (article.processeur) specifications.push(`• Processor Type: ${article.processeur}`);
                     if (article.carte_graphique) specifications.push(`• Graphics Chipset: ${article.carte_graphique}`);
@@ -356,7 +355,7 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
                     if (article.stockage) specifications.push(`• Storage: ${article.stockage}`);
                     if (article.ecran) specifications.push(`• Display: ${article.ecran}`);
                     if (article.etat) specifications.push(`• Condition: ${article.etat}`);
-                    specifications.push(`• Bonus: Free RGB Mouse`); // Toujours offerte avec PC portable
+                    specifications.push(`• Bonus: Free RGB Mouse`);
                 } else if (article.produit_type === 'moniteur') {
                     if (article.taille_ecran) specifications.push(`• Screen Size: ${article.taille_ecran}`);
                     if (article.resolution) specifications.push(`• Resolution: ${article.resolution}`);
@@ -393,37 +392,37 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
                         <img 
                           src={article.image_url} 
                           alt={article.nom_produit}
-                          className="w-full h-24 object-cover border border-gray-300 rounded"
+                          className="w-full h-24 object-contain border border-gray-300 rounded"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.style.display = 'none';
                           }}
                         />
                       ) : (
-                        <div className="w-full h-24 border border-gray-300 flex items-center justify-center text-xs text-gray-500 rounded">
+                        <div className="w-full h-24 border border-gray-300 flex items-center justify-center text-xs text-gray-500 rounded bg-gray-100">
                           No Image
                         </div>
                       )}
                     </td>
                     <td className="border border-black p-2 text-left align-top">
-                      <div className="font-bold mb-1">Specification</div>
-                      <div className="text-xs leading-tight">
+                      <div className="font-bold mb-2 text-sm">Specification</div>
+                      <div className="text-xs leading-tight space-y-1">
                         {specifications.map((spec, i) => (
                           <div key={`spec-${index}-${i}`}>{spec}</div>
                         ))}
                       </div>
                     </td>
-                    <td className="border border-black p-2 text-right font-bold align-top">
+                    <td className="border border-black p-2 text-right font-bold align-top text-sm">
                       {formatPrice(article.prix_unitaire_ht || article.prix_unitaire_ttc)}
                     </td>
-                    <td className="border border-black p-2 text-center align-top">{article.quantite}</td>
-                    <td className="border border-black p-2 text-right font-bold align-top">
+                    <td className="border border-black p-2 text-center align-top text-sm font-bold">{article.quantite}</td>
+                    <td className="border border-black p-2 text-right font-bold align-top text-sm">
                       {formatPrice((article.prix_unitaire_ht || article.prix_unitaire_ttc) * article.quantite)}
                     </td>
                   </tr>,
                   <tr key={`product-detail-${index}`}>
                     <td className="border-l border-r border-b border-black p-2 text-left" style={{borderTop: 'none'}}>
-                      <div className="font-bold mb-1">Detail</div>
+                      <div className="font-bold mb-2 text-sm">Detail</div>
                       <div className="text-xs text-gray-700">
                         {(article as any).description || article.nom_produit}
                       </div>

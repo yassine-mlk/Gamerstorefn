@@ -4,6 +4,7 @@ import { Printer, Download, Eye, Shield } from "lucide-react";
 import { type Vente } from "@/hooks/useVentes";
 import { QRCodeGenerator } from "@/lib/qrCodeGenerator";
 import { COMPANY_CONFIG, getCompanyLogo } from "@/lib/companyConfig";
+import { supabase } from "@/lib/supabase";
 
 interface WarrantyGeneratorProps {
   vente: Vente;
@@ -14,6 +15,7 @@ interface WarrantyGeneratorProps {
 
 export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: WarrantyGeneratorProps) {
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string>('');
+  const [warrantyMonths, setWarrantyMonths] = useState<number | null>(null);
 
   useEffect(() => {
     const generateQR = async () => {
@@ -25,16 +27,96 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
     generateQR();
   }, [vente]);
 
+  useEffect(() => {
+    const parseWarrantyToMonths = (value?: string | null): number | null => {
+      if (!value) return null;
+      const lower = value.toLowerCase();
+      if (lower.includes('sans')) return 0;
+      const match = lower.match(/(\d{1,2})/);
+      if (match) {
+        const months = parseInt(match[1], 10);
+        return isNaN(months) ? null : months;
+      }
+      return null;
+    };
+
+    const fetchWarranty = async () => {
+      try {
+        // Par défaut: si aucune info, ne pas forcer 12 mois; laisser null pour fallback visuel plus loin
+        let months: number | null = null;
+        const article = vente.articles?.[0];
+        if (!article) {
+          setWarrantyMonths(months);
+          return;
+        }
+
+        let tableName: string | null = null;
+        switch (article.produit_type) {
+          case 'pc_portable':
+            tableName = 'pc_portables';
+            break;
+          case 'moniteur':
+            tableName = 'moniteurs';
+            break;
+          case 'peripherique':
+            tableName = 'peripheriques';
+            break;
+          case 'chaise_gaming':
+            tableName = 'chaises_gaming';
+            break;
+          case 'pc_gamer':
+            tableName = 'pc_gamer_configs';
+            break;
+          case 'composant_pc':
+            tableName = 'composants_pc';
+            break;
+          default:
+            tableName = null;
+        }
+
+        if (!tableName) {
+          setWarrantyMonths(months);
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from(tableName)
+          .select('garantie')
+          .eq('id', article.produit_id)
+          .maybeSingle();
+
+        if (error) {
+          console.warn('Erreur récupération garantie produit:', error);
+          setWarrantyMonths(months);
+          return;
+        }
+
+        months = parseWarrantyToMonths((data as any)?.garantie ?? null);
+        setWarrantyMonths(months);
+      } catch (e) {
+        console.warn('Impossible de déterminer la garantie:', e);
+        setWarrantyMonths(null);
+      }
+    };
+
+    fetchWarranty();
+  }, [vente]);
+
   const generateWarrantyHTML = (): string => {
     const numeroFacture = vente.numero_vente || 'N/A';
     const dateVente = new Date(vente.date_vente || Date.now());
+    const months = warrantyMonths ?? null;
     const dateGarantie = new Date(dateVente);
-    dateGarantie.setFullYear(dateGarantie.getFullYear() + 1); // Garantie 1 an
-    
-    // Calculer la durée de garantie en mois
-    const diffTime = dateGarantie.getTime() - dateVente.getTime();
-    const diffMonths = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 30.44)); // Approximation des mois
-    const dureeGarantie = diffMonths === 12 ? '12 mois' : `${diffMonths} mois`;
+    if (months !== null) {
+      dateGarantie.setMonth(dateGarantie.getMonth() + months);
+    } else {
+      // Fallback si inconnue: ne pas modifier la date (affichage cohérent sans "12 mois" forcé)
+    }
+    const dureeGarantie = months === null
+      ? 'Indéfinie'
+      : months <= 0
+        ? 'Sans garantie'
+        : `${months} mois`;
     
     const logo = getCompanyLogo();
     
@@ -292,27 +374,6 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
             color: #666;
         }
         
-        .stamp-section {
-            margin-top: 60px;
-            text-align: center;
-            padding: 40px;
-            border: 2px dashed #ccc;
-            border-radius: 10px;
-            background: #f9f9f9;
-        }
-        
-        .stamp-placeholder {
-            font-size: 18px;
-            font-weight: bold;
-            color: #666;
-            margin-bottom: 10px;
-        }
-        
-        .stamp-subtitle {
-            font-size: 12px;
-            color: #999;
-        }
-        
         .footer-info {
             margin-bottom: 5px;
         }
@@ -404,7 +465,7 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
                     </div>
                     <div class="info-item">
                         <span class="info-label">Fin garantie :</span>
-                        <span>${dateGarantie.toLocaleDateString('fr-FR')}</span>
+                        <span>${months === null ? '—' : dateGarantie.toLocaleDateString('fr-FR')}</span>
                     </div>
                 </div>
             </div>
@@ -448,7 +509,7 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
             </div>
             
             <div class="validity-info">
-                <div class="validity-date">Valide jusqu'au ${dateGarantie.toLocaleDateString('fr-FR')}</div>
+                <div class="validity-date">${months !== null && months > 0 ? `Valide jusqu'au ${dateGarantie.toLocaleDateString('fr-FR')}` : 'Aucune garantie en cours'}</div>
                 <div>Scannez le QR code pour vérifier la validité</div>
             </div>
             
@@ -474,12 +535,6 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
                 <li>Des dégâts ont été causés par l'utilisation de composants non fabriqués ou vendus par Gamer Store;</li>
                 <li>Des dégâts ont été causés par des logiciels tiers ou des virus informatiques;</li>
             </ul>
-        </div>
-        
-        <!-- Espace pour cachet du magasin -->
-        <div class="stamp-section">
-            <div class="stamp-placeholder">CACHET DU MAGASIN</div>
-            <div class="stamp-subtitle">GAMER STORE SARL</div>
         </div>
         
         <!-- Pied de page -->

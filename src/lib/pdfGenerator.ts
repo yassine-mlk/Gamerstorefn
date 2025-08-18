@@ -416,9 +416,9 @@ export class PDFGenerator {
         
         // Utiliser les dimensions de l'aperçu HTML avec object-fit: contain
         // Configuration COMPANY_CONFIG : width: 80, height: 60 → Aperçu: 160x120px → PDF: 42mm x 32mm
-        // Mais ajuster pour préserver les proportions comme object-fit: contain
-        const targetWidth = (COMPANY_CONFIG.logo.width * 2) * 0.265; // Conversion px vers mm
-        const targetHeight = (COMPANY_CONFIG.logo.height * 2) * 0.265;
+        // Réduire la taille du logo en multipliant par 0.9 comme demandé
+        const targetWidth = (COMPANY_CONFIG.logo.width * 2) * 0.265 * 0.9; // Conversion px vers mm, puis multiplié par 0.9
+        const targetHeight = (COMPANY_CONFIG.logo.height * 2) * 0.265 * 0.9;
         
         // Pour préserver les proportions comme object-fit: contain, utiliser des dimensions plus petites
         // Le logo original a probablement des proportions différentes de 4:3
@@ -443,16 +443,16 @@ export class PDFGenerator {
     } catch (error) {
       console.error('Erreur lors du chargement du logo:', error);
       console.log('Utilisation du logo fallback');
-      // Fallback au logo textuel - dimensions réduites
-      doc.setFillColor(0, 0, 0);
-      doc.rect(marginLeft, currentY, 42, 32, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('GS', marginLeft + 21, currentY + 14, { align: 'center' });
-      doc.setFontSize(7);
-      doc.text('GAMER', marginLeft + 21, currentY + 20, { align: 'center' });
-      doc.text('STORE', marginLeft + 21, currentY + 25, { align: 'center' });
+              // Fallback au logo textuel - dimensions réduites par 0.9
+        doc.setFillColor(0, 0, 0);
+        doc.rect(marginLeft, currentY, 18.9, 14.4, 'F'); // Multiplié par 0.9 (21*0.9, 16*0.9)
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(7.2); // Réduit de 8 à 7.2 (8*0.9)
+        doc.setFont('helvetica', 'bold');
+        doc.text('GS', marginLeft + 9.45, currentY + 6.3, { align: 'center' }); // Multiplié par 0.9
+        doc.setFontSize(3.6); // Réduit de 4 à 3.6 (4*0.9)
+        doc.text('GAMER', marginLeft + 9.45, currentY + 9, { align: 'center' });
+        doc.text('STORE', marginLeft + 9.45, currentY + 11.25, { align: 'center' });
     }
 
     // Titre "Facture" au centre - taille réduite comme dans l'aperçu
@@ -618,30 +618,31 @@ export class PDFGenerator {
     // Générer le tableau manuellement avec design amélioré
     const tableStartY = currentY;
     
-    // Largeurs des colonnes optimisées pour rester dans les marges (170mm disponible)
+    // Largeurs des colonnes optimisées pour s'adapter parfaitement à l'espace disponible
     const availableWidth = pageWidth - marginLeft - marginRight; // 170mm
-    const colWidths = [25, 75, 25, 20, 25]; // Total: 170mm exactement
+    const colWidths = [28, 77, 25, 20, 20]; // Total: 170mm exactement (ID, NOM, PRIX, QTÉ, TOTAL)
     
     const tableWidth = colWidths.reduce((sum, width) => sum + width, 0);
+    console.log(`Tableau: largeur totale ${tableWidth}mm, espace disponible ${availableWidth}mm`);
     let tableY = tableStartY;
     
     // En-tête du tableau avec design amélioré
     doc.setFillColor(0, 0, 0);
-    doc.rect(marginLeft, tableY, tableWidth, 12, 'F');
+    doc.rect(marginLeft, tableY, tableWidth, 15, 'F'); // Augmenté de 12 à 15
     
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(10);
+    doc.setFontSize(11); // Augmenté de 10 à 11
     doc.setFont('helvetica', 'bold');
     
     const headers = ['ID', 'NOM DU PRODUIT', 'PRIX', 'QTÉ', 'TOTAL'];
     let currentX = marginLeft;
     
     headers.forEach((header, index) => {
-      doc.text(header, currentX + colWidths[index] / 2, tableY + 8, { align: 'center' });
+      doc.text(header, currentX + colWidths[index] / 2, tableY + 10, { align: 'center' }); // Augmenté de 8 à 10
       currentX += colWidths[index];
     });
     
-    tableY += 12;
+    tableY += 15; // Augmenté de 12 à 15
     
     // Corps du tableau avec design épuré - bordures fines
     doc.setTextColor(0, 0, 0);
@@ -649,8 +650,8 @@ export class PDFGenerator {
     doc.setFont('helvetica', 'normal');
     
     tableData.forEach((product, productIndex) => {
-      const specificationRowHeight = Math.max(18, Math.ceil(product.specifications.length * 3));
-      const detailRowHeight = 12;
+      const specificationRowHeight = Math.max(25, Math.ceil(product.specifications.length * 4)); // Augmenté de 18 à 25
+      const detailRowHeight = 18; // Augmenté de 12 à 18
       
       // === PREMIÈRE LIGNE : Image + Specifications + Prix + Quantité + Total ===
       currentX = marginLeft;
@@ -667,8 +668,8 @@ export class PDFGenerator {
       if (product.imageBase64) {
         try {
           // Dimensions fixes pour maintenir les proportions (comme dans l'aperçu HTML h-24)
-          const imageWidth = colWidths[0] - 4; // Largeur disponible
-          const imageHeight = 18; // Hauteur fixe équivalente à h-24 (6rem = 96px ≈ 18mm)
+          const imageWidth = colWidths[0] - 4; // Largeur disponible (24mm)
+          const imageHeight = 22; // Hauteur ajustée pour les proportions (légèrement réduite de 25 à 22)
           const imageX = currentX + 2;
           const imageY = tableY + 2; // Position en haut de la cellule
           
@@ -679,7 +680,7 @@ export class PDFGenerator {
         } catch (error) {
           console.error('Erreur lors de l\'ajout de l\'image au PDF:', error);
           // Fallback propre avec dimensions fixes
-          const fallbackHeight = 18;
+          const fallbackHeight = 22; // Ajusté de 25 à 22
           const fallbackY = tableY + (totalRowHeight - fallbackHeight) / 2;
           doc.setFillColor(245, 245, 245);
           doc.rect(currentX + 2, fallbackY, colWidths[0] - 4, fallbackHeight, 'F');
@@ -690,7 +691,7 @@ export class PDFGenerator {
         }
       } else {
         // Placeholder avec dimensions fixes
-        const placeholderHeight = 18;
+        const placeholderHeight = 22; // Ajusté de 25 à 22
         const placeholderY = tableY + (totalRowHeight - placeholderHeight) / 2;
         doc.setFillColor(245, 245, 245);
         doc.rect(currentX + 2, placeholderY, colWidths[0] - 4, placeholderHeight, 'F');
@@ -709,14 +710,14 @@ export class PDFGenerator {
       }
       
       doc.setTextColor(0, 0, 0);
-      doc.setFontSize(9);
+      doc.setFontSize(10); // Augmenté de 9 à 10
       doc.setFont('helvetica', 'bold');
-      doc.text('Specification', currentX + 3, tableY + 6);
+      doc.text('Specification', currentX + 3, tableY + 12); // Augmenté de 10 à 12 pour plus d'espace
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
+      doc.setFontSize(9); // Augmenté de 8 à 9
       product.specifications.forEach((spec, specIndex) => {
-        if (tableY + 9 + (specIndex * 3) < tableY + specificationRowHeight - 2) {
-          doc.text(spec, currentX + 3, tableY + 9 + (specIndex * 3));
+        if (tableY + 15 + (specIndex * 4) < tableY + specificationRowHeight - 2) { // Augmenté de 13 à 15
+          doc.text(spec, currentX + 3, tableY + 15 + (specIndex * 4)); // Augmenté de 13 à 15
         }
       });
       doc.rect(currentX, tableY, colWidths[1], specificationRowHeight);
@@ -729,11 +730,11 @@ export class PDFGenerator {
           doc.rect(currentX, tableY, colWidths[2 + index], specificationRowHeight, 'F');
         }
         
-        doc.setFontSize(10);
+        doc.setFontSize(11); // Augmenté de 10 à 11
         doc.setFont('helvetica', 'bold');
         const align = index === 1 ? 'center' : 'right';
         const x = index === 1 ? currentX + colWidths[2 + index] / 2 : currentX + colWidths[2 + index] - 3;
-        doc.text(value, x, tableY + specificationRowHeight / 2 + 2, { align: align });
+        doc.text(value, x, tableY + specificationRowHeight / 2 + 3, { align: align }); // Augmenté de 2 à 3
         doc.rect(currentX, tableY, colWidths[2 + index], specificationRowHeight);
         currentX += colWidths[2 + index];
       });
@@ -893,120 +894,168 @@ export class PDFGenerator {
       doc.text(text, x, y);
     };
     
-    let yPos = 10;
+    // Centrer un texte avec wrap pour s'adapter à la largeur du ticket
+    const centerWrappedText = (
+      text: string, 
+      y: number, 
+      fontSize: number = 8, 
+      maxWidth: number = 70, 
+      lineGap: number = 3
+    ): number => {
+      doc.setFontSize(fontSize);
+      const lines = doc.splitTextToSize(text, maxWidth) as string[];
+      const centerX = 40; // Milieu du ticket (80mm / 2)
+      lines.forEach((line, idx) => {
+        doc.text(line, centerX, y + (idx * lineGap), { align: 'center' });
+      });
+      return y + (lines.length * lineGap);
+    };
     
-    // En-tête
-    doc.setFont('helvetica', 'bold');
-    centerText(company.nom, yPos, 14);
-    yPos += 6;
-    
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    centerText(company.adresse, yPos);
-    yPos += 4;
-    centerText(company.telephone, yPos);
-    yPos += 4;
-    centerText(company.email, yPos);
-    yPos += 8;
-    
-    // Ligne de séparation
-    doc.line(5, yPos, 75, yPos);
-    yPos += 6;
-    
-    // Titre
-    doc.setFont('helvetica', 'bold');
-    centerText('TICKET DE CAISSE', yPos, 12);
-    yPos += 8;
-    
-    // Informations de la vente
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.text(`N° ${vente.numero_vente}`, 5, yPos);
-    yPos += 4;
-    doc.text(`Date: ${new Date(vente.date_vente || '').toLocaleDateString('fr-FR')}`, 5, yPos);
-    yPos += 4;
-    doc.text(`Client: ${vente.client_nom}`, 5, yPos);
-    yPos += 4;
-    doc.text(`Vendeur: ${vente.vendeur_nom || 'N/A'}`, 5, yPos);
-    yPos += 6;
-    
-    // Ligne de séparation
-    doc.line(5, yPos, 75, yPos);
-    yPos += 4;
-    
-    // Articles
-    doc.setFont('helvetica', 'bold');
-    doc.text('ARTICLES', 5, yPos);
-    yPos += 4;
-    doc.line(5, yPos, 75, yPos);
-    yPos += 4;
-    
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
-    
-    vente.articles?.forEach(article => {
-      // Nom du produit (tronqué si nécessaire)
-      const nomTronque = article.nom_produit.length > 25 
-        ? article.nom_produit.substring(0, 22) + '...'
-        : article.nom_produit;
-      doc.text(nomTronque, 5, yPos);
-      yPos += 3;
+    // Rendu du reste du ticket après le logo
+    const renderRest = (startY: number) => {
+      let yPos = startY;
       
-      // Quantité et prix
-      const ligne = `${article.quantite} x ${article.prix_unitaire_ttc} MAD`;
-      doc.text(ligne, 5, yPos);
-      doc.text(`${article.total_ttc.toFixed(2)} MAD`, 75, yPos, { align: 'right' });
-      yPos += 5;
-    });
-    
-    // Ligne de séparation
-    doc.line(5, yPos, 75, yPos);
-    yPos += 4;
-    
-    // Totaux
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.text('Sous-total HT:', 5, yPos);
-    doc.text(`${vente.total_ht.toFixed(2)} MAD`, 75, yPos, { align: 'right' });
-    yPos += 4;
-    
-    doc.text('TVA (20%):', 5, yPos);
-    doc.text(`${vente.tva.toFixed(2)} MAD`, 75, yPos, { align: 'right' });
-    yPos += 4;
-    
-    if (vente.remise > 0) {
-      doc.text('Remise:', 5, yPos);
-      doc.text(`-${vente.remise.toFixed(2)} MAD`, 75, yPos, { align: 'right' });
+      // En-tête texte (nom + coordonnées)
+      doc.setFont('helvetica', 'bold');
+      yPos = centerWrappedText(COMPANY_CONFIG.nom, yPos, 14, 70, 4);
+      yPos += 2;
+      
+      doc.setFont('helvetica', 'normal');
+      yPos = centerWrappedText(COMPANY_CONFIG.adresse, yPos, 8, 70, 3);
+      yPos += 1;
+      yPos = centerWrappedText(COMPANY_CONFIG.telephone, yPos, 8, 70, 3);
+      yPos += 1;
+      yPos = centerWrappedText(`RC: ${COMPANY_CONFIG.rc} / IF: ${COMPANY_CONFIG.if} / ICE: ${COMPANY_CONFIG.ice}`, yPos, 8, 70, 3);
       yPos += 4;
-    }
+      
+      // Ligne de séparation
+      doc.line(5, yPos, 75, yPos);
+      yPos += 6;
+      
+      // Titre
+      doc.setFont('helvetica', 'bold');
+      centerText('TICKET DE CAISSE', yPos, 12);
+      yPos += 8;
+      
+      // Informations de la vente
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.text(`N° ${vente.numero_vente}`, 5, yPos);
+      yPos += 4;
+      doc.text(`Date: ${new Date(vente.date_vente || '').toLocaleDateString('fr-FR')}`, 5, yPos);
+      yPos += 4;
+      doc.text(`Client: ${vente.client_nom}`, 5, yPos);
+      yPos += 4;
+      doc.text(`Vendeur: ${vente.vendeur_nom || 'N/A'}`, 5, yPos);
+      yPos += 6;
+      
+      // Ligne de séparation
+      doc.line(5, yPos, 75, yPos);
+      yPos += 4;
+      
+      // Articles
+      doc.setFont('helvetica', 'bold');
+      doc.text('ARTICLES', 5, yPos);
+      yPos += 4;
+      doc.line(5, yPos, 75, yPos);
+      yPos += 4;
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      
+      vente.articles?.forEach(article => {
+        // Nom du produit (tronqué si nécessaire)
+        const nomTronque = article.nom_produit.length > 25 
+          ? article.nom_produit.substring(0, 22) + '...'
+          : article.nom_produit;
+        doc.text(nomTronque, 5, yPos);
+        yPos += 3;
+        
+        // Quantité et prix
+        const ligne = `${article.quantite} x ${article.prix_unitaire_ttc} MAD`;
+        doc.text(ligne, 5, yPos);
+        doc.text(`${article.total_ttc.toFixed(2)} MAD`, 75, yPos, { align: 'right' });
+        yPos += 5;
+      });
+      
+      // Ligne de séparation
+      doc.line(5, yPos, 75, yPos);
+      yPos += 4;
+      
+      // Totaux
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.text('Sous-total HT:', 5, yPos);
+      doc.text(`${vente.total_ht.toFixed(2)} MAD`, 75, yPos, { align: 'right' });
+      yPos += 4;
+      
+      doc.text('TVA (20%):', 5, yPos);
+      doc.text(`${vente.tva.toFixed(2)} MAD`, 75, yPos, { align: 'right' });
+      yPos += 4;
+      
+      if (vente.remise > 0) {
+        doc.text('Remise:', 5, yPos);
+        doc.text(`-${vente.remise.toFixed(2)} MAD`, 75, yPos, { align: 'right' });
+        yPos += 4;
+      }
+      
+      // Total final
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text('TOTAL TTC:', 5, yPos);
+      doc.text(`${vente.total_ttc.toFixed(2)} MAD`, 75, yPos, { align: 'right' });
+      yPos += 6;
+      
+      // Mode de paiement
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.text(`Paiement: ${vente.mode_paiement.toUpperCase()}`, 5, yPos);
+      yPos += 8;
+      
+      // Ligne de séparation
+      doc.line(5, yPos, 75, yPos);
+      yPos += 6;
+      
+      // Message de remerciement
+      centerText('Merci de votre visite !', yPos, 9);
+      yPos += 4;
+      centerText('À bientôt chez GamerStore', yPos, 8);
+      yPos += 6;
+      // Pas d'affichage de site web pour s'aligner avec le pied de page facture
+      
+      // Sauvegarde
+      doc.save(`Ticket_${vente.numero_vente}.pdf`);
+    };
     
-    // Total final
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.text('TOTAL TTC:', 5, yPos);
-    doc.text(`${vente.total_ttc.toFixed(2)} MAD`, 75, yPos, { align: 'right' });
-    yPos += 6;
-    
-    // Mode de paiement
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.text(`Paiement: ${vente.mode_paiement.toUpperCase()}`, 5, yPos);
-    yPos += 8;
-    
-    // Ligne de séparation
-    doc.line(5, yPos, 75, yPos);
-    yPos += 6;
-    
-    // Message de remerciement
-    centerText('Merci de votre visite !', yPos, 9);
-    yPos += 4;
-    centerText('À bientôt chez GamerStore', yPos, 8);
-    yPos += 6;
-    
-    centerText(company.website, yPos, 7);
-    
-    // Sauvegarde
-    doc.save(`Ticket_${vente.numero_vente}.pdf`);
+    // Tenter d'ajouter le logo en haut du ticket (centré)
+    getCompanyLogoBase64()
+      .then((logo: any) => {
+        if (logo && logo.type === 'image' && logo.url) {
+          try {
+            // Dimensions adaptées au ticket (80mm de large). On vise ~30mm de largeur.
+            const targetWidth = 30; // mm
+            const targetHeight = 15; // mm (approx)
+            const x = (80 - targetWidth) / 2;
+            const y = 5; // marge haute
+            
+            // Le format dépend de l'extension; sur base64, on peut par défaut utiliser PNG
+            const format = logo.url.startsWith('data:image/jpeg') ? 'JPEG' : 'PNG';
+            doc.addImage(logo.url, format as any, x, y, targetWidth, targetHeight);
+            
+            // Continuer le rendu sous le logo
+            renderRest(y + targetHeight + 4);
+            return;
+          } catch (e) {
+            console.warn('Impossible d\'ajouter le logo au ticket, fallback sans logo:', e);
+          }
+        }
+        // Fallback sans logo
+        renderRest(10);
+      })
+      .catch(() => {
+        // Fallback sans logo en cas d\'erreur
+        renderRest(10);
+      });
   }
 
   private static formatTypeVente(type: string): string {
