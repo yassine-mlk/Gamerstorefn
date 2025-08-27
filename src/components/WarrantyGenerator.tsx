@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Printer, Download, Eye, Shield } from "lucide-react";
+import { Printer, Shield } from "lucide-react";
 import { type Vente } from "@/hooks/useVentes";
 import { QRCodeGenerator } from "@/lib/qrCodeGenerator";
 import { COMPANY_CONFIG, getCompanyLogo } from "@/lib/companyConfig";
@@ -552,16 +552,6 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
     `;
   };
 
-  const handlePreview = () => {
-    const htmlContent = generateWarrantyHTML();
-    const newWindow = window.open('', '_blank');
-    if (newWindow) {
-      newWindow.document.write(htmlContent);
-      newWindow.document.close();
-    }
-    onPreview?.();
-  };
-
   const handlePrint = () => {
     const htmlContent = generateWarrantyHTML();
     const newWindow = window.open('', '_blank');
@@ -576,50 +566,16 @@ export function WarrantyGenerator({ vente, onPreview, onPrint, onDownload }: War
     onPrint?.();
   };
 
-  const handleDownload = () => {
-    const htmlContent = generateWarrantyHTML();
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Garantie_${vente.numero_vente}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    onDownload?.();
-  };
-
   return (
     <div className="flex gap-2">
-      <Button
-        onClick={handlePreview}
-        variant="outline"
-        size="sm"
-        className="flex items-center gap-2 border-yellow-600 text-yellow-600 hover:bg-yellow-600 hover:text-white"
-      >
-        <Shield className="w-4 h-4" />
-        Aperçu Garantie
-      </Button>
-      
       <Button
         onClick={handlePrint}
         variant="outline"
         size="sm"
         className="flex items-center gap-2 border-yellow-600 text-yellow-600 hover:bg-yellow-600 hover:text-white"
       >
-        <Printer className="w-4 h-4" />
-        Imprimer
-      </Button>
-      
-      <Button
-        onClick={handleDownload}
-        variant="outline"
-        size="sm"
-        className="flex items-center gap-2 border-yellow-600 text-yellow-600 hover:bg-yellow-600 hover:text-white"
-      >
-        <Download className="w-4 h-4" />
-        Télécharger
+        <Shield className="w-4 h-4" />
+        Garantie
       </Button>
     </div>
   );

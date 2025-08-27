@@ -114,6 +114,56 @@ export function useVentes() {
   const { toast } = useToast();
   const { addMouvementFromVente } = useBankAccounts();
   const { addCashTransactionFromVente } = useCash();
+  // Numérotation des ventes: configuration des points de départ par année
+  const YEAR_BASELINES: Record<number, number> = {
+    2025: 244,
+  };
+
+  const parseNumeroVente = (numero?: string): { sequence: number | null; year: number | null } => {
+    if (!numero) return { sequence: null, year: null };
+    const match = numero.match(/^(\d{1,6})\/(\d{4})$/);
+    if (!match) return { sequence: null, year: null };
+    const sequence = parseInt(match[1], 10);
+    const year = parseInt(match[2], 10);
+    return { sequence: isNaN(sequence) ? null : sequence, year: isNaN(year) ? null : year };
+  };
+
+  const formatNumeroVente = (sequence: number, year: number): string => {
+    return `${sequence}/${year}`;
+  };
+
+  const isNumeroVenteAvailable = async (numero: string, excludeVenteId?: string): Promise<boolean> => {
+    const { data, error } = await supabase
+      .from('ventes')
+      .select('id, numero_vente')
+      .eq('numero_vente', numero);
+    if (error) throw error;
+    if (!data || data.length === 0) return true;
+    if (excludeVenteId) {
+      return data.every(v => v.id === excludeVenteId);
+    }
+    return false;
+  };
+
+  const getNextAvailableNumeroForYear = async (year: number): Promise<string> => {
+    const baseline = YEAR_BASELINES[year] ?? 0;
+    const { data, error } = await supabase
+      .from('ventes')
+      .select('numero_vente')
+      .ilike('numero_vente', `%/${year}`);
+    if (error) throw error;
+    const used = new Set<number>();
+    for (const row of (data || [])) {
+      const { sequence, year: parsedYear } = parseNumeroVente(row.numero_vente as string);
+      if (parsedYear === year && sequence !== null) used.add(sequence);
+    }
+    // Trouver le plus petit nombre libre strictement supérieur au baseline
+    let candidate = baseline + 1;
+    while (used.has(candidate)) {
+      candidate += 1;
+    }
+    return formatNumeroVente(candidate, year);
+  };
 
 
 
@@ -365,6 +415,22 @@ export function useVentes() {
         vendeur_id: user.id,
         vendeur_nom: user.user_metadata?.name || user.email || 'Utilisateur'
       };
+
+      // Numéro de vente auto si absent: combler les trous, point de départ par année
+      const now = new Date();
+      const year = now.getFullYear();
+      if (!(venteData as any).numero_vente || (venteData as any).numero_vente === '') {
+        try {
+          (venteDataToInsert as any).numero_vente = await getNextAvailableNumeroForYear(year);
+        } catch (numError) {
+          console.warn('Impossible de calculer le prochain numéro de vente:', numError);
+        }
+      } else {
+        // Si un numéro est fourni, vérifier la dispo
+        const provided = (venteData as any).numero_vente as string;
+        const ok = await isNumeroVenteAvailable(provided);
+        if (!ok) throw new Error('Numéro de vente déjà utilisé');
+      }
       
       // Créer la vente
       const { data: vente, error: venteError } = await supabase
@@ -569,11 +635,34 @@ export function useVentes() {
       // Récupérer la vente actuelle pour vérifier le changement de statut
       const { data: venteActuelle, error: fetchError } = await supabase
         .from('ventes')
-        .select('statut')
+        .select('statut, numero_vente')
         .eq('id', id)
         .single();
 
       if (fetchError) throw fetchError;
+
+      // Validation/normalisation du numéro de vente si mis à jour
+      if (updates.numero_vente && updates.numero_vente !== venteActuelle.numero_vente) {
+        const { sequence, year } = parseNumeroVente(updates.numero_vente);
+        const currentYear = new Date().getFullYear();
+        const targetYear = year ?? currentYear;
+        // Si format invalide ou année manquante, forcer l'année courante
+        if (sequence === null) {
+          // Générer un prochain disponible pour l'année courante
+          updates.numero_vente = await getNextAvailableNumeroForYear(targetYear);
+        } else {
+          // Respecter baseline: à partir de baseline+1
+          const baseline = YEAR_BASELINES[targetYear] ?? 0;
+          const seq = Math.max(sequence, baseline + 1);
+          const candidate = formatNumeroVente(seq, targetYear);
+          // Si occupé, avancer jusqu'au prochain libre
+          if (!(await isNumeroVenteAvailable(candidate, id))) {
+            updates.numero_vente = await getNextAvailableNumeroForYear(targetYear);
+          } else {
+            updates.numero_vente = candidate;
+          }
+        }
+      }
 
       // Si le statut change vers "annulee" ou "remboursee", rembourser le stock
       if (updates.statut && 

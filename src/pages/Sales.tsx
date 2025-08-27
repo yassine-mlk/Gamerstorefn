@@ -16,25 +16,23 @@ import {
   Calendar,
   Filter,
   Download,
-  Eye,
   BarChart3,
   TrendingUp,
   ShoppingCart,
   Users,
   RefreshCw,
-  Trash2,
-  Edit,
-  Shield
+  Trash2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useVentes, type Vente, type VenteFilters, type VenteStats } from "@/hooks/useVentes";
 import { VenteDetailsModal } from "@/components/VenteDetailsModal";
 import { InvoiceGenerator } from "@/components/InvoiceGenerator";
 import { WarrantyGenerator } from "@/components/WarrantyGenerator";
+import { EditVenteModal } from "@/components/EditVenteModal";
 import { PDFGenerator } from "@/lib/pdfGenerator";
 
 export default function Sales() {
-  const { ventes, loading, fetchVentes, deleteVente, getVentesStats } = useVentes();
+  const { ventes, loading, fetchVentes, deleteVente, getVentesStats, updateVente } = useVentes();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("tous");
   const [paymentFilter, setPaymentFilter] = useState("tous");
@@ -44,6 +42,7 @@ export default function Sales() {
   const [loadingStats, setLoadingStats] = useState(false);
   const [selectedVente, setSelectedVente] = useState<Vente | null>(null);
   const [showVenteDetails, setShowVenteDetails] = useState(false);
+  const [showEditVente, setShowEditVente] = useState(false);
   const { toast } = useToast();
 
   // Appliquer les filtres
@@ -426,75 +425,55 @@ export default function Sales() {
                           <p className="text-xs text-gray-600">{vente.articles?.length || 0} article(s)</p>
                         </div>
 
-                        {/* Première ligne de boutons */}
-                        <div className="flex flex-col gap-2 w-full sm:w-auto">
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => viewDetails(vente)}
-                              className="text-blue-600 hover:bg-blue-50"
-                              title="Voir les détails"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => generateReceipt(vente)}
-                              className="text-blue-600 hover:bg-blue-50"
-                              title="Ticket de caisse"
-                            >
-                              <Receipt className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteVente(vente.id!, vente.numero_vente!)}
-                              className="text-red-600 hover:bg-red-50"
-                              title="Supprimer"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          
-                          {/* Deuxième ligne - Générateur de facture GAMER STORE */}
-                          <div className="flex items-center">
-                            <InvoiceGenerator 
-                              vente={vente}
-                              onPreview={() => toast({
-                                title: "Aperçu facture",
-                                description: `Aperçu de la facture ${vente.numero_vente}`,
-                              })}
-                              onPrint={() => toast({
-                                title: "Facture imprimée",
-                                description: `Facture ${vente.numero_vente} envoyée à l'imprimante`,
-                              })}
-                              onDownload={() => toast({
-                                title: "Facture téléchargée",
-                                description: `Facture ${vente.numero_vente} téléchargée`,
-                              })}
-                            />
-                          </div>
-                          
-                          {/* Troisième ligne - Générateur de garantie */}
-                          <div className="flex items-center">
-                            <WarrantyGenerator 
-                              vente={vente}
-                              onPreview={() => toast({
-                                title: "Aperçu garantie",
-                                description: `Aperçu de la garantie ${vente.numero_vente}`,
-                              })}
-                              onPrint={() => toast({
-                                title: "Garantie imprimée",
-                                description: `Garantie ${vente.numero_vente} envoyée à l'imprimante`,
-                              })}
-                              onDownload={() => toast({
-                                title: "Garantie téléchargée",
-                                description: `Garantie ${vente.numero_vente} téléchargée`,
-                              })}
-                            />
-                          </div>
+                        {/* Actions: Modifier, Ticket, Facture, Garantie */}
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => { setSelectedVente(vente); setShowEditVente(true); }}
+                            className="flex items-center gap-2 border-gray-400 text-gray-700 hover:bg-gray-700 hover:text-white"
+                            title="Modifier la vente"
+                          >
+                            Modifier
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteVente(vente.id!, vente.numero_vente!)}
+                            className="flex items-center gap-2 border-red-600 text-red-600 hover:bg-red-600 hover:text-white"
+                            title="Supprimer la vente"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Supprimer
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => generateReceipt(vente)}
+                            className="flex items-center gap-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
+                            title="Ticket de caisse"
+                          >
+                            <Receipt className="w-4 h-4" />
+                            Ticket
+                          </Button>
+                          <InvoiceGenerator 
+                            vente={vente}
+                            onPreview={() => toast({
+                              title: "Aperçu facture",
+                              description: `Aperçu de la facture ${vente.numero_vente}`,
+                            })}
+                            onPrint={() => toast({
+                              title: "Facture imprimée",
+                              description: `Facture ${vente.numero_vente} envoyée à l'imprimante`,
+                            })}
+                          />
+                          <WarrantyGenerator 
+                            vente={vente}
+                            onPrint={() => toast({
+                              title: "Garantie imprimée",
+                              description: `Garantie ${vente.numero_vente} envoyée à l'imprimante`,
+                            })}
+                          />
                         </div>
                       </div>
                     </div>
@@ -545,6 +524,20 @@ export default function Sales() {
         }}
         onGenerateInvoice={generateInvoice}
         onGenerateReceipt={generateReceipt}
+      />
+
+      <EditVenteModal
+        isOpen={showEditVente}
+        onClose={() => { setShowEditVente(false); setSelectedVente(null); }}
+        vente={selectedVente}
+        updateVenteFn={async (id, updates) => {
+          const ok = await updateVente(id, updates);
+          if (ok) await fetchVentes();
+          return ok;
+        }}
+        onSaved={async () => {
+          await fetchVentes();
+        }}
       />
     </div>
   );

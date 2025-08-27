@@ -924,8 +924,6 @@ export class PDFGenerator {
       yPos = centerWrappedText(COMPANY_CONFIG.adresse, yPos, 8, 70, 3);
       yPos += 1;
       yPos = centerWrappedText(COMPANY_CONFIG.telephone, yPos, 8, 70, 3);
-      yPos += 1;
-      yPos = centerWrappedText(`RC: ${COMPANY_CONFIG.rc} / IF: ${COMPANY_CONFIG.if} / ICE: ${COMPANY_CONFIG.ice}`, yPos, 8, 70, 3);
       yPos += 4;
       
       // Ligne de séparation

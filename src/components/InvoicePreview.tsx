@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Printer, Download, X, FileText, Loader2 } from "lucide-react";
+import { Printer, X } from "lucide-react";
 import { type Vente } from "@/hooks/useVentes";
 import { QRCodeGenerator } from "@/lib/qrCodeGenerator";
 import { COMPANY_CONFIG, getCompanyLogo } from "@/lib/companyConfig";
@@ -17,10 +17,9 @@ interface InvoicePreviewProps {
   onDownload?: () => void;
 }
 
-export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: InvoicePreviewProps) {
+export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload: _onDownload }: InvoicePreviewProps) {
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string>('');
   const [articlesWithImages, setArticlesWithImages] = useState<any[]>([]);
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   // Fonction pour récupérer toutes les données d'un produit depuis sa table source
   const getProductData = async (produit_id: string, produit_type: string): Promise<any> => {
@@ -130,18 +129,6 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
   // Format des nombres
   const formatPrice = (price: number) => price.toFixed(2);
 
-  // Fonction pour imprimer en PDF natif
-  const handlePrintPDF = async () => {
-    setIsGeneratingPDF(true);
-    try {
-      await PDFGenerator.generateNativeInvoicePDF(vente, articlesWithImages);
-    } catch (error) {
-      console.error('Erreur lors de la génération du PDF:', error);
-    } finally {
-      setIsGeneratingPDF(false);
-    }
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white text-black">
@@ -159,34 +146,6 @@ export function InvoicePreview({ vente, isOpen, onClose, onPrint, onDownload }: 
               >
                 <Printer className="w-4 h-4" />
                 Imprimer
-              </Button>
-              <Button
-                onClick={handlePrintPDF}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2 no-print"
-                disabled={isGeneratingPDF}
-              >
-                {isGeneratingPDF ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Génération PDF...
-                  </>
-                ) : (
-                  <>
-                    <FileText className="w-4 h-4" />
-                    Imprimer PDF
-                  </>
-                )}
-              </Button>
-              <Button
-                onClick={onDownload}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2 no-print"
-              >
-                <Download className="w-4 h-4" />
-                Télécharger
               </Button>
               <Button
                 onClick={onClose}
