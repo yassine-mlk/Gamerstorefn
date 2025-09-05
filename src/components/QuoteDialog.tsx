@@ -12,6 +12,7 @@ import { generateQuoteHTML, previewQuote, printQuote, downloadQuote, QuoteData }
 import { useToast } from '@/hooks/use-toast';
 import { useClients, type NewClient } from '@/hooks/useClients';
 
+
 interface Product {
   id: string;
   nom?: string;
@@ -32,6 +33,7 @@ interface QuoteDialogProps {
 export function QuoteDialog({ isOpen, onClose, product, productType }: QuoteDialogProps) {
   const { toast } = useToast();
   const { clients, loading: loadingClients, addClient } = useClients();
+
   
   const [selectedClient, setSelectedClient] = useState('');
   const [showAddClientForm, setShowAddClientForm] = useState(false);
@@ -150,6 +152,8 @@ export function QuoteDialog({ isOpen, onClose, product, productType }: QuoteDial
       setIsAddingClient(false);
     }
   };
+
+
 
   const handleAction = async (action: 'preview' | 'print' | 'download') => {
     if (!selectedClient) {

@@ -117,6 +117,7 @@ export default function PointOfSale() {
   const [venteFinalise, setVenteFinalise] = useState<any>(null);
   const [showRepriseSystem, setShowRepriseSystem] = useState(false);
   const [operationType, setOperationType] = useState<'vente' | 'reprise' | 'retour' | null>(null);
+  const [documentType, setDocumentType] = useState<'facture' | 'bon_achat'>('bon_achat');
   
   // États pour l'ajout de client
   const [showAddClientDialog, setShowAddClientDialog] = useState(false);
@@ -639,6 +640,7 @@ export default function PointOfSale() {
         client_id: selectedClientData.id,
         client_nom: clientName,
         client_email: clientEmail,
+        document_type: documentType,
         sous_total: totalHT,
         tva: tva,
         remise: reductionMontant,
@@ -759,6 +761,30 @@ export default function PointOfSale() {
       toast({
         title: "Erreur",
         description: "Impossible d'enregistrer la vente",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Fonction pour réinitialiser les données bancaires (pour corriger les UUIDs)
+  const resetBankData = () => {
+    try {
+      localStorage.removeItem('gamerstore_bank_accounts');
+      localStorage.removeItem('gamerstore_bank_movements');
+      localStorage.removeItem('gamerstore_initialized');
+      
+      // Recharger la page pour forcer le rechargement des données
+      window.location.reload();
+      
+      toast({
+        title: "Données réinitialisées",
+        description: "Les comptes bancaires ont été réinitialisés. La page va se recharger.",
+      });
+    } catch (error) {
+      console.error('Erreur lors de la réinitialisation:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de réinitialiser les données bancaires",
         variant: "destructive",
       });
     }
@@ -1330,6 +1356,40 @@ export default function PointOfSale() {
 
               <Separator className="bg-gray-300" />
 
+              {/* Type de document */}
+              <div className="space-y-3">
+                <Label className="text-gray-700">Type de document</Label>
+                <div className="space-y-2">
+                  {[
+                    { value: 'facture', label: 'Facture', icon: FileText },
+                    { value: 'bon_achat', label: "Bon d'achat", icon: Receipt }
+                  ].map(({ value, label, icon: Icon }) => (
+                    <div
+                      key={value}
+                      className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all ${
+                        documentType === value
+                          ? 'border-indigo-600 bg-indigo-50 text-indigo-600'
+                          : 'border-gray-300 bg-white text-gray-900 hover:border-gray-400 hover:bg-gray-50'
+                      }`}
+                      onClick={() => setDocumentType(value as 'facture' | 'bon_achat')}
+                    >
+                      <Icon className="w-4 h-4 mr-3" />
+                      <span className="font-medium">{label}</span>
+                      {documentType === value && (
+                        <div className="ml-auto w-2 h-2 bg-indigo-600 rounded-full"></div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <p className="text-sm text-gray-500">
+                  {documentType === 'facture'
+                    ? "La vente générera une facture."
+                    : "La vente générera un bon d'achat (titre 'Bon d'achat')."}
+                </p>
+              </div>
+
+              <Separator className="bg-gray-300" />
+
               {/* Mode de paiement */}
               <div className="space-y-3">
                 <Label className="text-gray-700">Mode de paiement</Label>
@@ -1398,6 +1458,26 @@ export default function PointOfSale() {
                         ))}
                       </SelectContent>
                     </Select>
+                    
+                    {/* Debug info and reset button */}
+                    <div className="mt-2 text-xs text-gray-500">
+                      <div>Compte sélectionné: {selectedAccount || 'Aucun'}</div>
+                      <div>Type: {typeof selectedAccount}</div>
+                      {selectedAccount && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedAccount) && (
+                        <div className="text-red-500 mt-1">
+                          ⚠️ Format d'ID invalide. Cliquez sur "Réinitialiser" ci-dessous.
+                        </div>
+                      )}
+                    </div>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={resetBankData}
+                      className="mt-2 text-xs text-blue-600 hover:bg-blue-50"
+                    >
+                      Réinitialiser les données bancaires
+                    </Button>
                   </div>
                 )}
 
@@ -1497,7 +1577,7 @@ export default function PointOfSale() {
                 <div className="space-y-2">
                   {[
                     { value: "magasin", label: "Magasin (sur place)", icon: Building },
-                    { value: "commande", label: "Commande (livraison)", icon: Package }
+                    { value: "commande (livraison)", label: "Commande (livraison)", icon: Package }
                   ].map(({ value, label, icon: Icon }) => (
                     <div
                       key={value}
@@ -1557,6 +1637,10 @@ export default function PointOfSale() {
               <p className="text-gray-600 text-sm">
                 {clients.find(c => c.id === selectedClient)?.email}
               </p>
+              <div className="mt-2 text-sm text-gray-700">
+                <span className="font-medium">Document:</span>{' '}
+                {documentType === 'facture' ? 'Facture' : "Bon d'achat"}
+              </div>
             </div>
 
             {/* Articles */}
@@ -1741,7 +1825,7 @@ export default function PointOfSale() {
           <DialogHeader>
             <DialogTitle className="text-gray-900 flex items-center gap-2">
               <Receipt className="w-5 h-5" />
-              Ticket de caisse
+              {documentType === 'facture' ? 'Facture' : "Bon d'achat"}
             </DialogTitle>
             <DialogDescription className="text-gray-600">
               Vente finalisée avec succès
@@ -1753,11 +1837,12 @@ export default function PointOfSale() {
               <div className="text-center border-b border-gray-300 pb-3 mb-3">
                 <h2 className="font-bold text-lg">GAMERSTORE</h2>
                 <p className="text-xs">Point de vente gaming</p>
+                <p className="text-sm font-bold mt-1">{documentType === 'facture' ? 'FACTURE' : "BON D'ACHAT"}</p>
                 <p className="text-xs">Date: {new Date().toLocaleDateString('fr-FR')} {new Date().toLocaleTimeString('fr-FR')}</p>
               </div>
               
               <div className="border-b border-gray-300 pb-2 mb-2">
-                <p className="text-xs">N° Vente: {venteFinalise.numeroVente || 'N/A'}</p>
+                <p className="text-xs">{documentType === 'facture' ? 'N° Facture' : 'N° Vente'}: {venteFinalise.numeroVente || 'N/A'}</p>
                 <p className="text-xs">Client: {venteFinalise.clientNom}</p>
                 <p className="text-xs">Vendeur: Point de vente</p>
               </div>
@@ -1795,7 +1880,7 @@ export default function PointOfSale() {
                   </div>
                 )}
                 <div className="flex justify-between border-t border-gray-300 pt-1 font-bold">
-                  <span>TOTAL TTC:</span>
+                  <span>{taxMode === 'with_tax' ? 'TOTAL TTC:' : 'TOTAL:'}</span>
                   <span>{getTotalWithTaxMode().toFixed(2)} MAD</span>
                 </div>
                 <div className="flex justify-between">

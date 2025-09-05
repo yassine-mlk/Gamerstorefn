@@ -43,7 +43,7 @@ export interface MouvementBancaire {
 
 const defaultBankAccounts: CompteBancaire[] = [
   {
-    id: '1',
+    id: '550e8400-e29b-41d4-a716-446655440001',
     nom_compte: 'Compte Principal Gamerstore',
     nom_banque: 'Attijariwafa Bank',
     numero_compte: '007780001234567890',
@@ -59,7 +59,7 @@ const defaultBankAccounts: CompteBancaire[] = [
     telephone_banque: '0522-123456'
   },
   {
-    id: '2',
+    id: '550e8400-e29b-41d4-a716-446655440002',
     nom_compte: 'Compte Épargne',
     nom_banque: 'BMCE Bank',
     numero_compte: '011550009876543210',
@@ -75,7 +75,7 @@ const defaultBankAccounts: CompteBancaire[] = [
     telephone_banque: '0523-654321'
   },
   {
-    id: '3',
+    id: '550e8400-e29b-41d4-a716-446655440003',
     nom_compte: 'Compte Fournisseurs',
     nom_banque: 'Banque Populaire',
     numero_compte: '021100005555666677',
@@ -94,8 +94,8 @@ const defaultBankAccounts: CompteBancaire[] = [
 
 const defaultMovements: MouvementBancaire[] = [
   {
-    id: '1',
-    compte_bancaire_id: '1',
+    id: '550e8400-e29b-41d4-a716-446655440010',
+    compte_bancaire_id: '550e8400-e29b-41d4-a716-446655440001',
     type_mouvement: 'Crédit',
     montant: 2500.00,
     libelle: 'Vente matériel gaming - Client VIP',
@@ -108,8 +108,8 @@ const defaultMovements: MouvementBancaire[] = [
     rapproche: true
   },
   {
-    id: '2',
-    compte_bancaire_id: '1',
+    id: '550e8400-e29b-41d4-a716-446655440011',
+    compte_bancaire_id: '550e8400-e29b-41d4-a716-446655440001',
     type_mouvement: 'Débit',
     montant: 800.00,
     libelle: 'Achat stock processeurs',
@@ -122,8 +122,8 @@ const defaultMovements: MouvementBancaire[] = [
     rapproche: true
   },
   {
-    id: '3',
-    compte_bancaire_id: '3',
+    id: '550e8400-e29b-41d4-a716-446655440012',
+    compte_bancaire_id: '550e8400-e29b-41d4-a716-446655440003',
     type_mouvement: 'Débit',
     montant: 1200.00,
     libelle: 'Paiement facture - Gaming Hardware',
@@ -199,7 +199,38 @@ export function useBankAccounts() {
       localStorage.setItem('gamerstore_bank_accounts', JSON.stringify(newComptes));
       return true;
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
+      console.error('Erreur lors de la sauvegarde des comptes:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de sauvegarder les comptes",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  // Réinitialiser les données bancaires (pour corriger les UUIDs)
+  const resetBankData = () => {
+    try {
+      localStorage.removeItem('gamerstore_bank_accounts');
+      localStorage.removeItem('gamerstore_bank_movements');
+      localStorage.removeItem('gamerstore_initialized');
+      
+      // Recharger avec les nouveaux UUIDs
+      setComptes(defaultBankAccounts);
+      setMouvements(defaultMovements);
+      localStorage.setItem('gamerstore_bank_accounts', JSON.stringify(defaultBankAccounts));
+      localStorage.setItem('gamerstore_bank_movements', JSON.stringify(defaultMovements));
+      localStorage.setItem('gamerstore_initialized', 'true');
+      
+      toast({
+        title: "Données réinitialisées",
+        description: "Les comptes bancaires ont été réinitialisés avec les nouveaux identifiants",
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Erreur lors de la réinitialisation:', error);
       return false;
     }
   };
@@ -360,6 +391,42 @@ export function useBankAccounts() {
     }
   };
 
+  // Supprimer les mouvements liés à une vente
+  const removeMouvementsByVente = (venteId: string, numeroVente?: string) => {
+    try {
+      // Filtrer les mouvements qui ne correspondent pas à cette vente
+      const filteredMouvements = mouvements.filter(m => {
+        // Vérifier si le libellé contient le numéro de vente
+        const containsVenteNumber = numeroVente && m.libelle.includes(numeroVente);
+        // Vérifier si c'est une vente (catégorie 'Vente' et type 'Crédit')
+        const isVenteMovement = m.categorie === 'Vente' && m.type_mouvement === 'Crédit';
+        
+        return !(containsVenteNumber && isVenteMovement);
+      });
+      
+      const success = saveMouvements(filteredMouvements);
+      
+      if (success) {
+        // Mettre à jour les soldes des comptes affectés
+        const affectedComptes = new Set(mouvements
+          .filter(m => {
+            const containsVenteNumber = numeroVente && m.libelle.includes(numeroVente);
+            const isVenteMovement = m.categorie === 'Vente' && m.type_mouvement === 'Crédit';
+            return containsVenteNumber && isVenteMovement;
+          })
+          .map(m => m.compte_bancaire_id)
+        );
+        
+        affectedComptes.forEach(compteId => updateSoldeCompte(compteId));
+      }
+      
+      return success;
+    } catch (error) {
+      console.error('Erreur lors de la suppression des mouvements bancaires:', error);
+      return false;
+    }
+  };
+
   // Mettre à jour le solde d'un compte
   const updateSoldeCompte = (compteId: string) => {
     const compte = comptes.find(c => c.id === compteId);
@@ -413,8 +480,10 @@ export function useBankAccounts() {
     deleteCompte,
     addMouvement,
     addMouvementFromVente,
+    removeMouvementsByVente,
     getMouvementsCompte,
     getTotaux,
-    updateSoldeCompte
+    updateSoldeCompte,
+    resetBankData
   };
-} 
+}

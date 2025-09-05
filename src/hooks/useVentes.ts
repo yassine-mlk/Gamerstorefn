@@ -51,6 +51,7 @@ export interface Vente {
   id?: string;
   numero_vente?: string;
   date_vente?: string;
+  document_type?: 'facture' | 'bon_achat';
   client_id?: string;
   client_nom: string;
   client_email?: string;
@@ -112,8 +113,8 @@ export function useVentes() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-  const { addMouvementFromVente } = useBankAccounts();
-  const { addCashTransactionFromVente } = useCash();
+  const { addMouvementFromVente, removeMouvementsByVente } = useBankAccounts();
+  const { addCashTransactionFromVente, removeCashTransactionsByVente } = useCash();
   // Numérotation des ventes: configuration des points de départ par année
   const YEAR_BASELINES: Record<number, number> = {
     2025: 244,
@@ -165,6 +166,41 @@ export function useVentes() {
     return formatNumeroVente(candidate, year);
   };
 
+  // Bon d'achat: réf au format BA xxx-YYYY (rétro-compatible avec baXXX-YYYY)
+  const parseNumeroBonAchat = (numero?: string): { sequence: number | null; year: number | null } => {
+    if (!numero) return { sequence: null, year: null };
+    // Accepte "BA 001-2025" ou "ba001-2025" (espace optionnel)
+    const match = numero.match(/^ba\s*(\d{3,6})-(\d{4})$/i);
+    if (!match) return { sequence: null, year: null };
+    const sequence = parseInt(match[1], 10);
+    const year = parseInt(match[2], 10);
+    return { sequence: isNaN(sequence) ? null : sequence, year: isNaN(year) ? null : year };
+  };
+
+  const formatNumeroBonAchat = (sequence: number, year: number): string => {
+    const seq = sequence.toString().padStart(3, '0');
+    return `BA ${seq}-${year}`; // Format demandé
+  };
+
+  const getNextNumeroBonAchatForYear = async (year: number): Promise<string> => {
+    const { data, error } = await supabase
+      .from('ventes')
+      .select('numero_vente')
+      // Récupère toutes les refs finissant par -YEAR (couvre BA XXX-YYYY et baXXX-YYYY)
+      .ilike('numero_vente', `%-${year}`);
+    if (error) throw error;
+    const used = new Set<number>();
+    for (const row of (data || [])) {
+      const { sequence, year: parsedYear } = parseNumeroBonAchat(row.numero_vente as string);
+      if (parsedYear === year && sequence !== null) used.add(sequence);
+    }
+    let candidate = 1;
+    while (used.has(candidate)) {
+      candidate += 1;
+    }
+    return formatNumeroBonAchat(candidate, year);
+  };
+
 
 
   // Charger toutes les ventes
@@ -173,15 +209,10 @@ export function useVentes() {
       setLoading(true);
       setError(null);
 
-      // Première tentative avec les relations
+      // Charger directement les ventes sans relations pour éviter les erreurs
       let query = supabase
         .from('ventes')
-        .select(`
-          *,
-          clients!inner(type_client),
-          articles:ventes_articles(*),
-          paiements:ventes_paiements(*)
-        `)
+        .select('*')
         .order('date_vente', { ascending: false });
 
       // Appliquer les filtres
@@ -211,99 +242,45 @@ export function useVentes() {
       }
 
       const { data, error } = await query;
+      
+      if (error) throw error;
 
-      if (error) {
-        // Si erreur de relation (PGRST200), essayer sans les relations
-        if (error.code === 'PGRST200' || error.message.includes('relationship')) {
-          console.warn('Problème de relation détecté, chargement des ventes sans relations:', error);
-          
-          // Charger seulement les ventes
-          let simpleQuery = supabase
-            .from('ventes')
+      // Charger manuellement les articles et paiements pour chaque vente
+      const ventesWithRelations = await Promise.all(
+        (data || []).map(async (vente) => {
+          // Charger les articles
+          const { data: articles } = await supabase
+            .from('ventes_articles')
             .select('*')
-            .order('date_vente', { ascending: false });
+            .eq('vente_id', vente.id);
 
-          // Réappliquer les filtres
-          if (filters?.search) {
-            simpleQuery = simpleQuery.or(`client_nom.ilike.%${filters.search}%,numero_vente.ilike.%${filters.search}%`);
-          }
-          if (filters?.statut && filters.statut !== 'tous') {
-            simpleQuery = simpleQuery.eq('statut', filters.statut);
-          }
-          if (filters?.mode_paiement && filters.mode_paiement !== 'tous') {
-            simpleQuery = simpleQuery.eq('mode_paiement', filters.mode_paiement);
-          }
-          if (filters?.type_vente && filters.type_vente !== 'tous') {
-            simpleQuery = simpleQuery.eq('type_vente', filters.type_vente);
-          }
-          if (filters?.date_debut) {
-            simpleQuery = simpleQuery.gte('date_vente', filters.date_debut);
-          }
-          if (filters?.date_fin) {
-            simpleQuery = simpleQuery.lte('date_vente', filters.date_fin);
-          }
-          if (filters?.client_id) {
-            simpleQuery = simpleQuery.eq('client_id', filters.client_id);
-          }
-          if (filters?.vendeur_id) {
-            simpleQuery = simpleQuery.eq('vendeur_id', filters.vendeur_id);
+          // Charger les paiements
+          const { data: paiements } = await supabase
+            .from('ventes_paiements')
+            .select('*')
+            .eq('vente_id', vente.id);
+
+          // Charger le type de client
+          let client_type = undefined;
+          if (vente.client_id) {
+            const { data: clientData } = await supabase
+              .from('clients')
+              .select('type_client')
+              .eq('id', vente.client_id)
+              .single();
+            client_type = clientData?.type_client;
           }
 
-          const { data: simpleData, error: simpleError } = await simpleQuery;
-          
-          if (simpleError) throw simpleError;
+          return {
+            ...vente,
+            client_type,
+            articles: articles || [],
+            paiements: paiements || []
+          };
+        })
+      );
 
-          // Charger manuellement les articles et paiements pour chaque vente
-          const ventesWithRelations = await Promise.all(
-            (simpleData || []).map(async (vente) => {
-              // Charger les articles
-              const { data: articles } = await supabase
-                .from('ventes_articles')
-                .select('*')
-                .eq('vente_id', vente.id);
-
-              // Charger les paiements
-              const { data: paiements } = await supabase
-                .from('ventes_paiements')
-                .select('*')
-                .eq('vente_id', vente.id);
-
-              // Charger le type de client
-              let client_type = undefined;
-              if (vente.client_id) {
-                const { data: clientData } = await supabase
-                  .from('clients')
-                  .select('type_client')
-                  .eq('id', vente.client_id)
-                  .single();
-                client_type = clientData?.type_client;
-              }
-
-              return {
-                ...vente,
-                client_type,
-                articles: articles || [],
-                paiements: paiements || []
-              };
-            })
-          );
-
-          setVentes(ventesWithRelations);
-          
-          // Mode de compatibilité activé - pas besoin d'afficher un message d'erreur
-          console.log("Ventes chargées en mode de compatibilité");
-        } else {
-          throw error;
-        }
-      } else {
-        // Mapper les données pour inclure le type de client depuis la relation
-        const ventesWithClientType = (data || []).map(vente => ({
-          ...vente,
-          client_type: vente.clients?.type_client,
-          clients: undefined // Supprimer la relation clients pour éviter la confusion
-        }));
-        setVentes(ventesWithClientType);
-      }
+      setVentes(ventesWithRelations);
     } catch (err) {
       console.error('Erreur lors du chargement des ventes:', err);
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
@@ -416,14 +393,18 @@ export function useVentes() {
         vendeur_nom: user.user_metadata?.name || user.email || 'Utilisateur'
       };
 
-      // Numéro de vente auto si absent: combler les trous, point de départ par année
+      // Numéro de référence selon le type de document
       const now = new Date();
       const year = now.getFullYear();
       if (!(venteData as any).numero_vente || (venteData as any).numero_vente === '') {
         try {
-          (venteDataToInsert as any).numero_vente = await getNextAvailableNumeroForYear(year);
+          if (venteData.document_type === 'bon_achat') {
+            (venteDataToInsert as any).numero_vente = await getNextNumeroBonAchatForYear(year);
+          } else {
+            (venteDataToInsert as any).numero_vente = await getNextAvailableNumeroForYear(year);
+          }
         } catch (numError) {
-          console.warn('Impossible de calculer le prochain numéro de vente:', numError);
+          console.warn('Impossible de calculer le prochain numéro:', numError);
         }
       } else {
         // Si un numéro est fourni, vérifier la dispo
@@ -473,16 +454,28 @@ export function useVentes() {
       // Créer les paiements
       if (paiements && paiements.length > 0) {
         // Paiements multiples détaillés
-        const paymentsToInsert = paiements.map(paiement => ({
-          vente_id: vente.id,
-          montant: paiement.montant,
-          mode_paiement: paiement.mode_paiement,
-          numero_cheque: paiement.numero_cheque,
-          date_echeance: paiement.date_echeance,
-          compte_bancaire_id: paiement.compte_bancaire_id,
-          statut: venteData.statut === 'payee' ? 'valide' : 'en_attente',
-          created_by: user.id
-        }));
+        const paymentsToInsert = paiements.map(paiement => {
+          // Validation du compte_bancaire_id pour virement
+          if (paiement.mode_paiement === 'virement' && paiement.compte_bancaire_id) {
+            // Vérifier que c'est un UUID valide
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            if (!uuidRegex.test(paiement.compte_bancaire_id)) {
+              console.error('Invalid compte_bancaire_id:', paiement.compte_bancaire_id, 'Expected UUID format');
+              throw new Error(`ID de compte bancaire invalide: ${paiement.compte_bancaire_id}. Format UUID requis.`);
+            }
+          }
+          
+          return {
+            vente_id: vente.id,
+            montant: paiement.montant,
+            mode_paiement: paiement.mode_paiement,
+            numero_cheque: paiement.numero_cheque,
+            date_echeance: paiement.date_echeance,
+            compte_bancaire_id: paiement.compte_bancaire_id,
+            statut: venteData.statut === 'payee' ? 'valide' : 'en_attente',
+            created_by: user.id
+          };
+        });
 
         const { error: paiementError } = await supabase
           .from('ventes_paiements')
@@ -785,6 +778,16 @@ export function useVentes() {
     try {
       setLoading(true);
 
+      // Récupérer les informations de la vente avant de la supprimer
+      const { data: vente, error: venteError } = await supabase
+        .from('ventes')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (venteError) throw venteError;
+      if (!vente) throw new Error('Vente non trouvée');
+
       // Récupérer les articles de la vente avant de la supprimer
       const { data: articles, error: articlesError } = await supabase
         .from('ventes_articles')
@@ -805,6 +808,20 @@ export function useVentes() {
         }
       }
 
+      // Supprimer les transactions de caisse liées à cette vente
+      try {
+        removeCashTransactionsByVente(id);
+      } catch (cashError) {
+        console.warn('Erreur lors de la suppression des transactions de caisse:', cashError);
+      }
+
+      // Supprimer les mouvements bancaires liés à cette vente
+      try {
+        removeMouvementsByVente(id, vente.numero_vente);
+      } catch (bankError) {
+        console.warn('Erreur lors de la suppression des mouvements bancaires:', bankError);
+      }
+
       // Supprimer la vente
       const { error } = await supabase
         .from('ventes')
@@ -815,7 +832,7 @@ export function useVentes() {
 
       toast({
         title: "Vente supprimée",
-        description: "La vente a été supprimée avec succès",
+        description: "La vente et ses transactions associées ont été supprimées avec succès",
       });
 
       await fetchVentes();
@@ -938,4 +955,4 @@ export function useVentes() {
     getVentesStats,
     refetch: fetchVentes
   };
-} 
+}

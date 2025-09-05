@@ -158,6 +158,18 @@ export function useCash() {
     };
   };
 
+  // Supprimer les transactions liées à une vente
+  const removeCashTransactionsByVente = (venteId: string) => {
+    try {
+      const filteredTransactions = transactions.filter(t => t.vente_id !== venteId);
+      const success = saveTransactions(filteredTransactions);
+      return success;
+    } catch (error) {
+      console.error('Erreur lors de la suppression des transactions de caisse:', error);
+      return false;
+    }
+  };
+
   // Fonction pour réinitialiser les données (utile pour les tests)
   const resetCashData = () => {
     setTransactions([]);
@@ -173,7 +185,8 @@ export function useCash() {
     loading,
     addCashTransaction,
     addCashTransactionFromVente,
+    removeCashTransactionsByVente,
     getTotaux,
     resetCashData
   };
-} 
+}

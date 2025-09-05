@@ -32,6 +32,8 @@ import EquipePage from "./pages/Equipe";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import Facture from "./pages/Facture";
+import Devis from "./pages/Devis";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { UserMenu } from "@/components/UserMenu";
@@ -100,6 +102,8 @@ const AppContent = () => {
               <Route path="/chaises-gaming" element={<ChaisesGaming />} />
               <Route path="/peripheriques" element={<Peripheriques />} />
                   <Route path="/sales" element={<Sales />} />
+                  <Route path="/factures" element={<Facture />} />
+                  <Route path="/devis" element={<Devis />} />
                   <Route path="/point-of-sale" element={<PointOfSale />} />
                   <Route path="/delivery" element={<Delivery />} />
                   <Route path="/cash-register" element={<CashRegister />} />

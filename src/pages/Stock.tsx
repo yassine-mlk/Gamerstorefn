@@ -21,7 +21,9 @@ import {
   BarChart3,
   DollarSign,
   Clock,
-  CheckCircle
+  CheckCircle,
+  FileText,
+  Plus
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -42,6 +44,7 @@ import { usePCGamer } from "@/hooks/usePCGamer";
 import { useMoniteurs } from "@/hooks/useMoniteurs";
 import { useChaisesGamingSupabase } from "@/hooks/useChaisesGamingSupabase";
 import { usePeripheriques } from "@/hooks/usePeripheriques";
+import { useNavigate } from "react-router-dom";
 
 const StockPage = () => {
   const [activeTab, setActiveTab] = useState("pc-portables");
@@ -49,6 +52,7 @@ const StockPage = () => {
   const [stockFilter, setStockFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const navigate = useNavigate();
 
   // Hooks pour les statistiques
   const { pcPortables } = usePcPortables();
@@ -423,7 +427,7 @@ const StockPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Button variant="outline" className="flex items-center gap-2 p-4 h-auto">
               <AlertTriangle className="w-5 h-5 text-yellow-500" />
               <div className="text-left">
@@ -445,6 +449,16 @@ const StockPage = () => {
                 <div className="text-sm text-gray-600">{totalValue.toLocaleString()} MAD</div>
               </div>
             </Button>
+            <Button 
+              onClick={() => navigate('/devis')}
+              className="flex items-center gap-2 p-4 h-auto bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <FileText className="w-5 h-5" />
+              <div className="text-left">
+                <div className="font-medium">Générer Devis</div>
+                <div className="text-sm text-blue-100">Créer un nouveau devis</div>
+              </div>
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -452,4 +466,4 @@ const StockPage = () => {
   );
 };
 
-export default StockPage; 
+export default StockPage;

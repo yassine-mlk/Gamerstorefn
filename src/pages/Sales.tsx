@@ -27,6 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useVentes, type Vente, type VenteFilters, type VenteStats } from "@/hooks/useVentes";
 import { VenteDetailsModal } from "@/components/VenteDetailsModal";
 import { InvoiceGenerator } from "@/components/InvoiceGenerator";
+import { BonAchatGenerator } from "@/components/BonAchatGenerator";
 import { WarrantyGenerator } from "@/components/WarrantyGenerator";
 import { EditVenteModal } from "@/components/EditVenteModal";
 import { PDFGenerator } from "@/lib/pdfGenerator";
@@ -121,6 +122,8 @@ export default function Sales() {
       });
     }
   };
+
+
 
   const exportData = () => {
     // Créer un CSV des ventes
@@ -387,13 +390,20 @@ export default function Sales() {
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
-                          <p className="text-gray-900 font-medium">Vente {vente.numero_vente}</p>
+                          <p className="text-gray-900 font-medium">
+                            {vente.document_type === 'bon_achat' ? "Bon d'achat" : 'Facture'} {vente.numero_vente}
+                          </p>
                           <div className="flex items-center gap-2">
                             <Badge className={getTypeColor(vente.type_vente)}>
                               {vente.type_vente === 'magasin' ? 'Magasin' : 
                                vente.type_vente === 'en_ligne' ? 'En ligne' :
                                vente.type_vente === 'telephone' ? 'Téléphone' : 'Commande'}
                             </Badge>
+                            {vente.document_type && (
+                              <Badge className="bg-indigo-600 text-white">
+                                {vente.document_type === 'bon_achat' ? "Bon d'achat" : 'Facture'}
+                              </Badge>
+                            )}
                             <Badge className={getStatusColor(vente.statut)}>
                               {vente.statut === 'payee' ? 'Payée' :
                                vente.statut === 'en_cours' ? 'En cours' :
@@ -456,17 +466,35 @@ export default function Sales() {
                             <Receipt className="w-4 h-4" />
                             Ticket
                           </Button>
-                          <InvoiceGenerator 
-                            vente={vente}
-                            onPreview={() => toast({
-                              title: "Aperçu facture",
-                              description: `Aperçu de la facture ${vente.numero_vente}`,
-                            })}
-                            onPrint={() => toast({
-                              title: "Facture imprimée",
-                              description: `Facture ${vente.numero_vente} envoyée à l'imprimante`,
-                            })}
-                          />
+                          {vente.document_type === 'facture' ? (
+                            <InvoiceGenerator 
+                              vente={vente}
+                              onPreview={() => toast({
+                                title: "Aperçu facture",
+                                description: `Aperçu de la facture ${vente.numero_vente}`,
+                              })}
+                              onPrint={() => toast({
+                                title: "Facture imprimée",
+                                description: `Facture ${vente.numero_vente} envoyée à l'imprimante`,
+                              })}
+                            />
+                          ) : (
+                            <BonAchatGenerator 
+                              vente={vente}
+                              onPreview={() => toast({
+                                title: "Aperçu bon d'achat",
+                                description: `Aperçu du bon d'achat ${vente.numero_vente}`,
+                              })}
+                              onPrint={() => toast({
+                                title: "Bon d'achat imprimé",
+                                description: `Bon d'achat ${vente.numero_vente} envoyé à l'imprimante`,
+                              })}
+                              onDownload={() => toast({
+                                title: "Bon d'achat téléchargé",
+                                description: `Bon d'achat ${vente.numero_vente} téléchargé`,
+                              })}
+                            />
+                          )}
                           <WarrantyGenerator 
                             vente={vente}
                             onPrint={() => toast({

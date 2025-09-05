@@ -26,6 +26,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useMoniteurs, Moniteur, NewMoniteur } from "@/hooks/useMoniteurs";
 import { useSuppliers } from "@/hooks/useSuppliers";
+import { GenerateDevisButton } from "@/components/GenerateDevisButton";
 import { uploadImage, uploadImageFromBase64 } from "@/lib/imageUpload";
 import { GARANTIE_OPTIONS, ETAT_OPTIONS } from "@/lib/constants";
 
@@ -888,24 +889,30 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-2 pt-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openEditDialog(moniteur)}
-                        className="flex-1 border-gray-200 text-gray-600 hover:bg-gray-100"
-                      >
-                        <Edit className="w-3 h-3 mr-1" />
-                        Modifier
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteMoniteur(moniteur.id)}
-                        className="border-red-600 text-red-400 hover:bg-red-600 hover:text-gray-900"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
+                    <div className="space-y-2 pt-2">
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openEditDialog(moniteur)}
+                          className="flex-1 border-gray-200 text-gray-600 hover:bg-gray-100"
+                        >
+                          <Edit className="w-3 h-3 mr-1" />
+                          Modifier
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteMoniteur(moniteur.id)}
+                          className="border-red-600 text-red-400 hover:bg-red-600 hover:text-gray-900"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                      <GenerateDevisButton 
+                        product={moniteur} 
+                        productType="moniteur" 
+                      />
                     </div>
                   </div>
                 </CardContent>
@@ -924,4 +931,4 @@ export default function MoniteursNew({ embedded = false }: { embedded?: boolean 
       </Card>
     </div>
   );
-} 
+}

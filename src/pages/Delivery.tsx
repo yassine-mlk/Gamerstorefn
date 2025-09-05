@@ -169,79 +169,79 @@ const Delivery = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-        <Card className="tech-gradient border-gray-700">
+        <Card className="bg-blue-50 border-blue-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-blue-400 text-sm flex items-center gap-2">
+            <CardTitle className="text-blue-600 text-sm flex items-center gap-2">
               <Truck className="w-4 h-4" />
               En cours
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">
+            <div className="text-2xl font-bold text-gray-900">
               {loadingStats ? "..." : stats?.en_cours || 0}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="tech-gradient border-gray-700">
+        <Card className="bg-green-50 border-green-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-green-400 text-sm flex items-center gap-2">
+            <CardTitle className="text-green-600 text-sm flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />
               Livrées
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">
+            <div className="text-2xl font-bold text-gray-900">
               {loadingStats ? "..." : stats?.livrees || 0}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="tech-gradient border-gray-700">
+        <Card className="bg-red-50 border-red-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-red-400 text-sm flex items-center gap-2">
+            <CardTitle className="text-red-600 text-sm flex items-center gap-2">
               <XCircle className="w-4 h-4" />
               Non livrées
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">
+            <div className="text-2xl font-bold text-gray-900">
               {loadingStats ? "..." : stats?.non_livrees || 0}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="tech-gradient border-gray-700">
+        <Card className="bg-orange-50 border-orange-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-orange-400 text-sm flex items-center gap-2">
+            <CardTitle className="text-orange-600 text-sm flex items-center gap-2">
               <RotateCcw className="w-4 h-4" />
               Retours
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">
+            <div className="text-2xl font-bold text-gray-900">
               {loadingStats ? "..." : stats?.retours || 0}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="tech-gradient border-gray-700">
+        <Card className="bg-gray-50 border-gray-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-gray-400 text-sm">Total</CardTitle>
+            <CardTitle className="text-gray-600 text-sm">Total</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">
+            <div className="text-2xl font-bold text-gray-900">
               {loadingStats ? "..." : stats?.total_livraisons || 0}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="tech-gradient border-gray-700">
+        <Card className="bg-purple-50 border-purple-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-gaming-cyan text-sm">Valeur</CardTitle>
+            <CardTitle className="text-purple-600 text-sm">Valeur</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-lg font-bold text-white">
+            <div className="text-lg font-bold text-gray-900">
               {loadingStats ? "..." : `${stats?.valeur_totale?.toFixed(2) || 0} DH`}
             </div>
           </CardContent>
@@ -249,14 +249,14 @@ const Delivery = () => {
       </div>
 
       {/* Filters */}
-      <Card className="tech-gradient border-gray-700">
+      <Card className="bg-gray-50 border-gray-200">
         <CardHeader>
-          <CardTitle className="text-white">Filtres</CardTitle>
+          <CardTitle className="text-gray-900">Filtres</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <Label htmlFor="search" className="text-gray-300">Rechercher</Label>
+              <Label htmlFor="search" className="text-gray-700">Rechercher</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
@@ -265,14 +265,14 @@ const Delivery = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && applyFilters()}
-                  className="pl-10 bg-gray-800 border-gray-600 text-white"
+                  className="pl-10 bg-white border-gray-200"
                 />
               </div>
             </div>
             <div>
-              <Label htmlFor="status" className="text-gray-300">Statut</Label>
+              <Label htmlFor="status" className="text-gray-700">Statut</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                <SelectTrigger className="bg-white border-gray-200">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -286,9 +286,9 @@ const Delivery = () => {
               </Select>
             </div>
             <div>
-              <Label htmlFor="transporteur" className="text-gray-300">Transporteur</Label>
+              <Label htmlFor="transporteur" className="text-gray-700">Transporteur</Label>
               <Select value={transporteurFilter} onValueChange={setTransporteurFilter}>
-                <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                <SelectTrigger className="bg-white border-gray-200">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -300,9 +300,9 @@ const Delivery = () => {
               </Select>
             </div>
             <div>
-              <Label htmlFor="ville" className="text-gray-300">Ville</Label>
+              <Label htmlFor="ville" className="text-gray-700">Ville</Label>
               <Select value={villeFilter} onValueChange={setVilleFilter}>
-                <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                <SelectTrigger className="bg-white border-gray-200">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -315,7 +315,7 @@ const Delivery = () => {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button onClick={applyFilters} className="bg-gaming-cyan hover:bg-gaming-cyan/80">
+            <Button onClick={applyFilters} className="bg-blue-600 hover:bg-blue-700">
               <Search className="w-4 h-4 mr-2" />
               Rechercher
             </Button>
@@ -329,7 +329,7 @@ const Delivery = () => {
                 fetchLivraisons();
                 loadStats();
               }}
-              className="border-gray-600 text-gray-300 hover:bg-gray-700"
+              className="border-gray-300 text-gray-700 hover:bg-gray-100"
             >
               Réinitialiser
             </Button>
@@ -338,23 +338,23 @@ const Delivery = () => {
       </Card>
 
       {/* Deliveries Table */}
-      <Card className="tech-gradient border-gray-700">
+      <Card className="bg-gray-50 border-gray-200">
         <CardHeader>
-          <CardTitle className="text-white">Liste des Livraisons</CardTitle>
-          <CardDescription className="text-gray-400">
+          <CardTitle className="text-gray-900">Liste des Livraisons</CardTitle>
+          <CardDescription className="text-gray-600">
             {loading ? "Chargement..." : `${livraisons.length} livraison(s) trouvée(s)`}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="text-center py-8">
-              <div className="text-gray-400">Chargement des livraisons...</div>
+              <div className="text-gray-600">Chargement des livraisons...</div>
             </div>
           ) : livraisons.length === 0 ? (
             <div className="text-center py-8">
               <Package className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-              <div className="text-gray-400">Aucune livraison trouvée</div>
-              <Button onClick={handleSync} className="mt-4 bg-gaming-cyan hover:bg-gaming-cyan/80">
+              <div className="text-gray-600">Aucune livraison trouvée</div>
+              <Button onClick={handleSync} className="mt-4 bg-blue-600 hover:bg-blue-700">
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Synchroniser les commandes de livraison
               </Button>
@@ -362,35 +362,35 @@ const Delivery = () => {
           ) : (
             <Table>
               <TableHeader>
-                <TableRow className="border-gray-700">
-                  <TableHead className="text-gray-300">N° Livraison</TableHead>
-                  <TableHead className="text-gray-300">Client</TableHead>
-                  <TableHead className="text-gray-300">Ville</TableHead>
-                  <TableHead className="text-gray-300">Transporteur</TableHead>
-                  <TableHead className="text-gray-300">Articles</TableHead>
-                  <TableHead className="text-gray-300">Valeur</TableHead>
-                  <TableHead className="text-gray-300">Date</TableHead>
-                  <TableHead className="text-gray-300">Statut</TableHead>
-                  <TableHead className="text-gray-300">Actions</TableHead>
+                <TableRow className="border-gray-200">
+                  <TableHead className="text-gray-700">N° Livraison</TableHead>
+                  <TableHead className="text-gray-700">Client</TableHead>
+                  <TableHead className="text-gray-700">Ville</TableHead>
+                  <TableHead className="text-gray-700">Transporteur</TableHead>
+                  <TableHead className="text-gray-700">Articles</TableHead>
+                  <TableHead className="text-gray-700">Valeur</TableHead>
+                  <TableHead className="text-gray-700">Date</TableHead>
+                  <TableHead className="text-gray-700">Statut</TableHead>
+                  <TableHead className="text-gray-700">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {livraisons.map((livraison) => (
-                  <TableRow key={livraison.id} className="border-gray-700">
-                    <TableCell className="text-white font-medium">{livraison.numero_livraison}</TableCell>
-                    <TableCell className="text-gray-300">
+                  <TableRow key={livraison.id} className="border-gray-200">
+                    <TableCell className="text-gray-900 font-medium">{livraison.numero_livraison}</TableCell>
+                    <TableCell className="text-gray-700">
                       <div>
                         <div className="font-medium">{livraison.client_nom}</div>
                         {livraison.client_email && (
-                          <div className="text-sm text-gray-400">{livraison.client_email}</div>
+                          <div className="text-sm text-gray-500">{livraison.client_email}</div>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-gray-300">{livraison.ville || 'Non définie'}</TableCell>
-                    <TableCell className="text-gray-300">{livraison.transporteur || 'Non assigné'}</TableCell>
-                    <TableCell className="text-gray-300">{livraison.total_articles}</TableCell>
-                    <TableCell className="text-gray-300">{livraison.valeur_totale.toFixed(2)} DH</TableCell>
-                    <TableCell className="text-gray-300">
+                    <TableCell className="text-gray-700">{livraison.ville || 'Non définie'}</TableCell>
+                    <TableCell className="text-gray-700">{livraison.transporteur || 'Non assigné'}</TableCell>
+                    <TableCell className="text-gray-700">{livraison.total_articles}</TableCell>
+                    <TableCell className="text-gray-700">{livraison.valeur_totale.toFixed(2)} DH</TableCell>
+                    <TableCell className="text-gray-700">
                       {new Date(livraison.date_creation).toLocaleDateString('fr-FR')}
                     </TableCell>
                     <TableCell>
@@ -409,7 +409,7 @@ const Delivery = () => {
                             <Button 
                               size="sm" 
                               variant="outline" 
-                              className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                              className="border-gray-300 text-gray-700 hover:bg-gray-100"
                               onClick={() => setSelectedLivraison(livraison)}
                             >
                               <Eye className="w-4 h-4" />

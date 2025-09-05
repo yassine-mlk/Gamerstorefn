@@ -17,7 +17,9 @@ import {
   FileCheck,
   Cpu,
   Settings,
-  RotateCcw
+  RotateCcw,
+  Receipt,
+  FileText
 } from "lucide-react";
 import {
   Sidebar,
@@ -65,6 +67,16 @@ const adminMenuItems = [
     title: "Ventes",
     url: "/sales",
     icon: ShoppingCart,
+  },
+  {
+    title: "Factures",
+    url: "/factures",
+    icon: Receipt,
+  },
+  {
+    title: "Devis",
+    url: "/devis",
+    icon: FileText,
   },
   {
     title: "Livraisons",

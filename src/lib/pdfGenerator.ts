@@ -94,9 +94,9 @@ export class PDFGenerator {
     const company = this.getCompanyInfo();
     
     // Configuration des couleurs
-    const primaryColor = [34, 197, 94]; // Gaming green
-    const secondaryColor = [168, 85, 247]; // Gaming purple
-    const darkColor = [17, 24, 39]; // Dark gray
+    const primaryColor: [number, number, number] = [34, 197, 94]; // Gaming green
+    const secondaryColor: [number, number, number] = [168, 85, 247]; // Gaming purple
+    const darkColor: [number, number, number] = [17, 24, 39]; // Dark gray
     
     // En-tête
     doc.setFillColor(...primaryColor);
@@ -135,30 +135,26 @@ export class PDFGenerator {
     doc.text(`Email: ${company.email}`, 20, yPos + 20);
     doc.text(`ICE: ${company.ice}`, 20, yPos + 25);
     
-    // Informations du client
+    // Informations client
     doc.text('Facturé à:', 120, yPos);
     doc.setFont('helvetica', 'bold');
-    doc.text(vente.client_nom, 120, yPos + 5);
+    doc.text(vente.client_nom || 'Client', 120, yPos + 5);
     doc.setFont('helvetica', 'normal');
-    if (vente.client_email) {
-      doc.text(vente.client_email, 120, yPos + 10);
-    }
+    if (vente.client_email) doc.text(vente.client_email, 120, yPos + 10);
     if (vente.adresse_livraison) {
       const adresseLines = doc.splitTextToSize(vente.adresse_livraison, 70);
       doc.text(adresseLines, 120, yPos + 15);
     }
-    
-    // Informations de la vente
+
+    // Détails vente
     yPos += 40;
     doc.text(`Date: ${new Date(vente.date_vente || '').toLocaleDateString('fr-FR')}`, 20, yPos);
-    doc.text(`Mode de paiement: ${vente.mode_paiement.charAt(0).toUpperCase() + vente.mode_paiement.slice(1)}`, 120, yPos);
-    doc.text(`Type: ${this.formatTypeVente(vente.type_vente)}`, 20, yPos + 5);
-    doc.text(`Statut: ${this.formatStatut(vente.statut)}`, 120, yPos + 5);
-    
-    // Tableau des articles
+    doc.text(`Mode de paiement: ${vente.mode_paiement ? (vente.mode_paiement.charAt(0).toUpperCase() + vente.mode_paiement.slice(1)) : '—'}`, 120, yPos);
+    doc.text(`Type: ${this.formatTypeVente(String(vente.type_vente || '')) || '—'}`, 20, yPos + 5);
+    doc.text(`Statut: ${this.formatStatut(String(vente.statut || '')) || '—'}`, 120, yPos + 5);
+
+    // Détection du mode taxe alignée sur la facture
     yPos += 20;
-    
-    // Détecter le mode de taxe
     const detectTaxMode = () => {
       if (!vente.articles || vente.articles.length === 0) return "with_tax";
       
@@ -246,7 +242,7 @@ export class PDFGenerator {
     }
     
     // Récupérer la position Y après le tableau
-    const finalY = (doc as any).lastAutoTable.finalY + 10;
+    const finalY = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 10;
     
     // Totaux
     const totalsData = taxMode === "with_tax" && vente.tva > 0 ? [
@@ -289,7 +285,7 @@ export class PDFGenerator {
     });
     
     // Pied de page
-    const finalYFooter = (doc as any).lastAutoTable.finalY + 20;
+    const finalYFooter = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 20 : finalY + 10;
     
     if (vente.notes) {
       doc.setFontSize(9);
@@ -310,6 +306,153 @@ export class PDFGenerator {
     
     // Sauvegarde
     doc.save(`Facture_${vente.numero_vente}.pdf`);
+  }
+
+  static generateBonAchat(vente: Vente): void {
+    const doc = new jsPDF();
+    const company = this.getCompanyInfo();
+    // Configuration des couleurs
+    const primaryColor: [number, number, number] = [34, 197, 94];
+    const darkColor: [number, number, number] = [17, 24, 39];
+
+    // En-tête
+    doc.setFillColor(...primaryColor);
+    doc.rect(0, 0, 210, 40, 'F');
+
+    // Logo et nom
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.text(company.nom, 20, 25);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Équipement Gaming Professionnel', 20, 32);
+
+    // Titre Bon d'achat
+    doc.setTextColor(...darkColor);
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text("BON D'ACHAT", 150, 25);
+
+    // Référence
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`N° ${vente.numero_vente}`, 160, 32);
+
+    // Informations société
+    doc.setFontSize(9);
+    let yPos = 55;
+    doc.text('Émetteur:', 20, yPos);
+    doc.setFont('helvetica', 'bold');
+    doc.text(company.nom, 20, yPos + 5);
+    doc.setFont('helvetica', 'normal');
+    doc.text(company.adresse, 20, yPos + 10);
+    doc.text(`Tél: ${company.telephone}`, 20, yPos + 15);
+    doc.text(`Email: ${company.email}`, 20, yPos + 20);
+    doc.text(`ICE: ${company.ice}`, 20, yPos + 25);
+
+    // Informations client
+    doc.text('Client:', 120, yPos);
+    doc.setFont('helvetica', 'bold');
+    doc.text(vente.client_nom || 'Client', 120, yPos + 5);
+    doc.setFont('helvetica', 'normal');
+    if (vente.client_email) doc.text(vente.client_email, 120, yPos + 10);
+    if (vente.adresse_livraison) {
+      const adresseLines = doc.splitTextToSize(vente.adresse_livraison, 70);
+      doc.text(adresseLines, 120, yPos + 15);
+    }
+
+    // Détails vente
+    yPos += 40;
+    doc.text(`Date: ${new Date(vente.date_vente || '').toLocaleDateString('fr-FR')}`, 20, yPos);
+    doc.text(`Mode de paiement: ${vente.mode_paiement.charAt(0).toUpperCase() + vente.mode_paiement.slice(1)}`, 120, yPos);
+    doc.text(`Type: ${this.formatTypeVente(vente.type_vente)}`, 20, yPos + 5);
+    doc.text(`Statut: ${this.formatStatut(vente.statut)}`, 120, yPos + 5);
+
+    // Détection du mode taxe alignée sur la facture
+    yPos += 20;
+    const detectTaxMode = () => {
+      if (!vente.articles || vente.articles.length === 0) return 'with_tax';
+      const firstArticle = vente.articles[0];
+      const isWithoutTax = Math.abs(firstArticle.prix_unitaire_ttc - firstArticle.prix_unitaire_ht) < 0.01;
+      return isWithoutTax ? 'without_tax' : 'with_tax';
+    };
+    const taxMode = detectTaxMode();
+
+    const tableColumns = taxMode === 'with_tax'
+      ? ['#', 'Désignation', 'Qté', 'Prix HT', 'Total HT', 'Total TTC']
+      : ['#', 'Désignation', 'Qté', 'Prix', 'Total'];
+
+    const tableRows = vente.articles?.map((a, idx) => (
+      taxMode === 'with_tax'
+        ? [String(idx + 1), a.nom_produit, String(a.quantite), `${(a.prix_unitaire_ht ?? 0).toFixed(2)} MAD`, `${(a.total_ht ?? 0).toFixed(2)} MAD`, `${(a.total_ttc ?? 0).toFixed(2)} MAD`]
+        : [String(idx + 1), a.nom_produit, String(a.quantite), `${(a.prix_unitaire_ht ?? 0).toFixed(2)} MAD`, `${(a.total_ht ?? 0).toFixed(2)} MAD`]
+    )) || [];
+
+    doc.autoTable({
+      head: [tableColumns],
+      body: tableRows,
+      startY: yPos,
+      theme: 'grid',
+      headStyles: { fillColor: primaryColor, textColor: [255, 255, 255], fontStyle: 'bold' },
+      bodyStyles: { fontSize: 9, textColor: darkColor }
+    });
+
+    const finalY = (doc as any).lastAutoTable.finalY + 10;
+
+    // Totaux (sécurisés)
+    const totalHT = typeof (vente.total_ht as any) === 'number' ? vente.total_ht : 0;
+    const totalTTC = typeof (vente.total_ttc as any) === 'number' ? vente.total_ttc : 0;
+    const tva = typeof (vente.tva as any) === 'number' ? vente.tva : 0;
+    const remise = typeof (vente.remise as any) === 'number' ? vente.remise : 0;
+
+    const totalsData: string[][] = [] as any;
+    if (taxMode === 'with_tax' && tva > 0) {
+      totalsData.push(['Sous-total HT', `${totalHT.toFixed(2)} MAD`]);
+      totalsData.push(['TVA (20%)', `${tva.toFixed(2)} MAD`]);
+    } else {
+      totalsData.push(['Total', `${totalTTC.toFixed(2)} MAD`]);
+    }
+    if (remise > 0) totalsData.push(['Remise', `-${remise.toFixed(2)} MAD`]);
+    totalsData.push(['TOTAL TTC', `${totalTTC.toFixed(2)} MAD`]);
+
+    doc.autoTable({
+      body: totalsData,
+      startY: finalY,
+      theme: 'plain',
+      margin: { left: 120 },
+      bodyStyles: { fontSize: 10, textColor: darkColor },
+      columnStyles: { 0: { cellWidth: 40, fontStyle: 'bold' }, 1: { cellWidth: 40, halign: 'right', fontStyle: 'bold' } },
+      didParseCell: (data: any) => {
+        if (data.row.index === totalsData.length - 1) {
+          data.cell.styles.fillColor = primaryColor;
+          data.cell.styles.textColor = [255, 255, 255];
+          data.cell.styles.fontSize = 12;
+        }
+      }
+    });
+
+    // Notes
+    const finalYFooter = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 20 : finalY + 10;
+    if (vente.notes) {
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Notes:', 20, finalYFooter);
+      doc.setFont('helvetica', 'normal');
+      const notesLines = doc.splitTextToSize(vente.notes, 170);
+      doc.text(notesLines, 20, finalYFooter + 5);
+    }
+
+    // Bas de page
+    const pageHeight = doc.internal.pageSize.height;
+    doc.setFontSize(8);
+    doc.setTextColor(128, 128, 128);
+    doc.text('Merci de votre confiance !', 20, pageHeight - 30);
+    doc.text(`${company.website} | ${company.email}`, 20, pageHeight - 25);
+    doc.text("Ce bon d'achat est généré électroniquement.", 20, pageHeight - 20);
+
+    // Sauvegarde
+    doc.save(`Bon_achat_${vente.numero_vente}.pdf`);
   }
 
   // Nouvelle méthode pour générer un PDF à partir du HTML (identique à l'aperçu)
@@ -1076,4 +1219,4 @@ export class PDFGenerator {
       default: return statut;
     }
   }
-} 
+}

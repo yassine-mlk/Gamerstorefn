@@ -37,6 +37,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePCGamer, PCGamerConfig, NewPCGamerConfig, ConfigComposant } from "@/hooks/usePCGamer";
 import { useComposantsPC } from "@/hooks/useComposantsPC";
 import { AssignProductDialog } from "@/components/AssignProductDialog";
+import { GenerateDevisButton } from "@/components/GenerateDevisButton";
 import { uploadImageByType, uploadImageFromBase64ByType } from "@/lib/imageUpload";
 
 // Catégories de composants avec leurs icônes et labels
@@ -1014,6 +1015,12 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
                       </Button>
                     </div>
                     
+                    {/* Bouton de génération de devis */}
+                    <GenerateDevisButton 
+                      product={config} 
+                      productType="pc_gamer" 
+                    />
+                    
                     {/* Bouton d'assignation */}
                     <AssignProductDialog
                       productId={config.id}
@@ -1048,4 +1055,4 @@ export default function PCGamer({ embedded = false }: { embedded?: boolean }) {
       </Card>
     </div>
   );
-} 
+}

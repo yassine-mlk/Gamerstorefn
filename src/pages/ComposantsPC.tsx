@@ -37,6 +37,7 @@ import { useSuppliers } from "@/hooks/useSuppliers";
 import { useNavigate } from "react-router-dom";
 import { AssignProductDialog } from "@/components/AssignProductDialog";
 import { AddSupplierDialog } from "@/components/AddSupplierDialog";
+import { GenerateDevisButton } from "@/components/GenerateDevisButton";
 import { uploadImageByType, uploadImageFromBase64ByType } from "@/lib/imageUpload";
 
 // Catégories de composants PC avec leurs icônes
@@ -911,35 +912,41 @@ export default function ComposantsPC({ embedded = false }: { embedded?: boolean 
                     </div>
 
                     {/* Actions */}
-                    <div className="border-t border-gray-700 pt-3 flex justify-between items-center">
-                      <Button
-                        onClick={() => navigate(`/composants-pc/${product.id}`)}
-                        variant="outline"
-                        size="sm"
-                        className="border-gaming-cyan text-gaming-cyan hover:bg-gaming-cyan hover:text-white"
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        Voir détails
-                      </Button>
-                      
-                      <div className="flex gap-2">
+                    <div className="border-t border-gray-700 pt-3 space-y-2">
+                      <div className="flex justify-between items-center">
                         <Button
-                          onClick={() => openEditDialog(product)}
-                          variant="ghost"
+                          onClick={() => navigate(`/composants-pc/${product.id}`)}
+                          variant="outline"
                           size="sm"
-                          className="text-gaming-purple hover:bg-gaming-purple/20"
+                          className="border-gaming-cyan text-gaming-cyan hover:bg-gaming-cyan hover:text-white"
                         >
-                          <Edit className="w-4 h-4" />
+                          <Eye className="w-4 h-4 mr-2" />
+                          Voir détails
                         </Button>
-                        <Button
-                          onClick={() => handleDeleteProduct(product.id!)}
-                          variant="ghost"
-                          size="sm"
-                          className="text-red-400 hover:bg-red-400/20"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => openEditDialog(product)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-gaming-purple hover:bg-gaming-purple/20"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            onClick={() => handleDeleteProduct(product.id!)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-400 hover:bg-red-400/20"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
+                      <GenerateDevisButton 
+                         product={product} 
+                         productType="composant_pc" 
+                       />
                     </div>
                   </CardContent>
                 </Card>
@@ -957,4 +964,4 @@ export default function ComposantsPC({ embedded = false }: { embedded?: boolean 
       </Card>
     </div>
   );
-} 
+}

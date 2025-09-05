@@ -27,6 +27,7 @@ import { useSuppliers } from "@/hooks/useSuppliers";
 import { useChaisesGamingSupabase, type ChaiseGamingSupabase, type NewChaiseGamingSupabase } from "@/hooks/useChaisesGamingSupabase";
 import { AssignProductDialog } from "@/components/AssignProductDialog";
 import { AddSupplierDialog } from "@/components/AddSupplierDialog";
+import { GenerateDevisButton } from "@/components/GenerateDevisButton";
 import { uploadImageByType, uploadImageFromBase64ByType } from "@/lib/imageUpload";
 
 // Marques de chaises gaming
@@ -759,24 +760,30 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
               </div>
 
               {/* Actions */}
-              <div className="flex gap-2 pt-3 border-t border-gray-200">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="flex-1 border-gray-600 text-gray-600 hover:bg-gray-100"
-                  onClick={() => openEditDialog(product)}
-                >
-                  <Edit className="w-4 h-4 mr-1" />
-                  Modifier
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="border-red-600 text-red-400 hover:bg-red-600 hover:text-gray-900"
-                  onClick={() => handleDeleteProduct(product.id)}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+              <div className="space-y-2 pt-3 border-t border-gray-200">
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1 border-gray-600 text-gray-600 hover:bg-gray-100"
+                    onClick={() => openEditDialog(product)}
+                  >
+                    <Edit className="w-4 h-4 mr-1" />
+                    Modifier
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-red-600 text-red-400 hover:bg-red-600 hover:text-gray-900"
+                    onClick={() => handleDeleteProduct(product.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+                <GenerateDevisButton 
+                  product={product} 
+                  productType="chaise_gaming" 
+                />
               </div>
             </CardContent>
           </Card>
@@ -805,4 +812,4 @@ export default function ChaisesGaming({ embedded = false }: { embedded?: boolean
       )}
     </div>
   );
-} 
+}
