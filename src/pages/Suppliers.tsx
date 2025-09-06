@@ -24,20 +24,34 @@ import {
   Truck, 
   Loader2,
   User,
-  CreditCard
+  CreditCard,
+  History,
+  Eye,
+  DollarSign
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSuppliers, type Supplier, type NewSupplier } from "@/hooks/useSuppliers";
+import { useSupplierPurchases } from "@/hooks/useSupplierPurchases";
+import { useBankAccounts } from "@/hooks/useBankAccounts";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/currency";
 
 export default function Suppliers() {
   const { suppliers, loading, addSupplier, updateSupplier, deleteSupplier } = useSuppliers();
+  const { purchases, payments, balances, addPayment, getPurchasesBySupplier, getPaymentsBySupplier, getSupplierBalance } = useSupplierPurchases();
+  const { comptes: bankAccounts } = useBankAccounts();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredSuppliers, setFilteredSuppliers] = useState<Supplier[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentMode, setPaymentMode] = useState<"especes" | "virement" | "cheque">("especes");
+  const [paymentDescription, setPaymentDescription] = useState("");
+  const [selectedBankAccount, setSelectedBankAccount] = useState<string>("");
   const [newSupplier, setNewSupplier] = useState<NewSupplier>({
     nom: "",
     contact_principal: "",
@@ -181,6 +195,49 @@ export default function Suppliers() {
       case 'Actif': return 'bg-green-600 text-white';
       case 'Inactif': return 'bg-gray-600 text-white';
       default: return 'bg-gray-600 text-white';
+    }
+  };
+
+  const handlePayment = async () => {
+    if (!selectedSupplier || !paymentAmount || parseFloat(paymentAmount) <= 0) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez saisir un montant valide",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validation pour les virements
+    if (paymentMode === 'virement' && !selectedBankAccount) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner un compte bancaire pour le virement",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const payment = await addPayment({
+      fournisseur_id: selectedSupplier.id,
+      montant: parseFloat(paymentAmount),
+      mode_paiement: paymentMode,
+      compte_bancaire_id: paymentMode === 'virement' ? selectedBankAccount : undefined,
+      date_paiement: new Date().toISOString().split('T')[0],
+      description: paymentDescription || `Paiement à ${selectedSupplier.nom}`
+    });
+
+    if (payment) {
+      toast({
+        title: "Succès",
+        description: "Paiement effectué avec succès",
+        variant: "default",
+      });
+      setIsPaymentDialogOpen(false);
+      setPaymentAmount("");
+      setPaymentDescription("");
+      setSelectedBankAccount("");
+      setSelectedSupplier(null);
     }
   };
 
@@ -768,6 +825,11 @@ export default function Suppliers() {
                         <span className="text-green-600">
                           Total commandes: {formatCurrency(supplier.total_commandes)}
                         </span>
+                        <span className={`font-semibold ${
+                          getSupplierBalance(supplier.id).solde_restant > 0 ? 'text-red-600' : 'text-green-600'
+                        }`}>
+                          Solde dû: {formatCurrency(getSupplierBalance(supplier.id).solde_restant)}
+                        </span>
                         {supplier.derniere_commande && (
                           <span className="text-gray-600">
                             Dernière commande: {formatDate(supplier.derniere_commande)}
@@ -782,6 +844,28 @@ export default function Suppliers() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedSupplier(supplier);
+                        setIsDetailsDialogOpen(true);
+                      }}
+                      className="hover:bg-blue-600/20 hover:border-blue-600"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedSupplier(supplier);
+                        setIsPaymentDialogOpen(true);
+                      }}
+                      className="hover:bg-green-600/20 hover:border-green-600"
+                    >
+                      <CreditCard className="w-4 h-4" />
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -1150,6 +1234,267 @@ export default function Suppliers() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Details Dialog - Historique des achats */}
+      <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto bg-white border-gray-200">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl text-gray-900">
+              <History className="w-5 h-5 text-blue-600" />
+              Historique - {selectedSupplier?.nom}
+            </DialogTitle>
+            <DialogDescription className="text-gray-600">
+              Suivi des achats et paiements pour ce fournisseur
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedSupplier && (
+            <Tabs defaultValue="purchases" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="purchases">Achats</TabsTrigger>
+                <TabsTrigger value="payments">Paiements</TabsTrigger>
+                <TabsTrigger value="balance">Solde</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="purchases" className="space-y-4">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-900 mb-2">Historique des achats</h3>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>N° Facture</TableHead>
+                          <TableHead>Montant Total</TableHead>
+                          <TableHead>Montant Payé</TableHead>
+                          <TableHead>Restant</TableHead>
+                          <TableHead>Statut</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {getPurchasesBySupplier(selectedSupplier.id).map((purchase) => (
+                          <TableRow key={purchase.id}>
+                            <TableCell>{new Date(purchase.date_achat).toLocaleDateString()}</TableCell>
+                            <TableCell>{purchase.numero_facture || '-'}</TableCell>
+                            <TableCell>{formatCurrency(purchase.montant_total)}</TableCell>
+                            <TableCell>{formatCurrency(purchase.montant_paye)}</TableCell>
+                            <TableCell>{formatCurrency(purchase.montant_restant)}</TableCell>
+                            <TableCell>
+                              <Badge className={`${
+                                purchase.statut_paiement === 'paye' ? 'bg-green-100 text-green-800' :
+                                purchase.statut_paiement === 'partiel' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
+                              }`}>
+                                {purchase.statut_paiement === 'paye' ? 'Payé' :
+                                 purchase.statut_paiement === 'partiel' ? 'Partiel' : 'En attente'}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                    {getPurchasesBySupplier(selectedSupplier.id).length === 0 && (
+                      <div className="text-center py-8 text-gray-600">
+                        Aucun achat enregistré pour ce fournisseur
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="payments" className="space-y-4">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-900 mb-2">Historique des paiements</h3>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Montant</TableHead>
+                          <TableHead>Mode</TableHead>
+                          <TableHead>Description</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {getPaymentsBySupplier(selectedSupplier.id).map((payment) => (
+                          <TableRow key={payment.id}>
+                            <TableCell>{new Date(payment.date_paiement).toLocaleDateString()}</TableCell>
+                            <TableCell>{formatCurrency(payment.montant)}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline">
+                                {payment.mode_paiement === 'especes' ? 'Espèces' :
+                                 payment.mode_paiement === 'virement' ? 'Virement' : 'Chèque'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{payment.description || '-'}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                    {getPaymentsBySupplier(selectedSupplier.id).length === 0 && (
+                      <div className="text-center py-8 text-gray-600">
+                        Aucun paiement enregistré pour ce fournisseur
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="balance" className="space-y-4">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-900 mb-4">Situation financière</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-2">
+                          <DollarSign className="w-5 h-5 text-blue-600" />
+                          <div>
+                            <p className="text-sm text-gray-600">Total des achats</p>
+                            <p className="text-lg font-semibold text-gray-900">
+                              {formatCurrency(getSupplierBalance(selectedSupplier.id).total_achats)}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="w-5 h-5 text-green-600" />
+                          <div>
+                            <p className="text-sm text-gray-600">Total payé</p>
+                            <p className="text-lg font-semibold text-gray-900">
+                              {formatCurrency(getSupplierBalance(selectedSupplier.id).total_paye)}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-2">
+                          <History className="w-5 h-5 text-red-600" />
+                          <div>
+                            <p className="text-sm text-gray-600">Solde restant</p>
+                            <p className="text-lg font-semibold text-red-600">
+                              {formatCurrency(getSupplierBalance(selectedSupplier.id).solde_restant)}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Dialog */}
+      <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+        <DialogContent className="max-w-md bg-white border-gray-200">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl text-gray-900">
+              <CreditCard className="w-5 h-5 text-green-600" />
+              Effectuer un paiement
+            </DialogTitle>
+            <DialogDescription className="text-gray-600">
+              Paiement à {selectedSupplier?.nom}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedSupplier && (
+            <div className="space-y-4">
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-sm text-gray-600">Solde restant à payer</p>
+                <p className="text-lg font-semibold text-red-600">
+                  {formatCurrency(getSupplierBalance(selectedSupplier.id).solde_restant)}
+                </p>
+              </div>
+              
+              <div>
+                <Label htmlFor="payment-amount" className="text-gray-900">Montant du paiement</Label>
+                <Input
+                  id="payment-amount"
+                  type="number"
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="mt-1"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="payment-mode" className="text-gray-900">Mode de paiement</Label>
+                <Select value={paymentMode} onValueChange={(value: any) => setPaymentMode(value)}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="especes">Espèces</SelectItem>
+                    <SelectItem value="virement">Virement bancaire</SelectItem>
+                    <SelectItem value="cheque">Chèque</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {paymentMode === 'virement' && (
+                <div>
+                  <Label htmlFor="bank-account" className="text-gray-900">Compte bancaire</Label>
+                  <Select value={selectedBankAccount} onValueChange={(value: string) => setSelectedBankAccount(value)}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Sélectionnez un compte" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {bankAccounts.map((account) => (
+                        <SelectItem key={account.id} value={account.id}>
+                          {account.nom_banque} - {account.numero_compte} ({formatCurrency(account.solde_actuel)})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
+              <div>
+                <Label htmlFor="payment-description" className="text-gray-900">Description (optionnel)</Label>
+                <Textarea
+                  id="payment-description"
+                  value={paymentDescription}
+                  onChange={(e) => setPaymentDescription(e.target.value)}
+                  placeholder="Description du paiement..."
+                  className="mt-1"
+                  rows={3}
+                />
+              </div>
+              
+              <div className="flex gap-3 pt-4">
+                <Button 
+                  onClick={handlePayment}
+                  className="bg-green-600 hover:bg-green-700 text-white flex-1"
+                  disabled={!paymentAmount || parseFloat(paymentAmount) <= 0}
+                >
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  Effectuer le paiement
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsPaymentDialogOpen(false);
+                    setPaymentAmount("");
+                    setPaymentDescription("");
+                    setSelectedBankAccount("");
+                    setSelectedSupplier(null);
+                  }}
+                >
+                  Annuler
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

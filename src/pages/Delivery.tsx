@@ -144,14 +144,14 @@ const Delivery = () => {
   const villes = Array.from(new Set(livraisons.map(l => l.ville).filter(Boolean)));
 
   return (
-    <div className="p-6 space-y-6 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 min-h-screen">
+    <div className="p-6 space-y-6 bg-background min-h-screen">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
             <MapPin className="w-8 h-8 text-gaming-cyan" />
             Gestion des Livraisons
           </h1>
-          <p className="text-gray-400 mt-2">Suivez et gérez toutes vos livraisons de commandes</p>
+          <p className="text-gray-600 mt-2">Suivez et gérez toutes vos livraisons de commandes</p>
         </div>
         <Button onClick={handleSync} className="bg-gaming-cyan hover:bg-gaming-cyan/80">
           <RefreshCw className="w-4 h-4 mr-2" />
@@ -160,8 +160,8 @@ const Delivery = () => {
       </div>
 
       {error && (
-        <Alert className="border-red-500 bg-red-500/10">
-          <AlertDescription className="text-red-400">
+        <Alert className="border-red-500 bg-red-50">
+          <AlertDescription className="text-red-600">
             {error}
           </AlertDescription>
         </Alert>
@@ -415,12 +415,12 @@ const Delivery = () => {
                               <Eye className="w-4 h-4" />
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="tech-gradient border-gray-700 max-w-2xl">
+                          <DialogContent className="bg-white border-gray-200 max-w-2xl">
                             <DialogHeader>
-                              <DialogTitle className="text-white">
+                              <DialogTitle className="text-gray-900">
                                 Détails de la livraison {selectedLivraison?.numero_livraison}
                               </DialogTitle>
-                              <DialogDescription className="text-gray-400">
+                              <DialogDescription className="text-gray-600">
                                 Informations complètes et gestion du statut
                               </DialogDescription>
                             </DialogHeader>
@@ -428,53 +428,53 @@ const Delivery = () => {
                               <div className="space-y-6">
                                 <div className="grid grid-cols-2 gap-4">
                                   <div>
-                                    <Label className="text-gray-300">Client</Label>
-                                    <p className="text-white font-medium">{selectedLivraison.client_nom}</p>
+                                    <Label className="text-gray-700">Client</Label>
+                                    <p className="text-gray-900 font-medium">{selectedLivraison.client_nom}</p>
                                     {selectedLivraison.client_email && (
-                                      <p className="text-gray-400 text-sm">{selectedLivraison.client_email}</p>
+                                      <p className="text-gray-600 text-sm">{selectedLivraison.client_email}</p>
                                     )}
                                   </div>
                                   <div>
-                                    <Label className="text-gray-300">Transporteur</Label>
-                                    <p className="text-white">{selectedLivraison.transporteur || 'Non assigné'}</p>
+                                    <Label className="text-gray-700">Transporteur</Label>
+                                    <p className="text-gray-900">{selectedLivraison.transporteur || 'Non assigné'}</p>
                                   </div>
                                 </div>
                                 
                                 <div>
-                                  <Label className="text-gray-300">Adresse de livraison</Label>
-                                  <p className="text-white">{selectedLivraison.adresse_livraison}</p>
+                                  <Label className="text-gray-700">Adresse de livraison</Label>
+                                  <p className="text-gray-900">{selectedLivraison.adresse_livraison}</p>
                                   {selectedLivraison.ville && (
-                                    <p className="text-gray-400">{selectedLivraison.ville}, {selectedLivraison.pays}</p>
+                                    <p className="text-gray-600">{selectedLivraison.ville}, {selectedLivraison.pays}</p>
                                   )}
                                 </div>
 
                                 {selectedLivraison.numero_suivi && (
                                   <div>
-                                    <Label className="text-gray-300">Numéro de suivi</Label>
-                                    <p className="text-white font-mono">{selectedLivraison.numero_suivi}</p>
+                                    <Label className="text-gray-700">Numéro de suivi</Label>
+                                    <p className="text-gray-900 font-mono">{selectedLivraison.numero_suivi}</p>
                                   </div>
                                 )}
 
                                 <div className="grid grid-cols-2 gap-4">
                                   <div>
-                                    <Label className="text-gray-300">Articles</Label>
-                                    <p className="text-white text-2xl font-bold">{selectedLivraison.total_articles}</p>
+                                    <Label className="text-gray-700">Articles</Label>
+                                    <p className="text-gray-900 text-2xl font-bold">{selectedLivraison.total_articles}</p>
                                   </div>
                                   <div>
-                                    <Label className="text-gray-300">Valeur totale</Label>
-                                    <p className="text-white text-2xl font-bold">{selectedLivraison.valeur_totale.toFixed(2)} DH</p>
+                                    <Label className="text-gray-700">Valeur totale</Label>
+                                    <p className="text-gray-900 text-2xl font-bold">{selectedLivraison.valeur_totale.toFixed(2)} DH</p>
                                   </div>
                                 </div>
 
                                 {selectedLivraison.notes_livraison && (
                                   <div>
-                                    <Label className="text-gray-300">Notes</Label>
-                                    <p className="text-white">{selectedLivraison.notes_livraison}</p>
+                                    <Label className="text-gray-700">Notes</Label>
+                                    <p className="text-gray-900">{selectedLivraison.notes_livraison}</p>
                                   </div>
                                 )}
 
                                 <div>
-                                  <Label className="text-gray-300">Changer le statut</Label>
+                                  <Label className="text-gray-700">Changer le statut</Label>
                                   <div className="flex gap-2 mt-2 flex-wrap">
                                     {selectedLivraison.statut !== 'en_cours' && (
                                       <Button
@@ -519,7 +519,7 @@ const Delivery = () => {
                                   </div>
                                 </div>
 
-                                <div className="text-sm text-gray-400">
+                                <div className="text-sm text-gray-600">
                                   <p>Créé le: {new Date(selectedLivraison.created_at).toLocaleString('fr-FR')}</p>
                                   <p>Mis à jour: {new Date(selectedLivraison.updated_at).toLocaleString('fr-FR')}</p>
                                 </div>
